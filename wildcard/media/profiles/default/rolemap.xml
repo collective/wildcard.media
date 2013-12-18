@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<rolemap>
+  <roles>
+    <role name="Manager"></role>
+  </roles>
+  <permissions>
+    <permission name="wildcard.media: Add Video" acquire="True">
+      <role name="Manager" />
+      <role name="Site Administrator" />
+      <role name="Owner"/>
+      <role name="Contributor"/>
+    </permission>
+    <permission name="wildcard.media: Add Audio" acquire="True">
+      <role name="Manager" />
+      <role name="Site Administrator" />
+      <role name="Owner"/>
+      <role name="Contributor"/>
+    </permission>
+
+  </permissions>
+</rolemap>

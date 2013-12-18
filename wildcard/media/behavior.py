@@ -6,11 +6,12 @@ from plone.supermodel import model
 from plone.dexterity.interfaces import IDexterityContent
 from plone.autoform.interfaces import IFormFieldProvider
 from plone.namedfile import field as namedfile
-from wildcard.video import _
-from wildcard.video.async import queueJob
-from zope.interface import Invalid
+from wildcard.media import _
+from wildcard.media.async import queueJob
+from zope.interface import Invalid, invariant
 import json
 from plone.directives import form
+from plone.app.textfield import RichText
 
 
 def valid_video(namedblob):
@@ -19,8 +20,15 @@ def valid_video(namedblob):
     return True
 
 
+def valid_audio(namedblob):
+    if namedblob.contentType.split('/')[0] != 'audio':
+        raise Invalid("must be a audio file")
+    return True
+
+
 class IVideo(model.Schema):
 
+    form.omitted('image')
     image = namedfile.NamedBlobImage(
         title=_(u"Cover Image"),
         description=u"",
@@ -52,6 +60,11 @@ class IVideo(model.Schema):
         required=False
     )
 
+    @invariant
+    def validate_videos(data):
+        if not data.video_file and not data.youtube_url:
+            raise Invalid("Must specify either a video file or youtube url")
+
     width = schema.Int(
         title=_(u"Width"),
         default=640
@@ -62,13 +75,55 @@ class IVideo(model.Schema):
         default=320
     )
 
+    subtitle_file = namedfile.NamedBlobFile(
+        title=u"Subtitle file",
+        description=u"srt file format",
+        required=False
+    )
+
     form.omitted('metadata')
     metadata = schema.Text(
         required=False
     )
 
+    transcript = RichText(
+        title=u"Transcript",
+        default_mime_type='text/html',
+        output_mime_type='text/html',
+        allowed_mime_types=('text/html', 'text/plain'),
+        default=u"",
+        required=False
+    )
+
 
 alsoProvides(IVideo, IFormFieldProvider)
+
+
+class IAudio(model.Schema):
+
+    # main file will always be converted to mp4
+    audio_file = namedfile.NamedBlobFile(
+        title=_(u"Audio File"),
+        description=u"",
+        required=True,
+        constraint=valid_audio
+    )
+
+    form.omitted('metadata')
+    metadata = schema.Text(
+        required=False
+    )
+
+    transcript = RichText(
+        title=u"Transcript",
+        default_mime_type='text/html',
+        output_mime_type='text/html',
+        allowed_mime_types=('text/html', 'text/plain'),
+        default=u"",
+        required=False
+    )
+
+alsoProvides(IAudio, IFormFieldProvider)
 
 
 class UnsettableProperty(object):
@@ -108,7 +163,21 @@ class BasicProperty(object):
         return getattr(self._field, name)
 
 
-class Video(object):
+class BaseAdapter(object):
+
+    def _get_metadata(self):
+        return unicode(json.dumps(getattr(self.context, 'metadata', {})))
+
+    def _set_metadata(self, value):
+        pass
+
+    metadata = property(_get_metadata, _set_metadata)
+
+
+_marker = object()
+
+
+class Video(BaseAdapter):
     implements(IVideo)
     adapts(IDexterityContent)
 
@@ -119,23 +188,29 @@ class Video(object):
         return self.context.video_file
 
     def _set_video_file(self, value):
-        if value != self.context.video_file:
+        if value != getattr(self.context, 'video_file', _marker):
             self.context.video_file = value
             queueJob(self.context)
     video_file = property(_get_video_file, _set_video_file)
-
-    def _get_metadata(self):
-        return unicode(json.dumps(getattr(self.context, 'metadata', {})))
-
-    def _set_metadata(self, value):
-        pass
-
-    metadata = property(_get_metadata, _set_metadata)
 
     image = BasicProperty(IVideo['image'])
     youtube_url = BasicProperty(IVideo['youtube_url'])
     width = BasicProperty(IVideo['width'])
     height = BasicProperty(IVideo['height'])
+    transcript = BasicProperty(IVideo['transcript'])
+    subtitle_file = BasicProperty(IVideo['subtitle_file'])
 
     video_file_ogv = UnsettableProperty(IVideo['video_file_ogv'])
     video_file_webm = UnsettableProperty(IVideo['video_file_webm'])
+    image = UnsettableProperty(IVideo['image'])
+
+
+class Audio(BaseAdapter):
+    implements(IAudio)
+    adapts(IDexterityContent)
+
+    def __init__(self, context):
+        self.context = context
+
+    audio_file = BasicProperty(IAudio['audio_file'])
+    transcript = BasicProperty(IAudio['transcript'])

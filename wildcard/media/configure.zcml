@@ -4,19 +4,24 @@
     xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
     xmlns:plone="http://namespaces.plone.org/plone"
     xmlns:browser="http://namespaces.zope.org/browser"
-    i18n_domain="wildcard.video">
+    i18n_domain="wildcard.media">
 
   <genericsetup:registerProfile
       name="default"
-      title="wildcard.video"
+      title="wildcard.media"
       directory="profiles/default"
-      description="Installs the wildcard.video package"
+      description="Installs the wildcard.media package"
       provides="Products.GenericSetup.interfaces.EXTENSION"
       />
   <permission
-      id="wildcard.video.AddWildcardVideo"
-      title="wildcard.video: Add Video"
+      id="wildcard.media.AddWildcardVideo"
+      title="wildcard.media: Add Video"
       />
+  <permission
+      id="wildcard.media.AddWildcardAudio"
+      title="wildcard.media: Add Audio"
+      />
+
   <include package="plone.behavior" file="meta.zcml"/>
 
   <plone:behavior
@@ -26,17 +31,37 @@
       factory=".behavior.Video"
       for="plone.dexterity.interfaces.IDexterityContent"
       />
+  <plone:behavior
+      title="Audio"
+      description="Add support for audio fields"
+      provides=".behavior.IAudio"
+      factory=".behavior.Audio"
+      for="plone.dexterity.interfaces.IDexterityContent"
+      />
 
+  <browser:page
+    name="wildcard_video_macro"
+    for="plone.dexterity.content.Item"
+    class=".browser.VideoMacroView"
+    template="templates/video_macro.pt"
+    permission="zope2.View"
+  />
   <browser:page
     name="wildcard_video_view"
     for="plone.dexterity.content.Item"
-    class=".browser.VideoView"
     template="templates/video_view.pt"
+    permission="zope2.View"
+  />
+  <browser:page
+    name="wildcard_audio_view"
+    for="plone.dexterity.content.Item"
+    class=".browser.AudioView"
+    template="templates/audio_view.pt"
     permission="zope2.View"
   />
 
   <browser:resourceDirectory
-    name="wildcard-video"
+    name="wildcard-media"
     directory="static" />
 
 </configure>

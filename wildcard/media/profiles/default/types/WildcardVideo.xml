@@ -16,16 +16,16 @@
   <element value="wildcard_video_view "/>
  </property>
  <property name="default_view_fallback">True</property>
- <property name="add_permission">wildcard.video.AddWildcardVideo</property>
+ <property name="add_permission">wildcard.media.AddWildcardVideo</property>
  <property name="klass">plone.dexterity.content.Item</property>
  <property name="behaviors">
   <element value="plone.app.content.interfaces.INameFromTitle"/>
-  <element value="wildcard.video.behavior.IVideo"/>
+  <element value="wildcard.media.behavior.IVideo"/>
   <element value="plone.app.dexterity.behaviors.metadata.IDublinCore"/>
  </property>
  <property name="schema"></property>
  <property name="model_source"></property>
- <property name="model_file">wildcard.video:schema.xml</property>
+ <property name="model_file">wildcard.media.schema:video.xml</property>
  <alias from="(Default)" to="(dynamic view)"/>
  <alias from="edit" to="@@edit"/>
  <alias from="sharing" to="@@sharing"/>

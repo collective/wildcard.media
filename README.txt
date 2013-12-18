@@ -2,7 +2,3 @@ Introduction
 ============
 
 
-TODO
-----
-
-- tinymce integration

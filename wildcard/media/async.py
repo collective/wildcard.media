@@ -1,6 +1,6 @@
 from logging import getLogger
 from zope.component import getUtility
-from wildcard.video.convert import runConversion
+from wildcard.media.convert import runConversion
 from Products.CMFCore.utils import getToolByName
 
 try:

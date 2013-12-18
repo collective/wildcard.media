@@ -4,7 +4,7 @@ from logging import getLogger
 from plone.app.blob.utils import openBlob
 from tempfile import mkdtemp
 from shutil import copyfile, rmtree
-from plone.namedfile import NamedBlobFile
+from plone.namedfile import NamedBlobFile, NamedBlobImage
 logger = getLogger('wildcard.video')
 
 
@@ -77,6 +77,11 @@ class AVConvProcess(BaseSubProcess):
         cmd = [self.binary, '-i', filepath, outputfilepath]
         self._run_command(cmd)
 
+    def grab_frame(self, filepath, outputfilepath, instant='00:00:5'):
+        cmd = [self.binary, '-i', filepath, '-ss', instant, '-f', 'image2',
+               '-vframes', '1', outputfilepath]
+        self._run_command(cmd)
+
 try:
     avconv = AVConvProcess()
 except IOError:
@@ -129,7 +134,7 @@ def switchFileExt(filename, ext):
 
 def runConversion(context):
     if not avprobe or not avconv:
-        logger.warn('can not run wildcard.video conversion. No avconv')
+        logger.warn('can not run wildcard.media conversion. No avconv')
         return
     video = context.video_file
     try:
@@ -162,9 +167,20 @@ def runConversion(context):
                 logger.warn('error converting to %s' % video_type)
                 continue
             if os.path.exists(output_filepath):
+                fi = open(output_filepath)
                 namedblob = NamedBlobFile(
-                    output_filepath,
-                    filename=switchFileExt(video.filename,  video_type))
+                    fi, filename=switchFileExt(video.filename,  video_type))
                 setattr(context, fieldname, namedblob)
+                fi.close()
 
+    # try and grab one from video
+    output_filepath = os.path.join(tmpdir, u'screengrab.png')
+    try:
+        avconv.grab_frame(tmpfilepath, output_filepath)
+        if os.path.exists(output_filepath):
+            fi = open(output_filepath)
+            context.image = NamedBlobImage(fi, filename=u'screengrab.png')
+            fi.close()
+    except:
+        logger.warn('error getting thumbnail from video')
     rmtree(tmpdir)

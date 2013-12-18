@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<object>
+ <resourcetypes>
+  <linkable purge="False">
+    <element value="WildcardVideo"/>
+    <element value="WildcardAudio"/>
+  </linkable>
+</resourcetypes>
+<layout purge="False">
+   <styles purge="False">
+   <element value="Video|span|wcvideo"/>
+   <element value="Small Video|span|wcvideo video-small"/>
+   <element value="Large Video|span|wcvideo video-large"/>
+   <element value="Audio|span|wcaudio"/>
+  </styles>
+ </layout>
+</object>
