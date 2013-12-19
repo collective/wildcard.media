@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.0a1'
+version = '1.0a2'
 
 setup(name='wildcard.media',
       version=version,
@@ -13,8 +13,8 @@ setup(name='wildcard.media',
         "Programming Language :: Python",
         ],
       keywords='video audio media plone tiny html5 mediaelement',
-      author='nathan@vangheem.us',
-      author_email='Nathan Van Gheem',
+      author='Nathan Van Gheem',
+      author_email='nathan@vangheem.us',
       url='https://github.com/collective/wildcard.media',
       license='GPL',
       packages=find_packages(exclude=['ez_setup']),
