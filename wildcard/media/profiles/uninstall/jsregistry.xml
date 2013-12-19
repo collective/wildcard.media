@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<object name="portal_javascripts">
+
+    <javascript
+        remove="True"
+        id="++resource++wildcard-media/mediaelementjs/mediaelement-and-player.min.js"
+        />
+    <javascript
+        remove="True"
+        id="++resource++wildcard-media/integration.js"
+        />
+
+</object>

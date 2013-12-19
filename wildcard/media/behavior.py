@@ -188,7 +188,11 @@ class Video(BaseAdapter):
         return self.context.video_file
 
     def _set_video_file(self, value):
-        if value != getattr(self.context, 'video_file', _marker):
+        if value is None:
+            self.context.video_file = None
+            self.context.video_file_ogv = None
+            self.context.video_file_webm = None
+        elif value != getattr(self.context, 'video_file', _marker):
             self.context.video_file = value
             queueJob(self.context)
     video_file = property(_get_video_file, _set_video_file)

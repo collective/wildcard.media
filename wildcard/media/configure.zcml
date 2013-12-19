@@ -4,7 +4,11 @@
     xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
     xmlns:plone="http://namespaces.plone.org/plone"
     xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:five="http://namespaces.zope.org/five"
     i18n_domain="wildcard.media">
+
+  <five:registerPackage package="." initialize=".initialize" />
+  <include package="plone.app.dexterity" />
 
   <genericsetup:registerProfile
       name="default"
@@ -13,6 +17,14 @@
       description="Installs the wildcard.media package"
       provides="Products.GenericSetup.interfaces.EXTENSION"
       />
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="wildcard.media uninstall"
+      directory="profiles/uninstall"
+      description="uninstalls the wildcard.media package"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
   <permission
       id="wildcard.media.AddWildcardVideo"
       title="wildcard.media: Add Video"
@@ -30,6 +42,7 @@
       provides=".behavior.IVideo"
       factory=".behavior.Video"
       for="plone.dexterity.interfaces.IDexterityContent"
+      marker=".interfaces.IVideoEnabled"
       />
   <plone:behavior
       title="Audio"
@@ -37,28 +50,70 @@
       provides=".behavior.IAudio"
       factory=".behavior.Audio"
       for="plone.dexterity.interfaces.IDexterityContent"
+      marker=".interfaces.IAudioEnabled"
       />
 
   <browser:page
     name="wildcard_video_macro"
-    for="plone.dexterity.content.Item"
+    for=".interfaces.IVideoEnabled"
     class=".browser.VideoMacroView"
     template="templates/video_macro.pt"
     permission="zope2.View"
+    layer=".interfaces.ILayer"
   />
   <browser:page
     name="wildcard_video_view"
-    for="plone.dexterity.content.Item"
+    for=".interfaces.IVideoEnabled"
     template="templates/video_view.pt"
     permission="zope2.View"
+    layer=".interfaces.ILayer"
   />
   <browser:page
     name="wildcard_audio_view"
-    for="plone.dexterity.content.Item"
+    for=".interfaces.IAudioEnabled"
     class=".browser.AudioView"
     template="templates/audio_view.pt"
     permission="zope2.View"
+    layer=".interfaces.ILayer"
   />
+  <browser:page
+    name="convert-video"
+    for=".interfaces.IAudioEnabled"
+    class=".browser.ConvertVideo"
+    permission="cmf.ModifyPortalContent"
+    layer=".interfaces.ILayer"
+  />
+  <browser:page
+    name="wcmedia-utils"
+    for="*"
+    permission="zope2.View"
+    class=".browser.Utils"
+    allowed_interface=".interfaces.IUtils"
+    layer=".interfaces.ILayer" />
+
+  <adapter
+    factory=".syndication.AudioFeedItem"
+    for="wildcard.media.interfaces.IAudioEnabled
+         Products.CMFPlone.interfaces.syndication.IFeed"
+    provides="Products.CMFPlone.interfaces.syndication.IFeedItem" />
+  <adapter
+    factory=".syndication.VideoFeedItem"
+    for="wildcard.media.interfaces.IVideoEnabled
+         Products.CMFPlone.interfaces.syndication.IFeed"
+    provides="Products.CMFPlone.interfaces.syndication.IFeedItem" />
+
+  <adapter name="SearchableText" factory=".indexers.MediaSearchableText" />
+
+  <browser:page
+    name="global-media-settings"
+    for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+    class=".browser.GlobalSettingsFormView"
+    layer=".interfaces.ILayer"
+    permission="cmf.ManagePortal" />
+  <adapter
+    for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+    provides=".interfaces.IGlobalMediaSettings"
+    factory=".settings.GlobalSettings" />
 
   <browser:resourceDirectory
     name="wildcard-media"

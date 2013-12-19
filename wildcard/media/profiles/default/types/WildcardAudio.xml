@@ -17,7 +17,7 @@
  </property>
  <property name="default_view_fallback">True</property>
  <property name="add_permission">wildcard.media.AddWildcardAudio</property>
- <property name="klass">plone.dexterity.content.Item</property>
+ <property name="klass">wildcard.media.content.Audio</property>
  <property name="behaviors">
   <element value="plone.app.content.interfaces.INameFromTitle"/>
   <element value="wildcard.media.behavior.IAudio"/>

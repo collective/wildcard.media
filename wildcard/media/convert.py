@@ -4,8 +4,12 @@ from logging import getLogger
 from plone.app.blob.utils import openBlob
 from tempfile import mkdtemp
 from shutil import copyfile, rmtree
+from wildcard.media.config import getFormat
 from plone.namedfile import NamedBlobFile, NamedBlobImage
-logger = getLogger('wildcard.video')
+from wildcard.media.settings import GlobalSettings
+from Products.CMFCore.utils import getToolByName
+
+logger = getLogger('wildcard.media')
 
 
 class BaseSubProcess(object):
@@ -120,13 +124,6 @@ except IOError:
     logger.warn('avprobe not installed. wildcard.video will not function')
 
 
-conversion_types = {
-    'mp4': 'video_file',
-    'ogv': 'video_file_ogv',
-    'webm': 'video_file_webm'
-}
-
-
 def switchFileExt(filename, ext):
     filebase = filename.rsplit('.', 1)[0]
     return filebase + '.' + ext
@@ -136,6 +133,10 @@ def runConversion(context):
     if not avprobe or not avconv:
         logger.warn('can not run wildcard.media conversion. No avconv')
         return
+    # reset these...
+    context.video_file_ogv = None
+    context.video_file_webm = None
+
     video = context.video_file
     try:
         opened = openBlob(video._blob)
@@ -155,6 +156,19 @@ def runConversion(context):
         logger.warn('not a valid video format')
         return
     context.metadata = metadata
+
+    conversion_types = {
+        'mp4': 'video_file'
+    }
+
+    portal = getToolByName(context, 'portal_url').getPortalObject()
+    settings = GlobalSettings(portal)
+    for type_ in settings.additional_video_formats:
+        format = getFormat(type_)
+        if format:
+            conversion_types[format.extension] = 'video_file_%s' % (
+                format.extension
+            )
 
     for video_type, fieldname in conversion_types.items():
         if video_type == video.contentType.split('/')[-1]:

@@ -28,6 +28,11 @@ setup(name='wildcard.media',
           'plone.directives.form',
           'plone.app.textfield'
       ],
+      extras_require={
+          'test': [
+              'plone.app.testing',
+          ]
+      },
       entry_points="""
       # -*- Entry points: -*-
 

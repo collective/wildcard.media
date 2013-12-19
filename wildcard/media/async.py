@@ -2,6 +2,7 @@ from logging import getLogger
 from zope.component import getUtility
 from wildcard.media.convert import runConversion
 from Products.CMFCore.utils import getToolByName
+from wildcard.media.settings import GlobalSettings
 
 try:
     from zc.async.interfaces import COMPLETED
@@ -89,13 +90,15 @@ class JobRunner(object):
         """
         Set quota for document viewer jobs
         """
+        settings = GlobalSettings(self.portal)
+        size = settings.async_quota_size
         if QUOTA_NAME in self.queue.quotas:
-            if self.queue.quotas[QUOTA_NAME].size != 3:
-                self.queue.quotas[QUOTA_NAME].size = 3
+            if self.queue.quotas[QUOTA_NAME].size != size:
+                self.queue.quotas[QUOTA_NAME].size = size
                 logger.info("quota %r configured in queue %r", QUOTA_NAME,
                             self.queue.name)
         else:
-            self.queue.quotas.create(QUOTA_NAME, size=3)
+            self.queue.quotas.create(QUOTA_NAME, size=size)
             logger.info("quota %r added to queue %r", QUOTA_NAME,
                         self.queue.name)
 

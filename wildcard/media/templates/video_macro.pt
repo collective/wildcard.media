@@ -4,7 +4,7 @@
           tal:attributes="poster view/image_url;
                           width view/width|string:320;
                           height view/height|string:240;">
-        <tal:videos tal:repeat="video view/videos">
+        <tal:videos tal:repeat="video python:view.videos">
             <source src="/media/echo-hereweare.mp4" type="video/mp4"
                     tal:attributes="src video/url;
                                     type string:video/${video/type}" />
