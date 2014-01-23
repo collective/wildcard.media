@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from zope.interface import alsoProvides, implements
 from zope.component import adapts
+from z3c.form.interfaces import IEditForm
 from zope import schema
 from plone.supermodel import model
 from plone.dexterity.interfaces import IDexterityContent
@@ -43,12 +44,12 @@ class IVideo(model.Schema):
         constraint=valid_video
     )
 
-    form.omitted('video_file_ogv')
+    form.omitted(IEditForm, 'video_file_ogv')
     video_file_ogv = namedfile.NamedBlobFile(
         required=False,
     )
 
-    form.omitted('video_file_webm')
+    form.omitted(IEditForm, 'video_file_webm')
     video_file_webm = namedfile.NamedBlobFile(
         required=False,
     )

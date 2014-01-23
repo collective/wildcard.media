@@ -53,8 +53,9 @@ class VideoMacroView(MediaView):
             if file:
                 self.videos.append({
                     'type': _type,
-                    'url': '%svideo_file/@@download/%s' % (
+                    'url': '%s%s/@@download/%s' % (
                         self.base_furl,
+                        fieldname,
                         file.filename)
                 })
         if self.videos:

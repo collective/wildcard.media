@@ -7,11 +7,11 @@ current_dir = os.path.abspath(os.path.dirname(__file__))
 test_file_dir = os.path.join(current_dir, 'files')
 
 
-def _getBlob(_type='audio'):
+def _getBlob(_type='audio', _format='mp3'):
     if _type == 'audio':
-        filename = u'test.mp3'
+        filename = u'test.%s' % _format
     else:
-        filename = u'test.mp4'
+        filename = u'test.%s' % _format
 
     newpath = mktemp()
     origpath = os.path.join(test_file_dir, filename)
@@ -26,5 +26,5 @@ def getAudioBlob():
     return _getBlob('audio')
 
 
-def getVideoBlob():
-    return _getBlob('video')
+def getVideoBlob(_format='mp4'):
+    return _getBlob('video', _format)

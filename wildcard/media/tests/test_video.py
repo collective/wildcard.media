@@ -41,7 +41,9 @@ class VideoIntegrationTest(unittest.TestCase):
 
     def create(self, id):
         self.portal.invokeFactory('WildcardVideo', id,
-                                  video_file=getVideoBlob())
+                                  video_file=getVideoBlob('mp4'),
+                                  video_file_ogv=getVideoBlob('ogv'),
+                                  video_file_webm=getVideoBlob('webm'))
 
     def test_schema(self):
         fti = self.getFti()
@@ -72,10 +74,17 @@ class VideoIntegrationTest(unittest.TestCase):
         alsoProvides(self.request, IPloneFormLayer)
         view = video.restrictedTraverse('@@view')
 
-        self.assertTrue(view())
+        result = view()
+        self.assertTrue(result)
         self.assertEqual(view.request.response.status, 200)
-        self.assertTrue('My video' in view())
-        self.assertTrue('This is my video.' in view())
+        self.assertTrue('My video' in result)
+        self.assertTrue('This is my video.' in result)
+        self.assertTrue(
+            '++widget++form.widgets.IVideo.video_file/@@download/test.mp4' in result)
+        self.assertTrue(
+            '++widget++form.widgets.IVideo.video_file_ogv/@@download/test.ogv' in result)
+        self.assertTrue(
+            '++widget++form.widgets.IVideo.video_file_webm/@@download/test.webm' in result)
 
 
 class VideoFunctionalTest(unittest.TestCase):
@@ -112,6 +121,16 @@ class VideoFunctionalTest(unittest.TestCase):
         self.assertTrue('My video' in self.browser.contents)
         self.assertTrue('This is my video' in self.browser.contents)
         self.assertTrue('<video' in self.browser.contents)
+        self.assertEqual(self.browser.contents.count('<source'), 3)
+        self.assertIn(
+            '++widget++form.widgets.IVideo.video_file/@@download/test.mp4',
+            self.browser.contents)
+        self.assertIn(
+            '++widget++form.widgets.IVideo.video_file_ogv/@@download/test.ogv',
+            self.browser.contents)
+        self.assertIn(
+            '++widget++form.widgets.IVideo.video_file_webm/@@download/test.webm',
+            self.browser.contents)
 
 
 def test_suite():

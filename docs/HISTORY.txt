@@ -4,6 +4,13 @@ Changelog
 1.0a2 (unreleased)
 ------------------
 
+- Only omit ogv and webm video fields from edit forms; allows access to
+  field contents from main video view.
+  [davidjb]
+- Fix video display <source> URLs to point to correct fields. Previously,
+  all links referred to the main MP4 video field.
+  [davidjb]
+
 
 1.0a1 (2013-12-18)
 ------------------
