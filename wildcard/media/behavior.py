@@ -11,7 +11,7 @@ from wildcard.media import _
 from wildcard.media.async import queueJob
 from zope.interface import Invalid, invariant
 import json
-from plone.directives import form
+from plone.autoform import directives as form
 from plone.app.textfield import RichText
 
 
