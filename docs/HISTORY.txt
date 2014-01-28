@@ -4,6 +4,8 @@ Changelog
 1.0a2 (unreleased)
 ------------------
 
+- Upgrade MediaElement.js to 2.13.2.
+  [davidjb]
 - Switch to using ``plone.autoform`` for form directives rather
   than the old location in ``plone.directives.form``.
   [davidjb]
