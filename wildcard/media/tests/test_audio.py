@@ -107,6 +107,9 @@ class AudioFunctionalTest(unittest.TestCase):
         self.assertTrue('My audio' in self.browser.contents)
         self.assertTrue('This is my audio' in self.browser.contents)
         self.assertTrue('<audio' in self.browser.contents)
+        self.assertIn(
+            '++widget++form.widgets.IAudio.audio_file/@@stream',
+            self.browser.contents)
 
 
 def test_suite():

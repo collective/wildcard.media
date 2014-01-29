@@ -63,6 +63,13 @@
       />
 
   <browser:page
+    name="stream"
+    for=".widget.IStreamNamedFileWidget"
+    class=".widget.MediaStream"
+    permission="zope2.View"
+    />
+
+  <browser:page
     name="wildcard_video_macro"
     for=".interfaces.IVideoEnabled"
     class=".browser.VideoMacroView"
