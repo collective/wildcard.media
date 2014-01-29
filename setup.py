@@ -26,7 +26,8 @@ setup(name='wildcard.media',
           'plone.transformchain',
           'plone.app.dexterity',
           'plone.autoform',
-          'plone.app.textfield'
+          'plone.app.textfield',
+          'plone.app.blob'
       ],
       extras_require={
           'test': [

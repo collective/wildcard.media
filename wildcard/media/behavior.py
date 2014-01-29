@@ -9,6 +9,7 @@ from plone.autoform.interfaces import IFormFieldProvider
 from plone.namedfile import field as namedfile
 from wildcard.media import _
 from wildcard.media.async import queueJob
+from wildcard.media.widget import StreamNamedFileFieldWidget
 from zope.interface import Invalid, invariant
 import json
 from plone.autoform import directives as form
@@ -37,6 +38,7 @@ class IVideo(model.Schema):
     )
 
     # main file will always be converted to mp4
+    form.widget('video_file', StreamNamedFileFieldWidget)
     video_file = namedfile.NamedBlobFile(
         title=_(u"Video File"),
         description=u"",
@@ -46,12 +48,14 @@ class IVideo(model.Schema):
 
     form.omitted(IAddForm, 'video_file_ogv')
     form.omitted(IEditForm, 'video_file_ogv')
+    form.widget('video_file_ogv', StreamNamedFileFieldWidget)
     video_file_ogv = namedfile.NamedBlobFile(
         required=False,
     )
 
     form.omitted(IAddForm, 'video_file_webm')
     form.omitted(IEditForm, 'video_file_webm')
+    form.widget('video_file_webm', StreamNamedFileFieldWidget)
     video_file_webm = namedfile.NamedBlobFile(
         required=False,
     )
@@ -105,6 +109,7 @@ alsoProvides(IVideo, IFormFieldProvider)
 class IAudio(model.Schema):
 
     # main file will always be converted to mp4
+    form.widget('audio_file', StreamNamedFileFieldWidget)
     audio_file = namedfile.NamedBlobFile(
         title=_(u"Audio File"),
         description=u"",

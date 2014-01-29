@@ -4,6 +4,10 @@ Changelog
 1.0a2 (unreleased)
 ------------------
 
+- Add widget that supports streaming partial ranges of video content
+  from video and audio fields. This package now supports video seeking
+  in Chrome and iOS video display with content-range request support. 
+  [davidjb]
 - Configure CSS to apply prefix to local resources utilised for
   MediaElement.js. Previously, images used in CSS did not load
   when running outside of debug mode.

@@ -26,9 +26,8 @@ class MediaView(BrowserView):
 class AudioView(MediaView):
     def __call__(self):
         self.setUp()
-        self.audio_url = '%sIAudio.audio_file/@@download/%s' % (
+        self.audio_url = '%sIAudio.audio_file/@@stream' % (
             self.base_wurl,
-            self.context.audio_file.filename
         )
         return self.index()
 
@@ -46,17 +45,14 @@ class VideoMacroView(MediaView):
             format = getFormat(type_)
             if format:
                 types.append((format.type_,
-                              'video_file_%s' % format.extension))
+                              'video_file_' + format.extension))
         self.videos = []
         for (_type, fieldname) in types:
             file = getattr(context, fieldname, None)
             if file:
                 self.videos.append({
                     'type': _type,
-                    'url': '%s%s/@@download/%s' % (
-                        self.base_furl,
-                        fieldname,
-                        file.filename)
+                    'url': self.base_furl + fieldname + '/@@stream'
                 })
         if self.videos:
             self.mp4_url = self.videos[0]['url']

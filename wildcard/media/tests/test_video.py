@@ -12,6 +12,7 @@ from plone.app.testing import SITE_OWNER_PASSWORD
 from plone.testing.z2 import Browser
 
 from wildcard.media.interfaces import IVideoEnabled
+from wildcard.media.widget import MediaStream
 
 from wildcard.media.testing import (
     MEDIA_INTEGRATION_TESTING,
@@ -85,6 +86,33 @@ class VideoIntegrationTest(unittest.TestCase):
             '++widget++form.widgets.IVideo.video_file_ogv/@@download/test.ogv' in result)
         self.assertTrue(
             '++widget++form.widgets.IVideo.video_file_webm/@@download/test.webm' in result)
+
+    def test_media_range_request(self):
+        self.create('video3')
+        video = self.portal['video3']
+        alsoProvides(self.request, IPloneFormLayer)
+        view = video.restrictedTraverse('@@view')
+        result = view()
+
+        widget = view.widgets.get('IVideo.video_file')
+        stream = MediaStream(widget, self.request)
+
+        response = stream()
+        self.assertEqual(self.request.response.status, 200)
+        self.assertNotIn('Content-Range', self.request.response.headers)
+
+        for start in (0, 1000, 2000):
+            self.request.environ['HTTP_RANGE'] = 'bytes=%i-' % start
+            response = stream()
+            # Partial content responses for ranges
+            self.assertEqual(self.request.response.status, 206)
+            self.assertEqual(self.request.response.getHeader('Accept-Ranges'), 'bytes')
+            content_range =  self.request.response.getHeader('Content-Range')
+            self.assertIsNotNone(content_range)
+            self.assertTrue(content_range.startswith('bytes %i-' % start))
+
+
+
 
 
 class VideoFunctionalTest(unittest.TestCase):
