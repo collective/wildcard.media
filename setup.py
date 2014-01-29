@@ -21,6 +21,7 @@ setup(name='wildcard.media',
       namespace_packages=['wildcard'],
       include_package_data=True,
       zip_safe=False,
+      setup_requires=['setuptools-git'],
       install_requires=[
           'setuptools',
           'plone.transformchain',
