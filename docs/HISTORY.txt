@@ -4,6 +4,10 @@ Changelog
 1.0a2 (unreleased)
 ------------------
 
+- Configure CSS to apply prefix to local resources utilised for
+  MediaElement.js. Previously, images used in CSS did not load
+  when running outside of debug mode.
+  [davidjb]
 - Upgrade MediaElement.js to 2.13.2.
   [davidjb]
 - Switch to using ``plone.autoform`` for form directives rather

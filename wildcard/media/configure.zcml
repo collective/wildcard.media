@@ -24,6 +24,15 @@
       description="uninstalls the wildcard.media package"
       provides="Products.GenericSetup.interfaces.EXTENSION"
       />
+   <genericsetup:upgradeStep
+      title="Upgrade CSS resources"
+      description="Enable minified CSS and fix URL prefixes"
+      source="1000"
+      destination="1001"
+      handler="wildcard.media.upgrades.upgrade_css"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
 
   <permission
       id="wildcard.media.AddWildcardVideo"
