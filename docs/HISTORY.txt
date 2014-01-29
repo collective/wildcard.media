@@ -13,7 +13,7 @@ Changelog
 - Switch to using ``plone.autoform`` for form directives rather
   than the old location in ``plone.directives.form``.
   [davidjb]
-- Only omit ogv and webm video fields from edit forms; allows access to
+- Omit ogv and webm video fields from add and edit forms; allows access to
   field contents from main video view.
   [davidjb]
 - Fix video display <source> URLs to point to correct fields. Previously,
