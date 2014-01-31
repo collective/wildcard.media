@@ -33,6 +33,16 @@
       sortkey="1"
       profile="wildcard.media:default"
       />
+   <genericsetup:upgradeStep
+      title="Upgrade types definition"
+      description="fix video type definition"
+      source="1001"
+      destination="1002"
+      handler="wildcard.media.upgrades.upgrade_types"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
+
 
   <permission
       id="wildcard.media.AddWildcardVideo"

@@ -2,7 +2,7 @@
 <object name="portal_controlpanel" 
         meta_type="Plone Control Panel Tool"
         xmlns:i18n="http://xml.zope.org/namespaces/i18n" 
-        i18n:domain="collective.documentviewer">
+        i18n:domain="wildcard.media">
 
     <configlet title="Media Settings" action_id="wildcardmedia"
         appId="wildcard.media" category="Products" condition_expr=""
