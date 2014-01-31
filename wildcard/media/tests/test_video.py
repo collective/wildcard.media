@@ -80,39 +80,40 @@ class VideoIntegrationTest(unittest.TestCase):
         self.assertEqual(view.request.response.status, 200)
         self.assertTrue('My video' in result)
         self.assertTrue('This is my video.' in result)
-        self.assertTrue(
-            '++widget++form.widgets.IVideo.video_file/@@download/test.mp4' in result)
-        self.assertTrue(
-            '++widget++form.widgets.IVideo.video_file_ogv/@@download/test.ogv' in result)
-        self.assertTrue(
-            '++widget++form.widgets.IVideo.video_file_webm/@@download/test.webm' in result)
+        self.assertIn(
+            '++widget++form.widgets.IVideo.video_file/@@download/test.mp4',
+            result)
+        self.assertIn(
+            '++widget++form.widgets.IVideo.video_file_ogv/@@download/test.ogv',
+            result)
+        self.assertIn(
+            '++widget++form.widgets.IVideo.video_file_webm/@@download/test.webm',
+            result)
 
     def test_media_range_request(self):
         self.create('video3')
         video = self.portal['video3']
         alsoProvides(self.request, IPloneFormLayer)
         view = video.restrictedTraverse('@@view')
-        result = view()
+        view()
 
         widget = view.widgets.get('IVideo.video_file')
         stream = MediaStream(widget, self.request)
 
-        response = stream()
+        stream()
         self.assertEqual(self.request.response.status, 200)
         self.assertNotIn('Content-Range', self.request.response.headers)
 
         for start in (0, 1000, 2000):
             self.request.environ['HTTP_RANGE'] = 'bytes=%i-' % start
-            response = stream()
+            stream()
             # Partial content responses for ranges
             self.assertEqual(self.request.response.status, 206)
-            self.assertEqual(self.request.response.getHeader('Accept-Ranges'), 'bytes')
-            content_range =  self.request.response.getHeader('Content-Range')
+            self.assertEqual(self.request.response.getHeader('Accept-Ranges'),
+                             'bytes')
+            content_range = self.request.response.getHeader('Content-Range')
             self.assertIsNotNone(content_range)
             self.assertTrue(content_range.startswith('bytes %i-' % start))
-
-
-
 
 
 class VideoFunctionalTest(unittest.TestCase):
