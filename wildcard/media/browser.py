@@ -58,14 +58,14 @@ class VideoMacroView(MediaView):
             self.mp4_url = self.videos[0]['url']
         else:
             self.mp4_url = None
-        image = self.context.image
+        image = getattr(self.context, 'image', None)
         if image:
             self.image_url = '%s/@@images/image' % (
                 self.base_url
             )
         else:
             self.image_url = None
-        subtitles = self.context.subtitle_file
+        subtitles = getattr(self.context, 'subtitle_file', None)
         if subtitles:
             self.subtitles_url = '%ssubtitle_file/@@download/%s' % (
                 self.base_furl,

@@ -4,6 +4,9 @@ Changelog
 1.0a3 (unreleased)
 ------------------
 
+- handle no preview image being set
+  [vangheem]
+
 - fix video type definition
   [vangheem]
 
