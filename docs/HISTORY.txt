@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0a3 (unreleased)
+1.0a3 (2014-02-14)
 ------------------
 
 - handle no preview image being set
