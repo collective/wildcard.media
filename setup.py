@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.0a4.dev0'
+version = '1.0b1'
 
 setup(name='wildcard.media',
       version=version,
