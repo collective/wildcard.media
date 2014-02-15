@@ -21,6 +21,7 @@ from wildcard.media.testing import (
 from plone.app.testing import TEST_USER_ID, setRoles
 from plone.app.z3cform.interfaces import IPloneFormLayer
 from wildcard.media.tests import getAudioBlob, test_file_dir
+from plone.rfc822.interfaces import IPrimaryFieldInfo, IPrimaryField
 
 
 class AudioIntegrationTest(unittest.TestCase):
@@ -39,6 +40,7 @@ class AudioIntegrationTest(unittest.TestCase):
     def create(self, id):
         self.portal.invokeFactory('WildcardAudio', id,
                                   audio_file=getAudioBlob())
+        return self.portal[id]
 
     def test_schema(self):
         fti = self.getFti()
@@ -73,6 +75,12 @@ class AudioIntegrationTest(unittest.TestCase):
         self.assertEqual(view.request.response.status, 200)
         self.assertTrue('My Audio' in view())
         self.assertTrue('This is my audio.' in view())
+
+    def test_primary_field(self):
+        audio = self.create('audio')
+        info = IPrimaryFieldInfo(audio)
+        self.assertEquals(info.fieldname, 'audio_file')
+        self.assertTrue(IPrimaryField.providedBy(info.field))
 
 
 class AudioFunctionalTest(unittest.TestCase):

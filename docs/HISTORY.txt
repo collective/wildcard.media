@@ -4,6 +4,9 @@ Changelog
 1.0a4 (unreleased)
 ------------------
 
+- implement primary field
+  [vangheem]
+
 
 1.0a3 (2014-02-14)
 ------------------

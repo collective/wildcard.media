@@ -28,7 +28,9 @@ setup(name='wildcard.media',
           'plone.app.dexterity',
           'plone.autoform',
           'plone.app.textfield',
-          'plone.app.blob'
+          'plone.app.blob',
+          'plone.rfc822',
+          'plone.supermodel>=1.1'
       ],
       extras_require={
           'test': [

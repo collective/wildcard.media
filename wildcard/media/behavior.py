@@ -39,6 +39,7 @@ class IVideo(model.Schema):
 
     # main file will always be converted to mp4
     form.widget('video_file', StreamNamedFileFieldWidget)
+    model.primary('video_file')
     video_file = namedfile.NamedBlobFile(
         title=_(u"Video File"),
         description=u"",
@@ -110,6 +111,7 @@ class IAudio(model.Schema):
 
     # main file will always be converted to mp4
     form.widget('audio_file', StreamNamedFileFieldWidget)
+    model.primary('audio_file')
     audio_file = namedfile.NamedBlobFile(
         title=_(u"Audio File"),
         description=u"",

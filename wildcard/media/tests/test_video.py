@@ -23,6 +23,7 @@ from plone.app.testing import TEST_USER_ID, setRoles
 from plone.app.z3cform.interfaces import IPloneFormLayer
 from wildcard.media.tests import getVideoBlob, test_file_dir
 from wildcard.media.settings import GlobalSettings
+from plone.rfc822.interfaces import IPrimaryFieldInfo, IPrimaryField
 
 
 class VideoIntegrationTest(unittest.TestCase):
@@ -45,6 +46,7 @@ class VideoIntegrationTest(unittest.TestCase):
                                   video_file=getVideoBlob('mp4'),
                                   video_file_ogv=getVideoBlob('ogv'),
                                   video_file_webm=getVideoBlob('webm'))
+        return self.portal[id]
 
     def test_schema(self):
         fti = self.getFti()
@@ -114,6 +116,12 @@ class VideoIntegrationTest(unittest.TestCase):
             content_range = self.request.response.getHeader('Content-Range')
             self.assertIsNotNone(content_range)
             self.assertTrue(content_range.startswith('bytes %i-' % start))
+
+    def test_primary_field(self):
+        video = self.create('video')
+        info = IPrimaryFieldInfo(video)
+        self.assertEquals(info.fieldname, 'video_file')
+        self.assertTrue(IPrimaryField.providedBy(info.field))
 
 
 class VideoFunctionalTest(unittest.TestCase):
