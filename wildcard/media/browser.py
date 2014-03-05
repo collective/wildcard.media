@@ -9,7 +9,7 @@ from wildcard.media import _
 from wildcard.media.settings import GlobalSettings
 from wildcard.media.config import getFormat
 from wildcard.media.async import queueJob
-from wildcard.media.interfaces import IVideoEnabled
+from wildcard.media.interfaces import IMediaEnabled
 
 
 class MediaView(BrowserView):
@@ -110,4 +110,4 @@ class ConvertVideo(BrowserView):
 class Utils(BrowserView):
 
     def valid_type(self):
-        return IVideoEnabled.providedBy(self.context)
+        return IMediaEnabled.providedBy(self.context)

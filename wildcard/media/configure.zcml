@@ -104,7 +104,7 @@
   />
   <browser:page
     name="convert-video"
-    for=".interfaces.IAudioEnabled"
+    for=".interfaces.IMediaEnabled"
     class=".browser.ConvertVideo"
     permission="cmf.ModifyPortalContent"
     layer=".interfaces.ILayer"

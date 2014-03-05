@@ -4,6 +4,8 @@ Changelog
 1.0b2 (unreleased)
 ------------------
 
+- fix convert video
+  [vangheem]
 
 1.0b1 (2014-02-15)
 ------------------
