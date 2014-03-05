@@ -42,6 +42,15 @@
       sortkey="1"
       profile="wildcard.media:default"
       />
+   <genericsetup:upgradeStep
+      title="Upgrade types definition"
+      description="Fix typo in video type definition"
+      source="1002"
+      destination="1003"
+      handler="wildcard.media.upgrades.upgrade_types"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
 
 
   <permission

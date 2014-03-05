@@ -13,7 +13,7 @@
  <property name="allow_discussion">False</property>
  <property name="default_view">wildcard_audio_view</property>
  <property name="view_methods">
-  <element value="wildcard_audio_view "/>
+  <element value="wildcard_audio_view"/>
  </property>
  <property name="default_view_fallback">True</property>
  <property name="add_permission">wildcard.media.AddWildcardAudio</property>

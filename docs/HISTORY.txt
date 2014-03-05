@@ -1,11 +1,16 @@
 Changelog
 =========
 
-1.0b2 (unreleased)
+1.0b2 (2014-03-05)
 ------------------
 
 - fix convert video
   [vangheem]
+
+- Fix minor typo in available views for audio/video types. This previously
+  prevented saving type settings via the control panel.
+  [davidjb] 
+
 
 1.0b1 (2014-02-15)
 ------------------
