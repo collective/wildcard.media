@@ -12,6 +12,14 @@
             $('video.active').mediaelementplayer();
           });
       </script>
+
+      <meta property="og:type" content="video.movie" />
+      <meta property="og:url"
+            tal:attributes="content string:${context/absolute_url}/@@view/++widget++form.widgets.IVideo.video_file/@@download" />
+      <meta property="og:title"
+            tal:attributes="content context/Title" />
+      <meta property="og:image"
+            tal:attributes="content string:${context/absolute_url}/@@images/image" />
   </metal:js>
 
 <body>

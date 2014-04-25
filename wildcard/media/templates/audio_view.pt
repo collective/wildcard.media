@@ -12,6 +12,11 @@
             $('audio.active').mediaelementplayer(/* Options */);
           });
       </script>
+      <meta property="og:type" content="music.song" />
+      <meta property="og:url"
+            tal:attributes="content ${context/absolute_url}/@@view/++widget++form.widgets.IAudio.audio_file/@@download" />
+      <meta property="og:title"
+            tal:attributes="content context/Title" />
   </metal:js>
 
 <body>
