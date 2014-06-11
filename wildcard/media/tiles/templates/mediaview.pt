@@ -1,0 +1,45 @@
+<html
+    xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:metal="http://xml.zope.org/namespaces/metal"
+    xmlns:tal="http://xml.zope.org/namespaces/tal"
+    xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+    i18n:domain="collective.cover">
+
+<body tal:define="is_empty view/is_empty">
+    <p tal:condition="python: is_empty and view.is_compose_mode()" i18n:translate="">
+        Please drag &amp; drop a video file here.
+    </p>
+
+    <div tal:condition="not: is_empty" class="cover-file-tile tile-content">
+        <tal:fields repeat="field view/get_configured_fields">
+            <tal:title define="htmltag python:field.get('htmltag', 'h1')" condition="python:field['id'] == 'title'">
+                <h1 tal:condition="python:htmltag == 'h1'" tal:content="python:field['content']" />
+                <h2 tal:condition="python:htmltag == 'h2'" tal:content="python:field['content']" />
+                <h3 tal:condition="python:htmltag == 'h3'" tal:content="python:field['content']" />
+            </tal:title>
+            <tal:description condition="python:field['id'] == 'description'">
+                <p tal:content="python:field['content']">Description</p>
+            </tal:description>
+        </tal:fields>
+        <div
+            tal:condition="view/is_video"
+            tal:define="media_context python:view.media_context()"
+            tal:replace="structure media_context/@@wildcard_video_macro" />
+        <div tal:condition="not: view/is_video">
+            <audio controls="controls" preload="none" class="active"
+                   tal:attributes="src view/media_absolute_url;">
+            </audio>
+        </div>
+        <script tal:condition="view/is_video">
+            $(document).ready(function(){
+                $('video.active').mediaelementplayer();
+            });
+        </script>
+        <script tal:condition="not: view/is_video">
+            $(document).ready(function(){
+                $('audio.active').mediaelementplayer();
+            });
+        </script>
+    </div>
+</body>
+</html>

@@ -5,10 +5,12 @@
     xmlns:plone="http://namespaces.plone.org/plone"
     xmlns:browser="http://namespaces.zope.org/browser"
     xmlns:five="http://namespaces.zope.org/five"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
     i18n_domain="wildcard.media">
 
   <five:registerPackage package="." initialize=".initialize" />
   <include package="plone.app.dexterity" />
+  <include package=".tiles" file="configure.zcml" zcml:condition="installed collective.cover"/>
 
   <genericsetup:registerProfile
       name="default"
