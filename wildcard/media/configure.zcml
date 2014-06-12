@@ -53,6 +53,15 @@
       sortkey="1"
       profile="wildcard.media:default"
       />
+   <genericsetup:upgradeStep
+      title="Upgrade registry"
+      description="Add collective.cover tile support"
+      source="1003"
+      destination="1004"
+      handler="wildcard.media.upgrades.upgrade_registry"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
 
 
   <permission
