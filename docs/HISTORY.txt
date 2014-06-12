@@ -1,13 +1,15 @@
 Changelog
 =========
 
-1.2 (unreleased)
-----------------
+1.2b1 (2014-06-12)
+------------------
 
 - Upgrade MediaElement.js to 2.14.2.
   [davidjb]
 - Remove extraneous files from MediaElement.js distribution.
   [davidjb]
+- Add collective.cover tile
+  [zombified]
 
 
 1.1 (2014-04-25)
