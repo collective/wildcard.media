@@ -56,7 +56,7 @@ class MediaViewTile(PersistentCoverTile):
         data_mgr.set({
             'title': title,
             'description': desc,
-            'uuid': uuid
+            'uuid': uuid,
         })
 
     def accepted_ct(self):
@@ -82,3 +82,4 @@ class MediaViewTile(PersistentCoverTile):
             return ''
         obj = uuidToObject(uuid)
         return obj.portal_type == "WildcardVideo"
+
