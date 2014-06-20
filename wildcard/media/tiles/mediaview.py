@@ -51,16 +51,12 @@ class MediaViewTile(PersistentCoverTile):
         title = safe_unicode(obj.Title())
         desc = safe_unicode(obj.Description())
         uuid = IUUID(obj)
-        media_height = getattr(obj, "height", "")
-        media_width = getattr(obj, "width", "")
 
         data_mgr = ITileDataManager(self)
         data_mgr.set({
             'title': title,
             'description': desc,
             'uuid': uuid,
-            'media_height': media_height,
-            'media_width': media_width
         })
 
     def accepted_ct(self):
