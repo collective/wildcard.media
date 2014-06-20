@@ -31,13 +31,15 @@
             </audio>
         </div>
         <script tal:condition="view/is_video">
-            $(document).ready(function(){
-                $('video.active').mediaelementplayer();
+            var videoplayer = new MediaElementPlayer('video', {
+                videoWidth: '100%',
+                videoHeight: '100%',
+                enableAutoSize: true
             });
         </script>
         <script tal:condition="not: view/is_video">
             $(document).ready(function(){
-                $('audio.active').mediaelementplayer();
+                $('audio').mediaelementplayer();
             });
         </script>
     </div>
