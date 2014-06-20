@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Unreleased
-----------
+1.2b2 (2014-06-20)
+------------------
 
 - Enabled auto resizing of video element in tile
   [zombified]
