@@ -84,8 +84,8 @@ class IVideo(model.Schema):
     )
 
     subtitle_file = namedfile.NamedBlobFile(
-        title=u"Subtitle file",
-        description=u"srt file format",
+        title=_(u"Subtitle file"),
+        description=_(u"Provide a file in srt format"),
         required=False
     )
 
@@ -95,7 +95,7 @@ class IVideo(model.Schema):
     )
 
     transcript = RichText(
-        title=u"Transcript",
+        title=_(u"Transcript"),
         default_mime_type='text/html',
         output_mime_type='text/html',
         allowed_mime_types=('text/html', 'text/plain'),
@@ -125,7 +125,7 @@ class IAudio(model.Schema):
     )
 
     transcript = RichText(
-        title=u"Transcript",
+        title=_(u"Transcript"),
         default_mime_type='text/html',
         output_mime_type='text/html',
         allowed_mime_types=('text/html', 'text/plain'),

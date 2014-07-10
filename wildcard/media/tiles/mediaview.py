@@ -4,6 +4,7 @@ from plone.app.uuid.utils import uuidToObject
 from plone.tiles.interfaces import ITileDataManager
 from plone.uuid.interfaces import IUUID
 from Products.CMFPlone.utils import safe_unicode
+from Products.CMFPlone import PloneMessageFactory as pmf
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from zope import schema
 from zope.interface import implements
@@ -11,19 +12,20 @@ from zope.interface import implements
 from wildcard.media import _
 
 
+
 class IMediaViewTile(IPersistentCoverTile):
     title = schema.TextLine(
-        title=_(u'Title'),
+        title=pmf(u'Title'),
         required=False
     )
 
     description = schema.Text(
-        title=_(u'Description'),
+        title=pmf(u'Description'),
         required=False
     )
 
     uuid = schema.TextLine(
-        title=_(u'UUID'),
+        title=pmf(u'UUID'),
         required=False,
         readonly=True
     )

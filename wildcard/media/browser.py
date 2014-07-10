@@ -1,5 +1,6 @@
 from Products.Five import BrowserView
 from Products.CMFCore.utils import getToolByName
+from Products.CMFPlone import PloneMessageFactory as pmf
 from wildcard.media.interfaces import IGlobalMediaSettings
 from z3c.form import form
 from z3c.form import field
@@ -82,12 +83,11 @@ class VideoMacroView(MediaView):
 class GlobalSettingsForm(form.EditForm):
     fields = field.Fields(IGlobalMediaSettings)
 
-    label = _(u'heading_media_global_settings_form',
-              default=u"Media Settings")
+    label = _(u"Media Settings")
     description = _(u'description_media_global_settings_form',
                     default=u"Configure the parameters for media.")
 
-    @button.buttonAndHandler(_('Save'), name='apply')
+    @button.buttonAndHandler(pmf('Save'), name='apply')
     def handleApply(self, action):
         data, errors = self.extractData()
         if errors:
@@ -96,7 +96,7 @@ class GlobalSettingsForm(form.EditForm):
 
         self.applyChanges(data)
 
-        self.status = _('Changes saved.')
+        self.status = pmf('Changes saved.')
 
 GlobalSettingsFormView = wrap_form(GlobalSettingsForm)
 

@@ -9,6 +9,7 @@
     i18n_domain="wildcard.media">
 
   <five:registerPackage package="." initialize=".initialize" />
+  <i18n:registerTranslations directory="locales" />
   <include package="plone.app.dexterity" />
   <include package=".tiles" file="configure.zcml" zcml:condition="installed collective.cover"/>
 
