@@ -137,6 +137,7 @@
     allowed_interface=".interfaces.IUtils"
     layer=".interfaces.ILayer" />
 
+<configure zcml:condition="installed Products.CMFPlone.interfaces.syndication">
   <adapter
     factory=".syndication.AudioFeedItem"
     for="wildcard.media.interfaces.IAudioEnabled
@@ -147,6 +148,7 @@
     for="wildcard.media.interfaces.IVideoEnabled
          Products.CMFPlone.interfaces.syndication.IFeed"
     provides="Products.CMFPlone.interfaces.syndication.IFeedItem" />
+</configure>
 
   <adapter name="SearchableText" factory=".indexers.MediaSearchableText" />
 
