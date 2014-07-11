@@ -3,12 +3,12 @@
 
     <javascript 
         cacheable="True" compression="safe" 
-        enabled="True" inline="False" bundle="default"
+        enabled="True" inline="False"
         id="++resource++wildcard-media/mediaelementjs/mediaelement-and-player.min.js"
         />
     <javascript 
         cacheable="True" compression="safe" 
-        enabled="True" inline="False" bundle="default"
+        enabled="True" inline="False"
         id="++resource++wildcard-media/integration.js"
         />
 
