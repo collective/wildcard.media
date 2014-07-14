@@ -20,7 +20,7 @@
             $video.find('[height]').attr('height', height);
           }
           $span.replaceWith($video);
-          $video.find('video').mediaelementplayer();
+          $video.find('video').mediaelementplayer({pluginPath: '++resource++wildcard-media/mediaelementjs/'});
         }
       });
     });
