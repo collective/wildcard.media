@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<registry>
+	<!-- TODO: remove the entry for tiles -->
+    <record name="plone.app.tiles">
+        <field type="plone.registry.field.List">
+            <title>Tiles</title>
+            <value_type type="plone.registry.field.TextLine" />
+        </field>
+        <value purge="false">
+            <element remove="True">collective.cover.mediaview</element>
+        </value>
+    </record>
+</registry>

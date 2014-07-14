@@ -6,7 +6,10 @@ Changelog
 
 - Enabled auto resizing of video element in tile
   [zombified]
-
+- i18n support and italian translation
+  [keul]
+- More complete uninstall profile
+  [keul]
 
 1.2b1 (2014-06-12)
 ------------------

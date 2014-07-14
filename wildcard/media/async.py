@@ -125,7 +125,7 @@ def queueJob(obj):
         except:
             logger.exception(
                 "Error using plone.app.async with "
-                "collective.documentviewer. Converting pdf without "
+                "wildcard.media. Converting video without "
                 "plone.app.async...")
             runConversion(obj)
     else:

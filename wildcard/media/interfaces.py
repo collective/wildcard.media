@@ -32,11 +32,12 @@ for format in CONVERTABLE_FORMATS:
 class IGlobalMediaSettings(Interface):
     additional_video_formats = schema.List(
         title=_("Additional Video Formats"),
-        description=_(u"To provide better HTML5 support, different video "
-                      u"formats are generated via avconv(formerly ffmpeg). "
-                      u"If you'd prefer to save on disc space, but provide "
-                      u"less HTML5 support, change the additional video "
-                      u"formats that are generated here"),
+        description=_('additional_video_formats_help',
+                      default=u"To provide better HTML5 support, different video "
+                              u"formats are generated via avconv (formerly ffmpeg). "
+                              u"If you'd prefer to save on disc space, but provide "
+                              u"less HTML5 support, change the additional video "
+                              u"formats that are generated here"),
         default=['ogg', 'webm'],
         value_type=schema.Choice(
             vocabulary=SimpleVocabulary(VIDEO_FORMATS_VOCAB)
