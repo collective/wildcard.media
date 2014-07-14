@@ -9,7 +9,7 @@
   <metal:js fill-slot="javascript_head_slot">
       <script>
           $(document).ready(function(){
-            $('audio.active').mediaelementplayer(/* Options */);
+            $('audio.active').mediaelementplayer({pluginPath: '++resource++wildcard-media/mediaelementjs/'});
           });
       </script>
       <meta property="og:type" content="music.song" />
