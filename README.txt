@@ -10,7 +10,7 @@ Features
 --------
 
 - Audio and Video types
-- Integration with mediaelementjs
+- Integration with mediaelementjs designed for maximum forward and backwards compatibility
 - Automatically convert video types to HTML5 compatible video formats
 - Be able to add video from TinyMCE by adding a link to the audio or video
   objects and then adding one of the available Audio and Video TinyMCE styles.
@@ -26,10 +26,10 @@ which provides the `avconv` collection of command line utilities.
 
 On Ubuntu, you should be able to install with::
 
-    sudo apt-get install ffmpeg
+    sudo apt-get install avconv
 
 
 Support
 -------
 
-Only tested on Plone 4.3
+Only tested on Plone 4.3, Plone 4.1
