@@ -11,6 +11,7 @@ from wildcard.media.settings import GlobalSettings
 from wildcard.media.config import getFormat
 from wildcard.media.async import queueJob
 from wildcard.media.interfaces import IMediaEnabled
+import urllib
 
 
 class MediaView(BrowserView):
@@ -78,6 +79,9 @@ class VideoMacroView(MediaView):
         self.width = getattr(context, 'width', 640)
         self.height = getattr(context, 'height', 320)
         return self.index()
+
+    def mp4_url_quoted(self):
+        return urllib.quote_plus(self.mp4_url)
 
 
 class GlobalSettingsForm(form.EditForm):
