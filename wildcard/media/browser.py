@@ -80,9 +80,19 @@ class VideoMacroView(MediaView):
         self.height = getattr(context, 'height', 320)
         return self.index()
 
+    @property
     def mp4_url_quoted(self):
-        return urllib.quote_plus(self.mp4_url)
+        if self.mp4_url:
+            return urllib.quote_plus(self.mp4_url)
+        else:
+            return self.mp4_url
 
+    @property
+    def image_url_quoted(self):
+        if self.image_url:
+            return urllib.quote_plus(self.image_url)
+        else:
+            return self.image_url
 
 class GlobalSettingsForm(form.EditForm):
     fields = field.Fields(IGlobalMediaSettings)
