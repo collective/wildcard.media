@@ -17,7 +17,7 @@
                                 width view/width|string:320;
                                 height view/height|string:240;">
             <param name="movie" value="flashmediaelement.swf"
-                  tal:attributes="data string:${view/mstatic}/flashmediaelement.swf"/>
+                  tal:attributes="value string:${view/mstatic}/flashmediaelement.swf"/>
             <param name="flashvars" value="controls=true&file=myvideo.mp4"
                   tal:attributes="value string:controls=true&file=${view/mp4_url}" />
             <param name="allowFullScreen" value="true" />
