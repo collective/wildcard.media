@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.2b3 (unreleased)
+------------------
+
+- Fix issues with flash fallback (such as on IE8) [djay]
+- Fix documentation to install avconv [djay]
+- Fix to enable fullscreen mode in flash fallback mode [djay]
+
+
+
 1.2b2 (2014-06-20)
 ------------------
 
