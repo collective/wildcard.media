@@ -26,7 +26,7 @@ which provides the `avconv` collection of command line utilities.
 
 On Ubuntu, you should be able to install with::
 
-    sudo apt-get install avconv
+    sudo apt-get install libav-tools
 
 
 Support
