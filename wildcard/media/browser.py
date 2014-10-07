@@ -28,9 +28,11 @@ class MediaView(BrowserView):
 class AudioView(MediaView):
     def __call__(self):
         self.setUp()
-        self.audio_url = '%sIAudio.audio_file/@@stream' % (
+        self.audio_url = '%sIAudio.audio_file/@@download/%s' % (
             self.base_wurl,
+            self.context.audio_file.filename
         )
+        self.ct = self.context.audio_file.contentType
         return self.index()
 
 
@@ -93,6 +95,7 @@ class VideoMacroView(MediaView):
             return urllib.quote_plus(self.image_url)
         else:
             return self.image_url
+
 
 class GlobalSettingsForm(form.EditForm):
     fields = field.Fields(IGlobalMediaSettings)

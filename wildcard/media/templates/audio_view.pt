@@ -24,7 +24,7 @@
 <metal:content-core fill-slot="content-core">
     <metal:content-core define-macro="content-core">
         <audio controls="controls" preload="none" class="active"
-               tal:attributes="src view/audio_url;">
+               tal:attributes="src view/audio_url; type view/ct">
         </audio>
         <div class="transcript-text" tal:content="structure context/transcript/output|nothing" />
     </metal:content-core>
