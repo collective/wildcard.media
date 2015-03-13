@@ -53,3 +53,18 @@ class IGlobalMediaSettings(Interface):
 class IUtils(Interface):
     def valid_type(self):
         pass
+
+    def videos(self):
+        pass
+
+    def mp4_url(self):
+        pass
+
+    def image_url(self):
+        pass
+
+    def mp4_url_quoted(self):
+        pass
+
+    def image_url_quoted(self):
+        pass

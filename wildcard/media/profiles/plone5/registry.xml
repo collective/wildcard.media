@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <registry>
+
   <records prefix="plone.bundles/wildcard-media"
             interface='Products.CMFPlone.interfaces.IBundleRegistry'>
     <value key="enabled">True</value>

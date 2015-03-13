@@ -12,89 +12,28 @@ from wildcard.media.config import getFormat
 from wildcard.media.async import queueJob
 from wildcard.media.interfaces import IMediaEnabled
 import urllib
+from plone.memoize.instance import memoize
 
 
 class MediaView(BrowserView):
-    def setUp(self):
-        context = self.context
-        self.portal = getToolByName(context, 'portal_url').getPortalObject()
-        portal_url = self.portal.absolute_url()
-        self.base_url = context.absolute_url()
-        self.base_wurl = self.base_url + '/@@view/++widget++form.widgets.'
-        self.static = portal_url + '/++resource++wildcard-media'
-        self.mstatic = self.static + '/mediaelementjs'
+
+    @property
+    @memoize
+    def mstatic(self):
+        portal = getToolByName(self.context, 'portal_url').getPortalObject()
+        portal_url = portal.absolute_url()
+        static = portal_url + '/++resource++wildcard-media'
+        return static + '/components/mediaelement/build'
 
 
 class AudioView(MediaView):
     def __call__(self):
-        self.setUp()
         self.audio_url = '%sIAudio.audio_file/@@download/%s' % (
             self.base_wurl,
             self.context.audio_file.filename
         )
         self.ct = self.context.audio_file.contentType
         return self.index()
-
-
-class VideoMacroView(MediaView):
-
-    def __call__(self):
-        context = self.context
-        self.setUp()
-
-        self.base_furl = self.base_wurl + 'IVideo.'
-        types = [('mp4', 'video_file')]
-        settings = GlobalSettings(self.portal)
-        for type_ in settings.additional_video_formats:
-            format = getFormat(type_)
-            if format:
-                types.append((format.type_,
-                              'video_file_' + format.extension))
-        self.videos = []
-        for (_type, fieldname) in types:
-            file = getattr(context, fieldname, None)
-            if file:
-                self.videos.append({
-                    'type': _type,
-                    'url': self.base_furl + fieldname + '/@@stream'
-                })
-        if self.videos:
-            self.mp4_url = self.videos[0]['url']
-        else:
-            self.mp4_url = None
-        image = getattr(self.context, 'image', None)
-        if image:
-            self.image_url = '%s/@@images/image' % (
-                self.base_url
-            )
-        else:
-            self.image_url = None
-        subtitles = getattr(self.context, 'subtitle_file', None)
-        if subtitles:
-            self.subtitles_url = '%ssubtitle_file/@@download/%s' % (
-                self.base_furl,
-                subtitles.filename
-            )
-        else:
-            self.subtitles_url = None
-
-        self.width = getattr(context, 'width', 640)
-        self.height = getattr(context, 'height', 320)
-        return self.index()
-
-    @property
-    def mp4_url_quoted(self):
-        if self.mp4_url:
-            return urllib.quote_plus(self.mp4_url)
-        else:
-            return self.mp4_url
-
-    @property
-    def image_url_quoted(self):
-        if self.image_url:
-            return urllib.quote_plus(self.image_url)
-        else:
-            return self.image_url
 
 
 class GlobalSettingsForm(form.EditForm):
@@ -124,7 +63,75 @@ class ConvertVideo(BrowserView):
         self.request.response.redirect(self.context.absolute_url())
 
 
-class Utils(BrowserView):
+class Utils(MediaView):
 
     def valid_type(self):
         return IMediaEnabled.providedBy(self.context)
+
+    @memoize
+    def videos(self):
+        base_url = self.context.absolute_url()
+        base_wurl = base_url + '/@@view/++widget++form.widgets.'
+        base_furl = base_wurl + 'IVideo.'
+        types = [('mp4', 'video_file')]
+        settings = GlobalSettings(
+            getToolByName(self.context, 'portal_url').getPortalObject())
+        for type_ in settings.additional_video_formats:
+            format = getFormat(type_)
+            if format:
+                types.append((format.type_,
+                              'video_file_' + format.extension))
+        videos = []
+        for (_type, fieldname) in types:
+            file = getattr(self.context, fieldname, None)
+            if file:
+                videos.append({
+                    'type': _type,
+                    'url': base_furl + fieldname + '/@@stream'
+                })
+        return videos
+
+    @memoize
+    def mp4_url(self):
+        videos = self.videos()
+        if videos:
+            return videos[0]['url']
+        else:
+            return None
+
+    @memoize
+    def subtitles_url(self):
+        subtitles = getattr(self.context, 'subtitle_file', None)
+        if subtitles:
+            return '%ssubtitle_file/@@download/%s' % (
+                self.base_furl,
+                subtitles.filename
+            )
+        else:
+            return None
+
+    @memoize
+    def image_url(self):
+        image = getattr(self.context, 'image', None)
+        if image:
+            return '%s/@@images/image' % (
+                self.base_url
+            )
+        else:
+            return None
+
+    @memoize
+    def mp4_url_quoted(self):
+        url = self.mp4_url()
+        if url:
+            return urllib.quote_plus(url)
+        else:
+            return url
+
+    @memoize
+    def image_url_quoted(self):
+        url = self.image_url()
+        if url:
+            return urllib.quote_plus(url)
+        else:
+            return url

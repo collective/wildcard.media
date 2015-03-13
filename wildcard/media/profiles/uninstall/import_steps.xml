@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<import-steps>
+    <import-step id="wildcard.media.uninstall" version="3"
+        handler="wildcard.media.exportimport.uninstall"
+        title="Uninstall step for wildcard.media">
+    </import-step>
+</import-steps>

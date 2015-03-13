@@ -118,7 +118,6 @@
   <browser:page
     name="wildcard_video_macro"
     for=".interfaces.IVideoEnabled"
-    class=".browser.VideoMacroView"
     template="templates/video_macro.pt"
     permission="zope2.View"
     layer=".interfaces.ILayer"

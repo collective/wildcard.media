@@ -20,8 +20,8 @@
 <body>
 
 <metal:content-core fill-slot="content-core">
-    <metal:content-core define-macro="content-core">
-        <div tal:replace="structure context/@@wildcard_video_macro" />
+    <metal:content-core define-macro="content-core" tal:define="video context">
+        <div metal:use-macro="context/wildcard_video_macro/macros/video" />
         <div class="transcript-text" tal:content="structure context/transcript/output|nothing" />
     </metal:content-core>
 </metal:content-core>
