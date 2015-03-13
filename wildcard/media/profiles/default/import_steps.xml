@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<import-steps>
-    <import-step id="wildcard.media.install" version="3"
-        handler="wildcard.media.exportimport.install"
-        title="Installing step for wildcard.media">
-    </import-step>
-</import-steps>

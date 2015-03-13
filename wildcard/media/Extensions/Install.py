@@ -3,12 +3,18 @@ try:
 except ImportError:
     from zope.component.hooks import getSite
 from Products.CMFCore.utils import getToolByName
+from Products.CMFPlone.utils import getFSVersionTuple
 
 
 def install(context):
     setup = getToolByName(context, 'portal_setup')
     setup.runAllImportStepsFromProfile(
         'profile-wildcard.media:default')
+
+    if getFSVersionTuple()[0] == 4:
+        setup.runAllImportStepsFromProfile('profile-wildcard.media:plone4')
+    else:
+        setup.runAllImportStepsFromProfile('profile-wildcard.media:plone5')
 
 
 def uninstall(context, reinstall=False):
