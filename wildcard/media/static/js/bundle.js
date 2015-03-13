@@ -2,11 +2,16 @@
 
 require([
   'jquery',
+  'pat-registry',
   'wildcard-patterns-video'
-  ], function($){
+  ], function($, Registry){
   'use strict';
 
   $(document).ready(function(){
+    if (!Registry.initialized) {
+      Registry.init();
+    }
+
     $('span.wcvideo a').each(function(){
       var $a = $(this);
       var $span = $a.parents('span.wcvideo');
