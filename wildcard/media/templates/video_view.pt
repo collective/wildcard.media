@@ -24,11 +24,6 @@
         <div tal:replace="structure context/@@wildcard_video_macro" />
         <div class="transcript-text" tal:content="structure context/transcript/output|nothing" />
     </metal:content-core>
-      <script>
-          $(document).ready(function(){
-            $('video.active').mediaelementplayer({pluginPath: '++resource++wildcard-media/mediaelementjs/'});
-          });
-      </script>
 </metal:content-core>
 
 </body>

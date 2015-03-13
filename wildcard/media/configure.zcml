@@ -21,12 +21,27 @@
       provides="Products.GenericSetup.interfaces.EXTENSION"
       />
   <genericsetup:registerProfile
+      name="plone4"
+      title="wildcard.media plone4"
+      directory="profiles/plone4"
+      description="Installs plone4 specific wildcard.media steps"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+  <genericsetup:registerProfile
+      name="plone5"
+      title="wildcard.media plone5"
+      directory="profiles/plone5"
+      description="Installs plone5 specific wildcard.media steps"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+  <genericsetup:registerProfile
       name="uninstall"
       title="wildcard.media uninstall"
       directory="profiles/uninstall"
       description="uninstalls the wildcard.media package"
       provides="Products.GenericSetup.interfaces.EXTENSION"
       />
+
    <genericsetup:upgradeStep
       title="Upgrade CSS resources"
       description="Enable minified CSS and fix URL prefixes"

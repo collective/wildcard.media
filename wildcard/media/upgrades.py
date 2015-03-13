@@ -1,7 +1,7 @@
 from Products.CMFPlone.utils import getToolByName
 
 
-PROFILE_ID='profile-wildcard.media:default'
+PROFILE_ID = 'profile-wildcard.media:default'
 
 
 def upgrade_css(context, logger=None):

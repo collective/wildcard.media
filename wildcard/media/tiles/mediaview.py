@@ -12,7 +12,6 @@ from zope.interface import implements
 from wildcard.media import _
 
 
-
 class IMediaViewTile(IPersistentCoverTile):
     title = schema.TextLine(
         title=pmf(u'Title'),
@@ -62,7 +61,7 @@ class MediaViewTile(PersistentCoverTile):
         })
 
     def accepted_ct(self):
-        return ['WildcardVideo','WildcardAudio']
+        return ['WildcardVideo', 'WildcardAudio']
 
     def media_absolute_url(self):
         uuid = self.data.get('uuid', None)
@@ -84,4 +83,3 @@ class MediaViewTile(PersistentCoverTile):
             return ''
         obj = uuidToObject(uuid)
         return obj.portal_type == "WildcardVideo"
-

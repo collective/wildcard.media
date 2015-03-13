@@ -1,6 +1,12 @@
 Changelog
 =========
 
+2.0a1 (unreleased)
+------------------
+
+- plone 5 compatibility
+  [vangheem]
+
 
 1.2b5 (2014-09-07)
 ------------------

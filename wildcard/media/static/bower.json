@@ -1,0 +1,13 @@
+{
+  "name": "wildcard.media",
+  "version": "2.0",
+  "private": true,
+  "description": "",
+  "dependencies": {
+    "mediaelement": "2.16.4",
+    "mockup-core": "2.1.5"
+  },
+  "resolutions": {
+    "jquery": "1.11.1"
+  }
+}
