@@ -2,7 +2,7 @@
 <object name="portal_css">
 
     <stylesheet enabled="True" applyPrefix="True"
-        id="++resource++wildcard-media/mediaelementjs/mediaelementplayer.css"
+        id="++resource++wildcard-media/components/mediaelement/build/mediaelementplayer.css"
         />
 
 </object>
