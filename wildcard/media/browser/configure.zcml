@@ -1,0 +1,98 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="wildcard.media">
+
+  <browser:page
+    name="stream"
+    for=".widget.IStreamNamedFileWidget"
+    class=".widget.MediaStream"
+    permission="zope2.View"
+    />
+
+  <browser:page
+    name="wildcard_video_macro"
+    for="..interfaces.IVideoEnabled"
+    template="templates/video_macro.pt"
+    permission="zope2.View"
+    layer="..interfaces.ILayer"
+  />
+  <browser:page
+    name="wildcard_video_view"
+    for="..interfaces.IVideoEnabled"
+    template="templates/video_view.pt"
+    permission="zope2.View"
+    layer="..interfaces.ILayer"
+  />
+  <browser:page
+    name="wildcard_audio_view"
+    for="..interfaces.IAudioEnabled"
+    class=".views.AudioView"
+    template="templates/audio_view.pt"
+    permission="zope2.View"
+    layer="..interfaces.ILayer"
+  />
+  <browser:page
+    name="convert-video"
+    for="..interfaces.IMediaEnabled"
+    class=".views.ConvertVideo"
+    permission="cmf.ModifyPortalContent"
+    layer="..interfaces.ILayer"
+  />
+  <browser:page
+    name="wcmedia-utils"
+    for="*"
+    permission="zope2.View"
+    class=".views.Utils"
+    allowed_interface="..interfaces.IUtils"
+    layer="..interfaces.ILayer" />
+  <browser:page
+    name="authorize-google"
+    for="Products.CMFCore.interfaces._content.ISiteRoot"
+    class=".views.AuthorizeGoogle"
+    layer="..interfaces.ILayer"
+    permission="cmf.ManagePortal" />
+
+
+  <configure zcml:condition="installed Products.CMFPlone.interfaces.syndication">
+    <adapter
+      factory=".syndication.AudioFeedItem"
+      for="wildcard.media.interfaces.IAudioEnabled
+           Products.CMFPlone.interfaces.syndication.IFeed"
+      provides="Products.CMFPlone.interfaces.syndication.IFeedItem" />
+    <adapter
+      factory=".syndication.VideoFeedItem"
+      for="wildcard.media.interfaces.IVideoEnabled
+           Products.CMFPlone.interfaces.syndication.IFeed"
+      provides="Products.CMFPlone.interfaces.syndication.IFeedItem" />
+  </configure>
+
+  <browser:page
+    name="global-media-settings"
+    for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+    class=".views.GlobalSettingsFormView"
+    layer="..interfaces.ILayer"
+    permission="cmf.ManagePortal" />
+  <adapter
+    for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+    provides="..interfaces.IGlobalMediaSettings"
+    factory="..settings.GlobalSettings" />
+
+  <browser:resourceDirectory
+    name="wildcard-media"
+    directory="static" />
+
+  <!-- forms -->
+  <browser:page
+    for="..interfaces.IVideoEnabled"
+    name="edit"
+    class=".forms.VideoEditForm"
+    permission="cmf.ModifyPortalContent"
+    />
+   
+</configure>

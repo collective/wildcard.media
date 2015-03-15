@@ -10,75 +10,10 @@
 
   <five:registerPackage package="." initialize=".initialize" />
   <i18n:registerTranslations directory="locales" />
+
+  <include package="plone.behavior" file="meta.zcml"/>
   <include package="plone.app.dexterity" />
-  <include package=".tiles" file="configure.zcml" zcml:condition="installed collective.cover"/>
-
-  <genericsetup:registerProfile
-      name="default"
-      title="wildcard.media"
-      directory="profiles/default"
-      description="Installs the wildcard.media package"
-      provides="Products.GenericSetup.interfaces.EXTENSION"
-      />
-  <genericsetup:registerProfile
-      name="plone4"
-      title="wildcard.media plone4"
-      directory="profiles/plone4"
-      description="Installs plone4 specific wildcard.media steps"
-      provides="Products.GenericSetup.interfaces.EXTENSION"
-      />
-  <genericsetup:registerProfile
-      name="plone5"
-      title="wildcard.media plone5"
-      directory="profiles/plone5"
-      description="Installs plone5 specific wildcard.media steps"
-      provides="Products.GenericSetup.interfaces.EXTENSION"
-      />
-  <genericsetup:registerProfile
-      name="uninstall"
-      title="wildcard.media uninstall"
-      directory="profiles/uninstall"
-      description="uninstalls the wildcard.media package"
-      provides="Products.GenericSetup.interfaces.EXTENSION"
-      />
-
-   <genericsetup:upgradeStep
-      title="Upgrade CSS resources"
-      description="Enable minified CSS and fix URL prefixes"
-      source="1000"
-      destination="1001"
-      handler="wildcard.media.upgrades.upgrade_css"
-      sortkey="1"
-      profile="wildcard.media:default"
-      />
-   <genericsetup:upgradeStep
-      title="Upgrade types definition"
-      description="fix video type definition"
-      source="1001"
-      destination="1002"
-      handler="wildcard.media.upgrades.upgrade_types"
-      sortkey="1"
-      profile="wildcard.media:default"
-      />
-   <genericsetup:upgradeStep
-      title="Upgrade types definition"
-      description="Fix typo in video type definition"
-      source="1002"
-      destination="1003"
-      handler="wildcard.media.upgrades.upgrade_types"
-      sortkey="1"
-      profile="wildcard.media:default"
-      />
-   <genericsetup:upgradeStep
-      title="Upgrade registry"
-      description="Add collective.cover tile support"
-      source="1003"
-      destination="1004"
-      handler="wildcard.media.upgrades.upgrade_registry"
-      sortkey="1"
-      profile="wildcard.media:default"
-      />
-
+  <include package="five.globalrequest" />
 
   <permission
       id="wildcard.media.AddWildcardVideo"
@@ -88,8 +23,6 @@
       id="wildcard.media.AddWildcardAudio"
       title="wildcard.media: Add Audio"
       />
-
-  <include package="plone.behavior" file="meta.zcml"/>
 
   <plone:behavior
       title="Video"
@@ -108,80 +41,31 @@
       marker=".interfaces.IAudioEnabled"
       />
 
-  <browser:page
-    name="stream"
-    for=".widget.IStreamNamedFileWidget"
-    class=".widget.MediaStream"
-    permission="zope2.View"
-    />
-
-  <browser:page
-    name="wildcard_video_macro"
-    for=".interfaces.IVideoEnabled"
-    template="templates/video_macro.pt"
-    permission="zope2.View"
-    layer=".interfaces.ILayer"
-  />
-  <browser:page
-    name="wildcard_video_view"
-    for=".interfaces.IVideoEnabled"
-    template="templates/video_view.pt"
-    permission="zope2.View"
-    layer=".interfaces.ILayer"
-  />
-  <browser:page
-    name="wildcard_audio_view"
-    for=".interfaces.IAudioEnabled"
-    class=".browser.AudioView"
-    template="templates/audio_view.pt"
-    permission="zope2.View"
-    layer=".interfaces.ILayer"
-  />
-  <browser:page
-    name="convert-video"
-    for=".interfaces.IMediaEnabled"
-    class=".browser.ConvertVideo"
-    permission="cmf.ModifyPortalContent"
-    layer=".interfaces.ILayer"
-  />
-  <browser:page
-    name="wcmedia-utils"
-    for="*"
-    permission="zope2.View"
-    class=".browser.Utils"
-    allowed_interface=".interfaces.IUtils"
-    layer=".interfaces.ILayer" />
-
-<configure zcml:condition="installed Products.CMFPlone.interfaces.syndication">
-  <adapter
-    factory=".syndication.AudioFeedItem"
-    for="wildcard.media.interfaces.IAudioEnabled
-         Products.CMFPlone.interfaces.syndication.IFeed"
-    provides="Products.CMFPlone.interfaces.syndication.IFeedItem" />
-  <adapter
-    factory=".syndication.VideoFeedItem"
-    for="wildcard.media.interfaces.IVideoEnabled
-         Products.CMFPlone.interfaces.syndication.IFeed"
-    provides="Products.CMFPlone.interfaces.syndication.IFeedItem" />
-</configure>
-
   <adapter name="SearchableText" factory=".indexers.MediaSearchableText" />
-
-  <browser:page
-    name="global-media-settings"
-    for="Products.CMFPlone.interfaces.IPloneSiteRoot"
-    class=".browser.GlobalSettingsFormView"
-    layer=".interfaces.ILayer"
-    permission="cmf.ManagePortal" />
-  <adapter
-    for="Products.CMFPlone.interfaces.IPloneSiteRoot"
-    provides=".interfaces.IGlobalMediaSettings"
-    factory=".settings.GlobalSettings" />
-
-  <browser:resourceDirectory
-    name="wildcard-media"
-    directory="static" />
 
   <!-- PrimaryFieldInfo -->
   <adapter factory=".primary.PrimaryFieldInfo"/>
+
+  <!-- events -->
+  <subscriber
+    for=".interfaces.IVideoEnabled
+         zope.lifecycleevent.interfaces.IObjectModifiedEvent"
+    handler=".subscribers.video_edited" />
+  <subscriber
+    for=".interfaces.IVideoEnabled
+         zope.lifecycleevent.interfaces.IObjectAddedEvent"
+    handler=".subscribers.video_added" />
+  <subscriber
+    for=".interfaces.IVideoEnabled
+         zope.lifecycleevent.interfaces.IObjectRemovedEvent"
+    handler=".subscribers.video_deleted" />
+  <subscriber
+    for=".interfaces.IVideoEnabled
+         Products.DCWorkflow.interfaces.IAfterTransitionEvent"
+    handler=".subscribers.video_state_changed" />
+
+  <include package=".browser" />
+  <include file="profiles.zcml" />
+  <include package=".tiles" file="configure.zcml" zcml:condition="installed collective.cover"/>
+
 </configure>

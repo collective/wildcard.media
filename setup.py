@@ -6,12 +6,14 @@ version = '1.2b5'
 setup(name='wildcard.media',
       version=version,
       description="HTML5 audio and video integration with plone",
-      long_description=open("README.txt").read() + "\n" +
-                       open(os.path.join("docs", "HISTORY.txt")).read(),
+      long_description="%s\n%s" % (
+          open("README.txt").read(),
+          open(os.path.join("docs", "HISTORY.txt")).read()
+      ),
       classifiers=[
-        "Framework :: Plone",
-        "Programming Language :: Python",
-        ],
+          "Framework :: Plone",
+          "Programming Language :: Python",
+      ],
       keywords='video audio media plone tiny html5 mediaelement',
       author='Nathan Van Gheem',
       author_email='nathan@vangheem.us',
@@ -30,11 +32,16 @@ setup(name='wildcard.media',
           'plone.app.textfield',
           'plone.app.blob',
           'plone.rfc822',
-          'plone.supermodel>=1.1'
+          'plone.supermodel>=1.1',
+          'five.globalrequest'
       ],
       extras_require={
           'test': [
               'plone.app.testing',
+          ],
+          'youtube': [
+              'requests',
+              'oauthlib'
           ]
       },
       entry_points="""

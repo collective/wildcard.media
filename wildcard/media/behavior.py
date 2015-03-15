@@ -8,12 +8,15 @@ from plone.dexterity.interfaces import IDexterityContent
 from plone.autoform.interfaces import IFormFieldProvider
 from plone.namedfile import field as namedfile
 from wildcard.media import _
-from wildcard.media.async import queueJob
-from wildcard.media.widget import StreamNamedFileFieldWidget
+from wildcard.media.browser.widget import StreamNamedFileFieldWidget
 from zope.interface import Invalid, invariant
 import json
 from plone.autoform import directives as form
 from plone.app.textfield import RichText
+try:
+    from wildcard.media import youtube
+except ImportError:
+    youtube = None
 
 
 def valid_video(namedblob):
@@ -47,6 +50,15 @@ class IVideo(model.Schema):
         constraint=valid_video
     )
 
+    if youtube:
+        upload_video_to_youtube = schema.Bool(
+            title=_(u'Upload to youtube'),
+            description=_(u'Requires having youtube account connected. '
+                          u'Videos that are private will remain unlisted on YouTube. '
+                          u'Once published, video will be made public on YouTube. '),
+            required=False,
+            default=False)
+
     form.omitted(IAddForm, 'video_file_ogv')
     form.omitted(IEditForm, 'video_file_ogv')
     form.widget(video_file_ogv=StreamNamedFileFieldWidget)
@@ -64,7 +76,9 @@ class IVideo(model.Schema):
     youtube_url = schema.TextLine(
         title=_(u"Youtube URL"),
         description=_(u"Alternatively, you can provide a youtube video url. "
-                      u"If this is specified, video file will be ignored."),
+                      u"If this is specified, video file will be ignored. "
+                      u"If video was uploaded to youtube, this field will be filled "
+                      u"with video url."),
         required=False
     )
 
@@ -203,8 +217,8 @@ class Video(BaseAdapter):
             self.context.video_file_ogv = None
             self.context.video_file_webm = None
         elif value != getattr(self.context, 'video_file', _marker):
+            self.context.video_converted = False
             self.context.video_file = value
-            queueJob(self.context)
     video_file = property(_get_video_file, _set_video_file)
 
     image = BasicProperty(IVideo['image'])
@@ -217,6 +231,9 @@ class Video(BaseAdapter):
     video_file_ogv = UnsettableProperty(IVideo['video_file_ogv'])
     video_file_webm = UnsettableProperty(IVideo['video_file_webm'])
     image = UnsettableProperty(IVideo['image'])
+
+    if youtube:
+        upload_video_to_youtube = BasicProperty(IVideo['upload_video_to_youtube'])
 
 
 class Audio(BaseAdapter):

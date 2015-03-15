@@ -39,7 +39,30 @@ On Ubuntu, you should be able to install with::
     sudo apt-get install libav-tools
 
 
+YouTube API Support
+-------------------
+
+Since version 2.0, YouTube integration is supported.
+Videos can automatically be uploaded to a configured YouTube account.
+
+Install
+~~~~~~~
+
+Different install requirements::
+
+    eggs = 
+        ...
+        wildcard.media[youtube]
+        ...
+
+Then, setup a google api with oauth access and configure the 
+google_oauth_id and google_oauth_secret properties in the Configuration Registry.
+
+Finally, go to the url: http://plonesite/authorize-google
+
+
 Support
 -------
 
-Only tested on Plone 4.3.x, Plone 4.1
+Only tested on Plone 5.0, 4.3.x, Plone 4.1
+

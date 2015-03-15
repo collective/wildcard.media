@@ -1,11 +1,16 @@
 <div metal:define-macro="video">
 
-<div class="wcvideo-container" tal:define="util video/@@wcmedia-utils|context/@@wcmedia-utils">
-<tal:has_video tal:condition="util/mp4_url">
+<div class="wcvideo-container"
+     tal:define="util video/@@wcmedia-utils|context/@@wcmedia-utils;
+                 video nocall: video|context;
+                 height height|video/height|string:240;
+                 width width|video/width|string:320;
+                 upload_to_youtube video/upload_video_to_youtube|nothing">
+<tal:has_video tal:condition="python: util.mp4_url and not upload_to_youtube">
     <video width="320" height="240" poster="poster.jpg" controls="controls" preload="none" class="active pat-media"
           tal:attributes="poster util/image_url;
-                          width width|context/width|string:320;
-                          height height|context/height|string:240;">
+                          width width;
+                          height height;">
         <tal:videos tal:repeat="video python:util.videos()">
             <source src="/media/echo-hereweare.mp4" type="video/mp4"
                     tal:attributes="src video/url;
@@ -16,8 +21,8 @@
                tal:attributes="src util/subtitles_url" />
         <object width="320" height="240" type="application/x-shockwave-flash" data="flashmediaelement.swf"
                 tal:attributes="data string:${util/mstatic}/flashmediaelement.swf;
-                                width width|context/width|string:320;
-                                height height|context/height|string:240;">
+                                width width;
+                                height height;">
             <param name="movie" value="flashmediaelement.swf"
                   tal:attributes="value string:${util/mstatic}/flashmediaelement.swf"/>
             <param name="flashvars" value="controls=true&file=myvideo.mp4"
@@ -26,18 +31,18 @@
             <img src="myvideo.jpg" width="320" height="240" title="No video playback capabilities"
                  tal:condition="util/image_url"
                  tal:attributes="src util/image_url;
-                                 title context/Title;
-                                 width width|context/width|string:320;
-                                 height height|context/height|string:240"/>
+                                 title video/Title;
+                                 width width;
+                                 height height;"/>
         </object>
     </video>
 </tal:has_video>
-<tal:yt tal:condition="context/youtube_url|nothing">
+<tal:yt tal:condition="video/youtube_url|nothing">
     <video width="640" height="360" id="player1" preload="none" class="active pat-media"
-           tal:attributes="width width|context/width|string:640;
-                           height height|context/height|string:360;">
+           tal:attributes="width width;
+                           height height;">
         <source type="video/youtube" src="http://www.youtube.com/watch?v=nOEw9iiopwI"
-                tal:attributes="src context/youtube_url" />
+                tal:attributes="src video/youtube_url" />
     </video>
 </tal:yt>
 </div>

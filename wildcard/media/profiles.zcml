@@ -1,0 +1,76 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="wildcard.media">
+
+  <genericsetup:registerProfile
+      name="default"
+      title="wildcard.media"
+      directory="profiles/default"
+      description="Installs the wildcard.media package"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+  <genericsetup:registerProfile
+      name="plone4"
+      title="wildcard.media plone4"
+      directory="profiles/plone4"
+      description="Installs plone4 specific wildcard.media steps"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+  <genericsetup:registerProfile
+      name="plone5"
+      title="wildcard.media plone5"
+      directory="profiles/plone5"
+      description="Installs plone5 specific wildcard.media steps"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="wildcard.media uninstall"
+      directory="profiles/uninstall"
+      description="uninstalls the wildcard.media package"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+   <genericsetup:upgradeStep
+      title="Upgrade CSS resources"
+      description="Enable minified CSS and fix URL prefixes"
+      source="1000"
+      destination="1001"
+      handler="wildcard.media.upgrades.upgrade_css"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
+   <genericsetup:upgradeStep
+      title="Upgrade types definition"
+      description="fix video type definition"
+      source="1001"
+      destination="1002"
+      handler="wildcard.media.upgrades.upgrade_types"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
+   <genericsetup:upgradeStep
+      title="Upgrade types definition"
+      description="Fix typo in video type definition"
+      source="1002"
+      destination="1003"
+      handler="wildcard.media.upgrades.upgrade_types"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
+   <genericsetup:upgradeStep
+      title="Upgrade registry"
+      source="*"
+      destination="2000"
+      handler="wildcard.media.upgrades.upgrade_registry"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
+
+</configure>

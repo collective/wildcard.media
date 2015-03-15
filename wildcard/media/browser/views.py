@@ -9,10 +9,19 @@ from plone.app.z3cform.layout import wrap_form
 from wildcard.media import _
 from wildcard.media.settings import GlobalSettings
 from wildcard.media.config import getFormat
-from wildcard.media.async import queueJob
 from wildcard.media.interfaces import IMediaEnabled
+from wildcard.media.subscribers import video_edited
 import urllib
 from plone.memoize.instance import memoize
+from zope.interface import alsoProvides
+try:
+    from wildcard.media import youtube
+except ImportError:
+    youtube = False
+try:
+    from plone.protect.interfaces import IDisableCSRFProtection
+except ImportError:
+    from zope.interface import Interface as IDisableCSRFProtection  # noqa
 
 
 class MediaView(BrowserView):
@@ -59,7 +68,7 @@ GlobalSettingsFormView = wrap_form(GlobalSettingsForm)
 
 class ConvertVideo(BrowserView):
     def __call__(self):
-        queueJob(self.context)
+        video_edited(self.context, None)
         self.request.response.redirect(self.context.absolute_url())
 
 
@@ -135,3 +144,15 @@ class Utils(MediaView):
             return urllib.quote_plus(url)
         else:
             return url
+
+
+class AuthorizeGoogle(BrowserView):
+
+    def __call__(self):
+        if not youtube:
+            raise Exception("Error, dependencies for youtube support not present")
+        if self.request.get('code'):
+            alsoProvides(self.request, IDisableCSRFProtection)
+            return youtube.GoogleAPI(self.request).confirm_authorization()
+        else:
+            return youtube.GoogleAPI(self.request).authorize()

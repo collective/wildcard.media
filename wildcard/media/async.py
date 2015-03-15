@@ -1,132 +1,73 @@
-from logging import getLogger
-from zope.component import getUtility
-from wildcard.media.convert import runConversion
-from Products.CMFCore.utils import getToolByName
-from wildcard.media.settings import GlobalSettings
-
 try:
-    from zc.async.interfaces import COMPLETED
-except:
-    COMPLETED = None
-
-logger = getLogger('wildcard.video')
-
-QUOTA_NAME = 'wildcard.video'
-
-try:
-    from plone.app.async.interfaces import IAsyncService
+    import collective.celery  # noqa
+    from wildcard.media import tasks
 except ImportError:
-    pass
+    tasks = None
+
+from wildcard.media import pasync
+from wildcard.media import convert
+try:
+    from wildcard.media import youtube
+except ImportError:
+    youtube = None
+from plone import api
+from zope.globalrequest import getRequest
 
 
-def getPortal(obj):
-    return getToolByName(obj, 'portal_url').getPortalObject()
-
-
-def asyncInstalled():
-    try:
-        import plone.app.async
-        plone.app.async  # pyflakes
-        return True
-    except:
-        return False
-
-
-def isConversion(job, sitepath):
-    """
-    Check if job is a document viewer conversion job
-    """
-    return sitepath == job.args[1] and job.args[4] == runConversion
-
-
-class JobRunner(object):
-    """
-    helper class to setup the quota and check the
-    queue before adding it to the queue
-    """
-
-    def __init__(self, obj):
-        self.object = obj
-        self.objectpath = self.object.getPhysicalPath()
-        self.portal = getPortal(obj)
-        self.portalpath = self.portal.getPhysicalPath()
-        self.async = getUtility(IAsyncService)
-        self.queue = self.async.getQueues()['']
-
-    def is_current_active(self, job):
-        return isConversion(job, self.portalpath) and \
-            job.args[0] == self.objectpath and \
-            job.status != COMPLETED
-
-    @property
-    def already_in_queue(self):
-        """
-        Check if object in queue
-        """
-        return self.find_job()[0] > -1
-
-    def find_position(self):
-        # active in queue
-        try:
-            return self.find_job()[0]
-        except KeyError:
-            return -1
-
-    def find_job(self):
-        # active in queue
-        if QUOTA_NAME not in self.queue.quotas:
-            return -1, None
-        for job in self.queue.quotas[QUOTA_NAME]._data:
-            if self.is_current_active(job):
-                return 0, job
-
-        jobs = [job for job in self.queue]
-        for idx, job in enumerate(jobs):
-            if self.is_current_active(job):
-                return idx + 1, job
-        return -1, None
-
-    def set_quota(self):
-        """
-        Set quota for document viewer jobs
-        """
-        settings = GlobalSettings(self.portal)
-        size = settings.async_quota_size
-        if QUOTA_NAME in self.queue.quotas:
-            if self.queue.quotas[QUOTA_NAME].size != size:
-                self.queue.quotas[QUOTA_NAME].size = size
-                logger.info("quota %r configured in queue %r", QUOTA_NAME,
-                            self.queue.name)
-        else:
-            self.queue.quotas.create(QUOTA_NAME, size=size)
-            logger.info("quota %r added to queue %r", QUOTA_NAME,
-                        self.queue.name)
-
-    def queue_it(self):
-        self.async.queueJobInQueue(self.queue, (QUOTA_NAME,), runConversion,
-                                   self.object)
-
-
-def queueJob(obj):
-    """
-    queue a job async if available.
-    otherwise, just run normal
-    """
-    if asyncInstalled():
-        try:
-            runner = JobRunner(obj)
-            runner.set_quota()
-            if runner.already_in_queue:
-                logger.info('object %s already in queue for conversion' % (
-                    repr(obj)))
-            else:
-                runner.queue_it()
-            return
-        except:
-            logger.exception(
-                "Error using plone.app.async with "
-                "wildcard.media. Converting video without "
-                "plone.app.async...")
-            runConversion(obj)
+def _run(obj, func):
+    # return func(obj)
+    if tasks:
+        # collective.celery is installed
+        tfunc = getattr(tasks, func.__name__)
+        tfunc.delay(obj)
+    elif pasync.asyncInstalled():
+        # plone.app.async installed
+        pasync.queueJob(obj, func)
     else:
-        runConversion(obj)
+        func(obj)
+
+
+def convertVideoFormats(video):
+    api.portal.show_message(
+        'Converting video to compatible formats. Be patient.',
+        request=getRequest())
+    _run(video, convert.convertVideoFormats)
+
+
+def uploadToYouTube(video):
+    if not youtube:
+        return api.portal.show_message(
+            'Whoops, trying to use YouTube but not configure correctly?',
+            request=getRequest())
+    api.portal.show_message(
+        'Uploading video to YouTube. Check YouTube for status. '
+        'Be patient while YouTube processes.',
+        request=getRequest())
+    _run(video, youtube.uploadToYouTube)
+
+
+def removeFromYouTube(video):
+    if not youtube:
+        return api.portal.show_message(
+            'Whoops, trying to use YouTube but not configure correctly?',
+            request=getRequest())
+    api.portal.show_message(
+        'Removing video from YouTube. Be patient.',
+        request=getRequest())
+    _run(video, youtube.removeFromYouTube)
+
+
+def updateYouTubePermissions(video):
+    if not youtube:
+        return api.portal.show_message(
+            'Whoops, trying to use YouTube but not configure correctly?',
+            request=getRequest())
+    _run(video, youtube.updateYouTubePermissions)
+
+
+def editYouTubeVideo(video):
+    if not youtube:
+        return api.portal.show_message(
+            'Whoops, trying to use YouTube but not configure correctly?',
+            request=getRequest())
+    _run(video, youtube.editYouTubeVideo)

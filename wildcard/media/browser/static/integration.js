@@ -7152,6 +7152,17 @@ require([
       $audio.mediaelementplayer();
     });
 
+    var selector = '.template-wildcardvideo #form-widgets-IVideo-upload_video_to_youtube-0';
+    var checkFields = function(){
+      if($(selector)[0].checked){
+        $('#formfield-form-widgets-IVideo-youtube_url').hide();
+      }else{
+        $('#formfield-form-widgets-IVideo-youtube_url').show();
+      }
+    };
+    if($(selector).change(checkFields).size() > 0){
+      checkFields();
+    }
   });
 
 });

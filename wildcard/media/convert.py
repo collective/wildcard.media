@@ -129,15 +129,13 @@ def switchFileExt(filename, ext):
     return filebase + '.' + ext
 
 
-def runConversion(context):
-    if not avprobe or not avconv:
-        logger.warn('can not run wildcard.media conversion. No avconv')
-        return
+def _convertFormat(context):
     # reset these...
     context.video_file_ogv = None
     context.video_file_webm = None
 
     video = context.video_file
+    context.video_converted = True
     try:
         opened = openBlob(video._blob)
         bfilepath = opened.name
@@ -198,3 +196,10 @@ def runConversion(context):
     except:
         logger.warn('error getting thumbnail from video')
     rmtree(tmpdir)
+
+
+def convertVideoFormats(context):
+    if not avprobe or not avconv:
+        logger.warn('can not run wildcard.media conversion. No avconv')
+        return
+    _convertFormat(context)
