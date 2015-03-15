@@ -37,9 +37,10 @@ class MediaView(BrowserView):
 
 class AudioView(MediaView):
     def __call__(self):
-        self.audio_url = '%sIAudio.audio_file/@@download/%s' % (
-            self.base_wurl,
-            self.context.audio_file.filename
+        base_url = self.context.absolute_url()
+        base_wurl = base_url + '/@@view/++widget++form.widgets.'
+        self.audio_url = '%sIAudio.audio_file/@@stream' % (
+            base_wurl
         )
         self.ct = self.context.audio_file.contentType
         return self.index()
