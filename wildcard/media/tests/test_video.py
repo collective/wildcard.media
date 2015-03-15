@@ -12,7 +12,7 @@ from plone.app.testing import SITE_OWNER_PASSWORD
 from plone.testing.z2 import Browser
 
 from wildcard.media.interfaces import IVideoEnabled
-from wildcard.media.widget import MediaStream
+from wildcard.media.browser.widget import MediaStream
 
 from wildcard.media.testing import (
     MEDIA_INTEGRATION_TESTING,

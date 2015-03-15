@@ -2,7 +2,7 @@
 <object name="portal_javascripts">
 
     <javascript
-        remote="True"
+        remove="True"
         id="++resource++wildcard-media/mediaelementjs/mediaelement-and-player.min.js"
         />
     <javascript 
