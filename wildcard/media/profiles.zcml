@@ -42,7 +42,7 @@
       description="Enable minified CSS and fix URL prefixes"
       source="1000"
       destination="1001"
-      handler="wildcard.media.upgrades.upgrade_css"
+      handler="wildcard.media.upgrades.upgrade_resources"
       sortkey="1"
       profile="wildcard.media:default"
       />
@@ -65,10 +65,10 @@
       profile="wildcard.media:default"
       />
    <genericsetup:upgradeStep
-      title="Upgrade registry"
+      title="Upgrade to version 2"
       source="*"
       destination="2000"
-      handler="wildcard.media.upgrades.upgrade_registry"
+      handler="wildcard.media.upgrades.upgrade_to_2"
       sortkey="1"
       profile="wildcard.media:default"
       />
