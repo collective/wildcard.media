@@ -1,9 +1,14 @@
+try:
+    from zope.app.component.hooks import getSite
+except ImportError:
+    from zope.component.hooks import getSite
 import subprocess
 import os
 from logging import getLogger
 from plone.app.blob.utils import openBlob
 from tempfile import mkdtemp
 from shutil import copyfile, rmtree
+import shlex
 from wildcard.media.config import getFormat
 from plone.namedfile import NamedBlobFile, NamedBlobImage
 from wildcard.media.settings import GlobalSettings
@@ -78,7 +83,13 @@ class AVConvProcess(BaseSubProcess):
         bin_name = 'avconv'
 
     def convert(self, filepath, outputfilepath):
-        cmd = [self.binary, '-i', filepath, outputfilepath]
+        portal = getSite()
+        settings = GlobalSettings(portal)
+
+        infile_options = shlex.split(settings.convert_infile_options or '')
+        outfile_options = shlex.split(settings.convert_outfile_options or '')
+        cmd = [self.binary] + infile_options + ['-i', filepath] + outfile_options + [outputfilepath]
+
         self._run_command(cmd)
 
     def grab_frame(self, filepath, outputfilepath, instant='00:00:5'):

@@ -38,6 +38,19 @@ On Ubuntu, you should be able to install with::
 
     sudo apt-get install libav-tools
 
+Conversion
+----------
+
+Some versions of `avconv` may require extra arguments during the conversion
+process so that the conversion process succeeds and produces output files in
+a valid format. Extra `infile` and `outfile` options can be configured in the
+control panel.
+
+    avconv [infile options] -i infile [outfile options] outfile
+
+The latest version of avconv on Ubuntu may require `-strict experimental` as an
+outfile option.
+
 
 YouTube API Support
 -------------------
