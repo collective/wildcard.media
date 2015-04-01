@@ -138,6 +138,7 @@ def runConversion(context):
     context.video_file_webm = None
 
     video = context.video_file
+    context.video_converted = True
     try:
         opened = openBlob(video._blob)
         bfilepath = opened.name

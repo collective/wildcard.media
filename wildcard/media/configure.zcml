@@ -170,4 +170,15 @@
 
   <!-- PrimaryFieldInfo -->
   <adapter factory=".primary.PrimaryFieldInfo"/>
+
+  <!-- events -->
+  <subscriber
+    for=".interfaces.IVideoEnabled
+         zope.lifecycleevent.interfaces.IObjectAddedEvent"
+    handler=".subscribers.video_added" />
+  <subscriber
+    for=".interfaces.IVideoEnabled
+         zope.lifecycleevent.interfaces.IObjectModifiedEvent"
+    handler=".subscribers.video_edited" />
+
 </configure>

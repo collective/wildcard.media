@@ -8,7 +8,6 @@ from plone.dexterity.interfaces import IDexterityContent
 from plone.autoform.interfaces import IFormFieldProvider
 from plone.namedfile import field as namedfile
 from wildcard.media import _
-from wildcard.media.async import queueJob
 from wildcard.media.widget import StreamNamedFileFieldWidget
 from zope.interface import Invalid, invariant
 import json
@@ -203,8 +202,8 @@ class Video(BaseAdapter):
             self.context.video_file_ogv = None
             self.context.video_file_webm = None
         elif value != getattr(self.context, 'video_file', _marker):
+            self.context.video_converted = False
             self.context.video_file = value
-            queueJob(self.context)
     video_file = property(_get_video_file, _set_video_file)
 
     image = BasicProperty(IVideo['image'])
