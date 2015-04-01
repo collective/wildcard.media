@@ -49,6 +49,28 @@ class IGlobalMediaSettings(Interface):
                       "The quota name assigned is `wildcard.media`."),
         default=3)
 
+    convert_infile_options = schema.TextLine(
+        title=_("Convert Infile Options"),
+        description=_(
+            'convert_infile_options_help',
+            default=u"Pass optional infile parameters to aconv during the "
+                    u"conversion process.\n"
+        ),
+        default=u'',
+        required=False,
+    )
+
+    convert_outfile_options = schema.TextLine(
+        title=_("Convert Outfile Options"),
+        description=_(
+            'convert_outfile_options_help',
+            default=u"Pass optional outfile parameters to aconv during the "
+                    u"conversion process."
+        ),
+        default=u'',
+        required=False,
+    )
+
 
 class IUtils(Interface):
     def valid_type(self):
