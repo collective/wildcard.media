@@ -26,7 +26,7 @@ def video_edited(video, event):
         elif getattr(video, 'upload_video_to_youtube', False):
             editYouTubeVideo(video)
     else:
-        if video.upload_video_to_youtube:
+        if getattr(video, 'upload_video_to_youtube', False):
             # previously not on youtube, but now is, upload
             uploadToYouTube(video)
         elif video.video_file and not getattr(video, 'video_converted', True):
