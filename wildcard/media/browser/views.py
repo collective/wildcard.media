@@ -125,7 +125,7 @@ class Utils(MediaView):
         image = getattr(self.context, 'image', None)
         if image:
             return '%s/@@images/image' % (
-                self.base_url
+                self.context.absolute_url()
             )
         else:
             return None
