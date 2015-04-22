@@ -16,14 +16,14 @@ def video_added(video, event):
 
 def video_edited(video, event):
     if getattr(video, 'youtube_data', False):
-        if not video.upload_video_to_youtube:
+        if not getattr(video, 'upload_video_to_youtube', False):
             # previously set to put on youtube, but no longer set to be on youtube
             removeFromYouTube(video)
             convertVideoFormats(video)
         elif video.video_file and not getattr(video, 'video_converted', True):
             # new video set, need to upload
             uploadToYouTube(video)
-        elif video.upload_video_to_youtube:
+        elif getattr(video, 'upload_video_to_youtube', False):
             editYouTubeVideo(video)
     else:
         if video.upload_video_to_youtube:
