@@ -3,11 +3,13 @@
 
     <javascript
         remove="True"
+        compression="none"
         id="++resource++wildcard-media/mediaelementjs/mediaelement-and-player.min.js"
         />
     <javascript 
         cacheable="True" compression="safe" 
         enabled="True" inline="False"
+        compression="none"
         id="++resource++wildcard-media/integration.js"
         />
 
