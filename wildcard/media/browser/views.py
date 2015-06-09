@@ -78,11 +78,19 @@ class Utils(MediaView):
     def valid_type(self):
         return IMediaEnabled.providedBy(self.context)
 
+    @property
+    @memoize
+    def base_wurl(self):
+        base_url = self.context.absolute_url()
+        return base_url + '/@@view/++widget++form.widgets.'
+
+    @property
+    @memoize
+    def base_furl(self):
+        return self.base_wurl + 'IVideo.'
+
     @memoize
     def videos(self):
-        base_url = self.context.absolute_url()
-        base_wurl = base_url + '/@@view/++widget++form.widgets.'
-        base_furl = base_wurl + 'IVideo.'
         types = [('mp4', 'video_file')]
         settings = GlobalSettings(
             getToolByName(self.context, 'portal_url').getPortalObject())
@@ -97,7 +105,7 @@ class Utils(MediaView):
             if file:
                 videos.append({
                     'type': _type,
-                    'url': base_furl + fieldname + '/@@stream'
+                    'url': self.base_furl + fieldname + '/@@stream'
                 })
         return videos
 
