@@ -34,8 +34,7 @@ setup(name='wildcard.media',
           'plone.rfc822',
           'plone.supermodel>=1.1',
           'five.globalrequest',
-          'plone.api',
-          'plone.app.jquery>=1.8.3'
+          'plone.api'
       ],
       extras_require={
           'test': [

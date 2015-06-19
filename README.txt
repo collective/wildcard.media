@@ -38,6 +38,12 @@ On Ubuntu, you should be able to install with::
 
     sudo apt-get install libav-tools
 
+Plone 4
+~~~~~~~
+
+Must have plone.app.jquery >= 1.8.3
+
+
 Conversion
 ----------
 
