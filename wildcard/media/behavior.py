@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
-from zope.interface import alsoProvides, implements
-from zope.component import adapts
-from z3c.form.interfaces import IAddForm, IEditForm
-from zope import schema
-from plone.supermodel import model
-from plone.dexterity.interfaces import IDexterityContent
+import json
+
+from plone.app.textfield import RichText
+from plone.autoform import directives as form
 from plone.autoform.interfaces import IFormFieldProvider
+from plone.dexterity.interfaces import IDexterityContent
 from plone.namedfile import field as namedfile
+from plone.supermodel import model
 from wildcard.media import _
 from wildcard.media.browser.widget import StreamNamedFileFieldWidget
+from z3c.form.interfaces import IAddForm, IEditForm
+from zope import schema
+from zope.component import adapts
 from zope.interface import Invalid, invariant
-import json
-from plone.autoform import directives as form
-from plone.app.textfield import RichText
+from zope.interface import alsoProvides, implements
+from zope.component.hooks import getSite
+from wildcard.media.settings import GlobalSettings
+
 try:
     from wildcard.media import youtube
 except ImportError:
@@ -29,6 +33,18 @@ def valid_audio(namedblob):
     if namedblob.contentType.split('/')[0] != 'audio':
         raise Invalid("must be a audio file")
     return True
+
+
+def getDefaultWidth():
+    portal = getSite()
+    settings = GlobalSettings(portal)
+    return settings.default_video_width
+
+
+def getDefaultHeight():
+    portal = getSite()
+    settings = GlobalSettings(portal)
+    return settings.default_video_height
 
 
 class IVideo(model.Schema):
@@ -89,12 +105,12 @@ class IVideo(model.Schema):
 
     width = schema.Int(
         title=_(u"Width"),
-        default=640
+        defaultFactory=getDefaultWidth
     )
 
     height = schema.Int(
         title=_(u"Height"),
-        default=320
+        defaultFactory=getDefaultHeight
     )
 
     subtitle_file = namedfile.NamedBlobFile(

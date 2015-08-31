@@ -2,9 +2,10 @@
 
 <div class="wcvideo-container"
      tal:define="util video/@@wcmedia-utils|context/@@wcmedia-utils;
+                 settings util/settings;
                  video nocall: video|context;
-                 height height|video/height|string:240;
-                 width width|video/width|string:320;
+                 height height|video/height|settings/default_video_height|string:720;
+                 width width|video/width|settings/default_video_width|string:400;
                  upload_to_youtube video/upload_video_to_youtube|nothing">
 <tal:has_video tal:condition="python: util.mp4_url and not upload_to_youtube">
     <video width="320" height="240" poster="poster.jpg" controls="controls" preload="none" class="active pat-media"

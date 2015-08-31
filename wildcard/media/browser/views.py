@@ -1,19 +1,23 @@
-from Products.Five import BrowserView
+import urllib
+
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone import PloneMessageFactory as pmf
-from wildcard.media.interfaces import IGlobalMediaSettings
-from z3c.form import form
-from z3c.form import field
-from z3c.form import button
+from Products.Five import BrowserView
 from plone.app.z3cform.layout import wrap_form
-from wildcard.media import _
-from wildcard.media.settings import GlobalSettings
-from wildcard.media.config import getFormat
-from wildcard.media.interfaces import IMediaEnabled
-from wildcard.media.subscribers import video_edited
-import urllib
 from plone.memoize.instance import memoize
+from wildcard.media import _
+from wildcard.media.config import getFormat
+from wildcard.media.interfaces import IGlobalMediaSettings
+from wildcard.media.interfaces import IMediaEnabled
+from wildcard.media.settings import GlobalSettings
+from wildcard.media.subscribers import video_edited
+from z3c.form import button
+from z3c.form import field
+from z3c.form import form
+from zope.component.hooks import getSite
 from zope.interface import alsoProvides
+
+
 try:
     from wildcard.media import youtube
 except ImportError:
@@ -77,6 +81,10 @@ class Utils(MediaView):
 
     def valid_type(self):
         return IMediaEnabled.providedBy(self.context)
+
+    @memoize
+    def settings(self):
+        return GlobalSettings(getSite())
 
     @property
     @memoize

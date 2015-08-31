@@ -9,7 +9,6 @@
     <javascript 
         cacheable="True" compression="safe" 
         enabled="True" inline="False"
-        compression="none"
         expression="python: 'theming-controlpanel-mapper' not in request.get('ACTUAL_URL', '')"
         id="++resource++wildcard-media/integration.js"
         />

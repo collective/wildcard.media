@@ -71,6 +71,14 @@ class IGlobalMediaSettings(Interface):
         required=False,
     )
 
+    default_video_width = schema.Int(
+        title=_(u'Default video width'),
+        default=720)
+
+    default_video_height = schema.Int(
+        title=_(u'Default video height'),
+        default=400)
+
 
 class IUtils(Interface):
     def valid_type(self):
@@ -89,4 +97,7 @@ class IUtils(Interface):
         pass
 
     def image_url_quoted(self):
+        pass
+
+    def settings(self):
         pass
