@@ -4,6 +4,9 @@ Changelog
 2.0a1 (unreleased)
 ------------------
 
+- be able to provide default width/height for videos in admin
+  [vangheem]
+
 - fix use of captions
   [vangheem]
 
