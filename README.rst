@@ -7,20 +7,25 @@ Introduction
    :alt: Original work by wildcardcorp.com
    :align: right
    
-This package provides Audio and Video Dexterity content types and behaviors, conversions and players/views.
+This package provides Audio and Video Dexterity content types and behaviors,
+conversions and players/views.
 
-It integrates the HTML5 media player mediaelementjs and uses Async if installed to convert videos to common formats.
+It integrates the HTML5 media player `mediaelementjs`_ and uses
+`plone.app.async`_ if installed to convert videos to common formats.
 
+.. _mediaelementjs: http://mediaelementjs.com 
+.. _plone.app.async: https://pypi.python.org/pypi/plone.app.async
 
 Features
 --------
 
 - Audio and Video types
-- Integration with mediaelementjs designed for maximum forward and backwards compatibility
+- Integration with `mediaelementjs`_ designed for maximum forward and
+  backwards compatibility
 - Automatically convert video types to HTML5 compatible video formats
 - Be able to add video from TinyMCE by adding a link to the audio or video
   objects and then adding one of the available Audio and Video TinyMCE styles.
-- Integration with plone.app.async for conversions if installed
+- Integration with `plone.app.async`_ for conversions if installed
 - Plone 4.3 syndication support
 - Transcript data
 - Youtube URL  (in case you want the video streamed from Youtube)
@@ -31,8 +36,8 @@ Features
 Installation
 ------------
 
-In order for video conversion to work correctly, you'll need ffmpeg installed
-which provides the `avconv` collection of command line utilities.
+In order for video conversion to work correctly, you'll need ``ffmpeg``
+installed which provides the ``avconv`` collection of command line utilities.
 
 On Ubuntu, you should be able to install with::
 
@@ -47,15 +52,15 @@ Must have plone.app.jquery >= 1.8.3
 Conversion
 ----------
 
-Some versions of `avconv` may require extra arguments during the conversion
+Some versions of ``avconv`` may require extra arguments during the conversion
 process so that the conversion process succeeds and produces output files in
-a valid format. Extra `infile` and `outfile` options can be configured in the
-control panel.
+a valid format. Extra ``infile`` and ``outfile`` options can be configured in
+the control panel::
 
     avconv [infile options] -i infile [outfile options] outfile
 
-The latest version of avconv on Ubuntu may require `-strict experimental` as an
-outfile option.
+The latest version of ``avconv`` on Ubuntu may require 
+``-strict experimental`` as an ``outfile`` option.
 
 
 YouTube API Support
@@ -75,7 +80,8 @@ Different install requirements::
         ...
 
 Then, setup a google api with oauth access and configure the 
-google_oauth_id and google_oauth_secret properties in the Configuration Registry.
+``google_oauth_id`` and ``google_oauth_secret`` properties in the
+Configuration Registry.
 
 Finally, go to the url: http://plonesite/authorize-google
 

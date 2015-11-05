@@ -7,7 +7,7 @@ setup(name='wildcard.media',
       version=version,
       description="HTML5 audio and video integration with plone",
       long_description="%s\n%s" % (
-          open("README.txt").read(),
+          open("README.rst").read(),
           open(os.path.join("docs", "HISTORY.txt")).read()
       ),
       classifiers=[
