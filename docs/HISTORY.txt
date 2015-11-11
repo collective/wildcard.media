@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.0.2 (unreleased)
+------------------
+
+- nothing yet.
+
 2.0.1 (2015-11-11)
 ------------------
 
@@ -11,7 +16,7 @@ Changelog
 ------------------
 
 - add missing flashmediaelement.swf file and simplify build
-  [vangheem]
+  [senner]
 
 - be able to provide default width/height for videos in admin
   [vangheem]
