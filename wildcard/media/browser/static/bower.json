@@ -4,9 +4,7 @@
   "private": true,
   "description": "",
   "dependencies": {
-    "mediaelement": "2.18.2",
-    "mockup-core": "2.1.5",
-    "chosen": "git://github.com/harvesthq/chosen.git#0.9.11"
+    "mediaelement": "2.18.2"
   },
   "resolutions": {
     "jquery": "1.11.1"

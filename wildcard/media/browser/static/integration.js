@@ -1,3672 +1,3 @@
-/** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.1.14 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
- * Available via the MIT or new BSD license.
- * see: http://github.com/jrburke/requirejs for details
- */
-//Not using strict: uneven strict support in browsers, #392, and causes
-//problems with requirejs.exec()/transpiler plugins that may not be strict.
-/*jslint regexp: true, nomen: true, sloppy: true */
-/*global window, navigator, document, importScripts, setTimeout, opera */
-
-var requirejs, require, define;
-(function (global) {
-    var req, s, head, baseElement, dataMain, src,
-        interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.1.14',
-        commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
-        cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
-        jsSuffixRegExp = /\.js$/,
-        currDirRegExp = /^\.\//,
-        op = Object.prototype,
-        ostring = op.toString,
-        hasOwn = op.hasOwnProperty,
-        ap = Array.prototype,
-        apsp = ap.splice,
-        isBrowser = !!(typeof window !== 'undefined' && typeof navigator !== 'undefined' && window.document),
-        isWebWorker = !isBrowser && typeof importScripts !== 'undefined',
-        //PS3 indicates loaded and complete, but need to wait for complete
-        //specifically. Sequence is 'loading', 'loaded', execution,
-        // then 'complete'. The UA check is unfortunate, but not sure how
-        //to feature test w/o causing perf issues.
-        readyRegExp = isBrowser && navigator.platform === 'PLAYSTATION 3' ?
-                      /^complete$/ : /^(complete|loaded)$/,
-        defContextName = '_',
-        //Oh the tragedy, detecting opera. See the usage of isOpera for reason.
-        isOpera = typeof opera !== 'undefined' && opera.toString() === '[object Opera]',
-        contexts = {},
-        cfg = {},
-        globalDefQueue = [],
-        useInteractive = false;
-
-    function isFunction(it) {
-        return ostring.call(it) === '[object Function]';
-    }
-
-    function isArray(it) {
-        return ostring.call(it) === '[object Array]';
-    }
-
-    /**
-     * Helper function for iterating over an array. If the func returns
-     * a true value, it will break out of the loop.
-     */
-    function each(ary, func) {
-        if (ary) {
-            var i;
-            for (i = 0; i < ary.length; i += 1) {
-                if (ary[i] && func(ary[i], i, ary)) {
-                    break;
-                }
-            }
-        }
-    }
-
-    /**
-     * Helper function for iterating over an array backwards. If the func
-     * returns a true value, it will break out of the loop.
-     */
-    function eachReverse(ary, func) {
-        if (ary) {
-            var i;
-            for (i = ary.length - 1; i > -1; i -= 1) {
-                if (ary[i] && func(ary[i], i, ary)) {
-                    break;
-                }
-            }
-        }
-    }
-
-    function hasProp(obj, prop) {
-        return hasOwn.call(obj, prop);
-    }
-
-    function getOwn(obj, prop) {
-        return hasProp(obj, prop) && obj[prop];
-    }
-
-    /**
-     * Cycles over properties in an object and calls a function for each
-     * property value. If the function returns a truthy value, then the
-     * iteration is stopped.
-     */
-    function eachProp(obj, func) {
-        var prop;
-        for (prop in obj) {
-            if (hasProp(obj, prop)) {
-                if (func(obj[prop], prop)) {
-                    break;
-                }
-            }
-        }
-    }
-
-    /**
-     * Simple function to mix in properties from source into target,
-     * but only if target does not already have a property of the same name.
-     */
-    function mixin(target, source, force, deepStringMixin) {
-        if (source) {
-            eachProp(source, function (value, prop) {
-                if (force || !hasProp(target, prop)) {
-                    if (deepStringMixin && typeof value === 'object' && value &&
-                        !isArray(value) && !isFunction(value) &&
-                        !(value instanceof RegExp)) {
-
-                        if (!target[prop]) {
-                            target[prop] = {};
-                        }
-                        mixin(target[prop], value, force, deepStringMixin);
-                    } else {
-                        target[prop] = value;
-                    }
-                }
-            });
-        }
-        return target;
-    }
-
-    //Similar to Function.prototype.bind, but the 'this' object is specified
-    //first, since it is easier to read/figure out what 'this' will be.
-    function bind(obj, fn) {
-        return function () {
-            return fn.apply(obj, arguments);
-        };
-    }
-
-    function scripts() {
-        return document.getElementsByTagName('script');
-    }
-
-    function defaultOnError(err) {
-        throw err;
-    }
-
-    //Allow getting a global that is expressed in
-    //dot notation, like 'a.b.c'.
-    function getGlobal(value) {
-        if (!value) {
-            return value;
-        }
-        var g = global;
-        each(value.split('.'), function (part) {
-            g = g[part];
-        });
-        return g;
-    }
-
-    /**
-     * Constructs an error with a pointer to an URL with more information.
-     * @param {String} id the error ID that maps to an ID on a web page.
-     * @param {String} message human readable error.
-     * @param {Error} [err] the original error, if there is one.
-     *
-     * @returns {Error}
-     */
-    function makeError(id, msg, err, requireModules) {
-        var e = new Error(msg + '\nhttp://requirejs.org/docs/errors.html#' + id);
-        e.requireType = id;
-        e.requireModules = requireModules;
-        if (err) {
-            e.originalError = err;
-        }
-        return e;
-    }
-
-    if (typeof define !== 'undefined') {
-        //If a define is already in play via another AMD loader,
-        //do not overwrite.
-        return;
-    }
-
-    if (typeof requirejs !== 'undefined') {
-        if (isFunction(requirejs)) {
-            //Do not overwrite an existing requirejs instance.
-            return;
-        }
-        cfg = requirejs;
-        requirejs = undefined;
-    }
-
-    //Allow for a require config object
-    if (typeof require !== 'undefined' && !isFunction(require)) {
-        //assume it is a config object.
-        cfg = require;
-        require = undefined;
-    }
-
-    function newContext(contextName) {
-        var inCheckLoaded, Module, context, handlers,
-            checkLoadedTimeoutId,
-            config = {
-                //Defaults. Do not set a default for map
-                //config to speed up normalize(), which
-                //will run faster if there is no default.
-                waitSeconds: 7,
-                baseUrl: './',
-                paths: {},
-                bundles: {},
-                pkgs: {},
-                shim: {},
-                config: {}
-            },
-            registry = {},
-            //registry of just enabled modules, to speed
-            //cycle breaking code when lots of modules
-            //are registered, but not activated.
-            enabledRegistry = {},
-            undefEvents = {},
-            defQueue = [],
-            defined = {},
-            urlFetched = {},
-            bundlesMap = {},
-            requireCounter = 1,
-            unnormalizedCounter = 1;
-
-        /**
-         * Trims the . and .. from an array of path segments.
-         * It will keep a leading path segment if a .. will become
-         * the first path segment, to help with module name lookups,
-         * which act like paths, but can be remapped. But the end result,
-         * all paths that use this function should look normalized.
-         * NOTE: this method MODIFIES the input array.
-         * @param {Array} ary the array of path segments.
-         */
-        function trimDots(ary) {
-            var i, part;
-            for (i = 0; i < ary.length; i++) {
-                part = ary[i];
-                if (part === '.') {
-                    ary.splice(i, 1);
-                    i -= 1;
-                } else if (part === '..') {
-                    // If at the start, or previous value is still ..,
-                    // keep them so that when converted to a path it may
-                    // still work when converted to a path, even though
-                    // as an ID it is less than ideal. In larger point
-                    // releases, may be better to just kick out an error.
-                    if (i === 0 || (i == 1 && ary[2] === '..') || ary[i - 1] === '..') {
-                        continue;
-                    } else if (i > 0) {
-                        ary.splice(i - 1, 2);
-                        i -= 2;
-                    }
-                }
-            }
-        }
-
-        /**
-         * Given a relative module name, like ./something, normalize it to
-         * a real name that can be mapped to a path.
-         * @param {String} name the relative name
-         * @param {String} baseName a real name that the name arg is relative
-         * to.
-         * @param {Boolean} applyMap apply the map config to the value. Should
-         * only be done if this normalization is for a dependency ID.
-         * @returns {String} normalized name
-         */
-        function normalize(name, baseName, applyMap) {
-            var pkgMain, mapValue, nameParts, i, j, nameSegment, lastIndex,
-                foundMap, foundI, foundStarMap, starI, normalizedBaseParts,
-                baseParts = (baseName && baseName.split('/')),
-                map = config.map,
-                starMap = map && map['*'];
-
-            //Adjust any relative paths.
-            if (name) {
-                name = name.split('/');
-                lastIndex = name.length - 1;
-
-                // If wanting node ID compatibility, strip .js from end
-                // of IDs. Have to do this here, and not in nameToUrl
-                // because node allows either .js or non .js to map
-                // to same file.
-                if (config.nodeIdCompat && jsSuffixRegExp.test(name[lastIndex])) {
-                    name[lastIndex] = name[lastIndex].replace(jsSuffixRegExp, '');
-                }
-
-                // Starts with a '.' so need the baseName
-                if (name[0].charAt(0) === '.' && baseParts) {
-                    //Convert baseName to array, and lop off the last part,
-                    //so that . matches that 'directory' and not name of the baseName's
-                    //module. For instance, baseName of 'one/two/three', maps to
-                    //'one/two/three.js', but we want the directory, 'one/two' for
-                    //this normalization.
-                    normalizedBaseParts = baseParts.slice(0, baseParts.length - 1);
-                    name = normalizedBaseParts.concat(name);
-                }
-
-                trimDots(name);
-                name = name.join('/');
-            }
-
-            //Apply map config if available.
-            if (applyMap && map && (baseParts || starMap)) {
-                nameParts = name.split('/');
-
-                outerLoop: for (i = nameParts.length; i > 0; i -= 1) {
-                    nameSegment = nameParts.slice(0, i).join('/');
-
-                    if (baseParts) {
-                        //Find the longest baseName segment match in the config.
-                        //So, do joins on the biggest to smallest lengths of baseParts.
-                        for (j = baseParts.length; j > 0; j -= 1) {
-                            mapValue = getOwn(map, baseParts.slice(0, j).join('/'));
-
-                            //baseName segment has config, find if it has one for
-                            //this name.
-                            if (mapValue) {
-                                mapValue = getOwn(mapValue, nameSegment);
-                                if (mapValue) {
-                                    //Match, update name to the new value.
-                                    foundMap = mapValue;
-                                    foundI = i;
-                                    break outerLoop;
-                                }
-                            }
-                        }
-                    }
-
-                    //Check for a star map match, but just hold on to it,
-                    //if there is a shorter segment match later in a matching
-                    //config, then favor over this star map.
-                    if (!foundStarMap && starMap && getOwn(starMap, nameSegment)) {
-                        foundStarMap = getOwn(starMap, nameSegment);
-                        starI = i;
-                    }
-                }
-
-                if (!foundMap && foundStarMap) {
-                    foundMap = foundStarMap;
-                    foundI = starI;
-                }
-
-                if (foundMap) {
-                    nameParts.splice(0, foundI, foundMap);
-                    name = nameParts.join('/');
-                }
-            }
-
-            // If the name points to a package's name, use
-            // the package main instead.
-            pkgMain = getOwn(config.pkgs, name);
-
-            return pkgMain ? pkgMain : name;
-        }
-
-        function removeScript(name) {
-            if (isBrowser) {
-                each(scripts(), function (scriptNode) {
-                    if (scriptNode.getAttribute('data-requiremodule') === name &&
-                            scriptNode.getAttribute('data-requirecontext') === context.contextName) {
-                        scriptNode.parentNode.removeChild(scriptNode);
-                        return true;
-                    }
-                });
-            }
-        }
-
-        function hasPathFallback(id) {
-            var pathConfig = getOwn(config.paths, id);
-            if (pathConfig && isArray(pathConfig) && pathConfig.length > 1) {
-                //Pop off the first array value, since it failed, and
-                //retry
-                pathConfig.shift();
-                context.require.undef(id);
-
-                //Custom require that does not do map translation, since
-                //ID is "absolute", already mapped/resolved.
-                context.makeRequire(null, {
-                    skipMap: true
-                })([id]);
-
-                return true;
-            }
-        }
-
-        //Turns a plugin!resource to [plugin, resource]
-        //with the plugin being undefined if the name
-        //did not have a plugin prefix.
-        function splitPrefix(name) {
-            var prefix,
-                index = name ? name.indexOf('!') : -1;
-            if (index > -1) {
-                prefix = name.substring(0, index);
-                name = name.substring(index + 1, name.length);
-            }
-            return [prefix, name];
-        }
-
-        /**
-         * Creates a module mapping that includes plugin prefix, module
-         * name, and path. If parentModuleMap is provided it will
-         * also normalize the name via require.normalize()
-         *
-         * @param {String} name the module name
-         * @param {String} [parentModuleMap] parent module map
-         * for the module name, used to resolve relative names.
-         * @param {Boolean} isNormalized: is the ID already normalized.
-         * This is true if this call is done for a define() module ID.
-         * @param {Boolean} applyMap: apply the map config to the ID.
-         * Should only be true if this map is for a dependency.
-         *
-         * @returns {Object}
-         */
-        function makeModuleMap(name, parentModuleMap, isNormalized, applyMap) {
-            var url, pluginModule, suffix, nameParts,
-                prefix = null,
-                parentName = parentModuleMap ? parentModuleMap.name : null,
-                originalName = name,
-                isDefine = true,
-                normalizedName = '';
-
-            //If no name, then it means it is a require call, generate an
-            //internal name.
-            if (!name) {
-                isDefine = false;
-                name = '_@r' + (requireCounter += 1);
-            }
-
-            nameParts = splitPrefix(name);
-            prefix = nameParts[0];
-            name = nameParts[1];
-
-            if (prefix) {
-                prefix = normalize(prefix, parentName, applyMap);
-                pluginModule = getOwn(defined, prefix);
-            }
-
-            //Account for relative paths if there is a base name.
-            if (name) {
-                if (prefix) {
-                    if (pluginModule && pluginModule.normalize) {
-                        //Plugin is loaded, use its normalize method.
-                        normalizedName = pluginModule.normalize(name, function (name) {
-                            return normalize(name, parentName, applyMap);
-                        });
-                    } else {
-                        // If nested plugin references, then do not try to
-                        // normalize, as it will not normalize correctly. This
-                        // places a restriction on resourceIds, and the longer
-                        // term solution is not to normalize until plugins are
-                        // loaded and all normalizations to allow for async
-                        // loading of a loader plugin. But for now, fixes the
-                        // common uses. Details in #1131
-                        normalizedName = name.indexOf('!') === -1 ?
-                                         normalize(name, parentName, applyMap) :
-                                         name;
-                    }
-                } else {
-                    //A regular module.
-                    normalizedName = normalize(name, parentName, applyMap);
-
-                    //Normalized name may be a plugin ID due to map config
-                    //application in normalize. The map config values must
-                    //already be normalized, so do not need to redo that part.
-                    nameParts = splitPrefix(normalizedName);
-                    prefix = nameParts[0];
-                    normalizedName = nameParts[1];
-                    isNormalized = true;
-
-                    url = context.nameToUrl(normalizedName);
-                }
-            }
-
-            //If the id is a plugin id that cannot be determined if it needs
-            //normalization, stamp it with a unique ID so two matching relative
-            //ids that may conflict can be separate.
-            suffix = prefix && !pluginModule && !isNormalized ?
-                     '_unnormalized' + (unnormalizedCounter += 1) :
-                     '';
-
-            return {
-                prefix: prefix,
-                name: normalizedName,
-                parentMap: parentModuleMap,
-                unnormalized: !!suffix,
-                url: url,
-                originalName: originalName,
-                isDefine: isDefine,
-                id: (prefix ?
-                        prefix + '!' + normalizedName :
-                        normalizedName) + suffix
-            };
-        }
-
-        function getModule(depMap) {
-            var id = depMap.id,
-                mod = getOwn(registry, id);
-
-            if (!mod) {
-                mod = registry[id] = new context.Module(depMap);
-            }
-
-            return mod;
-        }
-
-        function on(depMap, name, fn) {
-            var id = depMap.id,
-                mod = getOwn(registry, id);
-
-            if (hasProp(defined, id) &&
-                    (!mod || mod.defineEmitComplete)) {
-                if (name === 'defined') {
-                    fn(defined[id]);
-                }
-            } else {
-                mod = getModule(depMap);
-                if (mod.error && name === 'error') {
-                    fn(mod.error);
-                } else {
-                    mod.on(name, fn);
-                }
-            }
-        }
-
-        function onError(err, errback) {
-            var ids = err.requireModules,
-                notified = false;
-
-            if (errback) {
-                errback(err);
-            } else {
-                each(ids, function (id) {
-                    var mod = getOwn(registry, id);
-                    if (mod) {
-                        //Set error on module, so it skips timeout checks.
-                        mod.error = err;
-                        if (mod.events.error) {
-                            notified = true;
-                            mod.emit('error', err);
-                        }
-                    }
-                });
-
-                if (!notified) {
-                    req.onError(err);
-                }
-            }
-        }
-
-        /**
-         * Internal method to transfer globalQueue items to this context's
-         * defQueue.
-         */
-        function takeGlobalQueue() {
-            //Push all the globalDefQueue items into the context's defQueue
-            if (globalDefQueue.length) {
-                //Array splice in the values since the context code has a
-                //local var ref to defQueue, so cannot just reassign the one
-                //on context.
-                apsp.apply(defQueue,
-                           [defQueue.length, 0].concat(globalDefQueue));
-                globalDefQueue = [];
-            }
-        }
-
-        handlers = {
-            'require': function (mod) {
-                if (mod.require) {
-                    return mod.require;
-                } else {
-                    return (mod.require = context.makeRequire(mod.map));
-                }
-            },
-            'exports': function (mod) {
-                mod.usingExports = true;
-                if (mod.map.isDefine) {
-                    if (mod.exports) {
-                        return (defined[mod.map.id] = mod.exports);
-                    } else {
-                        return (mod.exports = defined[mod.map.id] = {});
-                    }
-                }
-            },
-            'module': function (mod) {
-                if (mod.module) {
-                    return mod.module;
-                } else {
-                    return (mod.module = {
-                        id: mod.map.id,
-                        uri: mod.map.url,
-                        config: function () {
-                            return  getOwn(config.config, mod.map.id) || {};
-                        },
-                        exports: mod.exports || (mod.exports = {})
-                    });
-                }
-            }
-        };
-
-        function cleanRegistry(id) {
-            //Clean up machinery used for waiting modules.
-            delete registry[id];
-            delete enabledRegistry[id];
-        }
-
-        function breakCycle(mod, traced, processed) {
-            var id = mod.map.id;
-
-            if (mod.error) {
-                mod.emit('error', mod.error);
-            } else {
-                traced[id] = true;
-                each(mod.depMaps, function (depMap, i) {
-                    var depId = depMap.id,
-                        dep = getOwn(registry, depId);
-
-                    //Only force things that have not completed
-                    //being defined, so still in the registry,
-                    //and only if it has not been matched up
-                    //in the module already.
-                    if (dep && !mod.depMatched[i] && !processed[depId]) {
-                        if (getOwn(traced, depId)) {
-                            mod.defineDep(i, defined[depId]);
-                            mod.check(); //pass false?
-                        } else {
-                            breakCycle(dep, traced, processed);
-                        }
-                    }
-                });
-                processed[id] = true;
-            }
-        }
-
-        function checkLoaded() {
-            var err, usingPathFallback,
-                waitInterval = config.waitSeconds * 1000,
-                //It is possible to disable the wait interval by using waitSeconds of 0.
-                expired = waitInterval && (context.startTime + waitInterval) < new Date().getTime(),
-                noLoads = [],
-                reqCalls = [],
-                stillLoading = false,
-                needCycleCheck = true;
-
-            //Do not bother if this call was a result of a cycle break.
-            if (inCheckLoaded) {
-                return;
-            }
-
-            inCheckLoaded = true;
-
-            //Figure out the state of all the modules.
-            eachProp(enabledRegistry, function (mod) {
-                var map = mod.map,
-                    modId = map.id;
-
-                //Skip things that are not enabled or in error state.
-                if (!mod.enabled) {
-                    return;
-                }
-
-                if (!map.isDefine) {
-                    reqCalls.push(mod);
-                }
-
-                if (!mod.error) {
-                    //If the module should be executed, and it has not
-                    //been inited and time is up, remember it.
-                    if (!mod.inited && expired) {
-                        if (hasPathFallback(modId)) {
-                            usingPathFallback = true;
-                            stillLoading = true;
-                        } else {
-                            noLoads.push(modId);
-                            removeScript(modId);
-                        }
-                    } else if (!mod.inited && mod.fetched && map.isDefine) {
-                        stillLoading = true;
-                        if (!map.prefix) {
-                            //No reason to keep looking for unfinished
-                            //loading. If the only stillLoading is a
-                            //plugin resource though, keep going,
-                            //because it may be that a plugin resource
-                            //is waiting on a non-plugin cycle.
-                            return (needCycleCheck = false);
-                        }
-                    }
-                }
-            });
-
-            if (expired && noLoads.length) {
-                //If wait time expired, throw error of unloaded modules.
-                err = makeError('timeout', 'Load timeout for modules: ' + noLoads, null, noLoads);
-                err.contextName = context.contextName;
-                return onError(err);
-            }
-
-            //Not expired, check for a cycle.
-            if (needCycleCheck) {
-                each(reqCalls, function (mod) {
-                    breakCycle(mod, {}, {});
-                });
-            }
-
-            //If still waiting on loads, and the waiting load is something
-            //other than a plugin resource, or there are still outstanding
-            //scripts, then just try back later.
-            if ((!expired || usingPathFallback) && stillLoading) {
-                //Something is still waiting to load. Wait for it, but only
-                //if a timeout is not already in effect.
-                if ((isBrowser || isWebWorker) && !checkLoadedTimeoutId) {
-                    checkLoadedTimeoutId = setTimeout(function () {
-                        checkLoadedTimeoutId = 0;
-                        checkLoaded();
-                    }, 50);
-                }
-            }
-
-            inCheckLoaded = false;
-        }
-
-        Module = function (map) {
-            this.events = getOwn(undefEvents, map.id) || {};
-            this.map = map;
-            this.shim = getOwn(config.shim, map.id);
-            this.depExports = [];
-            this.depMaps = [];
-            this.depMatched = [];
-            this.pluginMaps = {};
-            this.depCount = 0;
-
-            /* this.exports this.factory
-               this.depMaps = [],
-               this.enabled, this.fetched
-            */
-        };
-
-        Module.prototype = {
-            init: function (depMaps, factory, errback, options) {
-                options = options || {};
-
-                //Do not do more inits if already done. Can happen if there
-                //are multiple define calls for the same module. That is not
-                //a normal, common case, but it is also not unexpected.
-                if (this.inited) {
-                    return;
-                }
-
-                this.factory = factory;
-
-                if (errback) {
-                    //Register for errors on this module.
-                    this.on('error', errback);
-                } else if (this.events.error) {
-                    //If no errback already, but there are error listeners
-                    //on this module, set up an errback to pass to the deps.
-                    errback = bind(this, function (err) {
-                        this.emit('error', err);
-                    });
-                }
-
-                //Do a copy of the dependency array, so that
-                //source inputs are not modified. For example
-                //"shim" deps are passed in here directly, and
-                //doing a direct modification of the depMaps array
-                //would affect that config.
-                this.depMaps = depMaps && depMaps.slice(0);
-
-                this.errback = errback;
-
-                //Indicate this module has be initialized
-                this.inited = true;
-
-                this.ignore = options.ignore;
-
-                //Could have option to init this module in enabled mode,
-                //or could have been previously marked as enabled. However,
-                //the dependencies are not known until init is called. So
-                //if enabled previously, now trigger dependencies as enabled.
-                if (options.enabled || this.enabled) {
-                    //Enable this module and dependencies.
-                    //Will call this.check()
-                    this.enable();
-                } else {
-                    this.check();
-                }
-            },
-
-            defineDep: function (i, depExports) {
-                //Because of cycles, defined callback for a given
-                //export can be called more than once.
-                if (!this.depMatched[i]) {
-                    this.depMatched[i] = true;
-                    this.depCount -= 1;
-                    this.depExports[i] = depExports;
-                }
-            },
-
-            fetch: function () {
-                if (this.fetched) {
-                    return;
-                }
-                this.fetched = true;
-
-                context.startTime = (new Date()).getTime();
-
-                var map = this.map;
-
-                //If the manager is for a plugin managed resource,
-                //ask the plugin to load it now.
-                if (this.shim) {
-                    context.makeRequire(this.map, {
-                        enableBuildCallback: true
-                    })(this.shim.deps || [], bind(this, function () {
-                        return map.prefix ? this.callPlugin() : this.load();
-                    }));
-                } else {
-                    //Regular dependency.
-                    return map.prefix ? this.callPlugin() : this.load();
-                }
-            },
-
-            load: function () {
-                var url = this.map.url;
-
-                //Regular dependency.
-                if (!urlFetched[url]) {
-                    urlFetched[url] = true;
-                    context.load(this.map.id, url);
-                }
-            },
-
-            /**
-             * Checks if the module is ready to define itself, and if so,
-             * define it.
-             */
-            check: function () {
-                if (!this.enabled || this.enabling) {
-                    return;
-                }
-
-                var err, cjsModule,
-                    id = this.map.id,
-                    depExports = this.depExports,
-                    exports = this.exports,
-                    factory = this.factory;
-
-                if (!this.inited) {
-                    this.fetch();
-                } else if (this.error) {
-                    this.emit('error', this.error);
-                } else if (!this.defining) {
-                    //The factory could trigger another require call
-                    //that would result in checking this module to
-                    //define itself again. If already in the process
-                    //of doing that, skip this work.
-                    this.defining = true;
-
-                    if (this.depCount < 1 && !this.defined) {
-                        if (isFunction(factory)) {
-                            //If there is an error listener, favor passing
-                            //to that instead of throwing an error. However,
-                            //only do it for define()'d  modules. require
-                            //errbacks should not be called for failures in
-                            //their callbacks (#699). However if a global
-                            //onError is set, use that.
-                            if ((this.events.error && this.map.isDefine) ||
-                                req.onError !== defaultOnError) {
-                                try {
-                                    exports = context.execCb(id, factory, depExports, exports);
-                                } catch (e) {
-                                    err = e;
-                                }
-                            } else {
-                                exports = context.execCb(id, factory, depExports, exports);
-                            }
-
-                            // Favor return value over exports. If node/cjs in play,
-                            // then will not have a return value anyway. Favor
-                            // module.exports assignment over exports object.
-                            if (this.map.isDefine && exports === undefined) {
-                                cjsModule = this.module;
-                                if (cjsModule) {
-                                    exports = cjsModule.exports;
-                                } else if (this.usingExports) {
-                                    //exports already set the defined value.
-                                    exports = this.exports;
-                                }
-                            }
-
-                            if (err) {
-                                err.requireMap = this.map;
-                                err.requireModules = this.map.isDefine ? [this.map.id] : null;
-                                err.requireType = this.map.isDefine ? 'define' : 'require';
-                                return onError((this.error = err));
-                            }
-
-                        } else {
-                            //Just a literal value
-                            exports = factory;
-                        }
-
-                        this.exports = exports;
-
-                        if (this.map.isDefine && !this.ignore) {
-                            defined[id] = exports;
-
-                            if (req.onResourceLoad) {
-                                req.onResourceLoad(context, this.map, this.depMaps);
-                            }
-                        }
-
-                        //Clean up
-                        cleanRegistry(id);
-
-                        this.defined = true;
-                    }
-
-                    //Finished the define stage. Allow calling check again
-                    //to allow define notifications below in the case of a
-                    //cycle.
-                    this.defining = false;
-
-                    if (this.defined && !this.defineEmitted) {
-                        this.defineEmitted = true;
-                        this.emit('defined', this.exports);
-                        this.defineEmitComplete = true;
-                    }
-
-                }
-            },
-
-            callPlugin: function () {
-                var map = this.map,
-                    id = map.id,
-                    //Map already normalized the prefix.
-                    pluginMap = makeModuleMap(map.prefix);
-
-                //Mark this as a dependency for this plugin, so it
-                //can be traced for cycles.
-                this.depMaps.push(pluginMap);
-
-                on(pluginMap, 'defined', bind(this, function (plugin) {
-                    var load, normalizedMap, normalizedMod,
-                        bundleId = getOwn(bundlesMap, this.map.id),
-                        name = this.map.name,
-                        parentName = this.map.parentMap ? this.map.parentMap.name : null,
-                        localRequire = context.makeRequire(map.parentMap, {
-                            enableBuildCallback: true
-                        });
-
-                    //If current map is not normalized, wait for that
-                    //normalized name to load instead of continuing.
-                    if (this.map.unnormalized) {
-                        //Normalize the ID if the plugin allows it.
-                        if (plugin.normalize) {
-                            name = plugin.normalize(name, function (name) {
-                                return normalize(name, parentName, true);
-                            }) || '';
-                        }
-
-                        //prefix and name should already be normalized, no need
-                        //for applying map config again either.
-                        normalizedMap = makeModuleMap(map.prefix + '!' + name,
-                                                      this.map.parentMap);
-                        on(normalizedMap,
-                            'defined', bind(this, function (value) {
-                                this.init([], function () { return value; }, null, {
-                                    enabled: true,
-                                    ignore: true
-                                });
-                            }));
-
-                        normalizedMod = getOwn(registry, normalizedMap.id);
-                        if (normalizedMod) {
-                            //Mark this as a dependency for this plugin, so it
-                            //can be traced for cycles.
-                            this.depMaps.push(normalizedMap);
-
-                            if (this.events.error) {
-                                normalizedMod.on('error', bind(this, function (err) {
-                                    this.emit('error', err);
-                                }));
-                            }
-                            normalizedMod.enable();
-                        }
-
-                        return;
-                    }
-
-                    //If a paths config, then just load that file instead to
-                    //resolve the plugin, as it is built into that paths layer.
-                    if (bundleId) {
-                        this.map.url = context.nameToUrl(bundleId);
-                        this.load();
-                        return;
-                    }
-
-                    load = bind(this, function (value) {
-                        this.init([], function () { return value; }, null, {
-                            enabled: true
-                        });
-                    });
-
-                    load.error = bind(this, function (err) {
-                        this.inited = true;
-                        this.error = err;
-                        err.requireModules = [id];
-
-                        //Remove temp unnormalized modules for this module,
-                        //since they will never be resolved otherwise now.
-                        eachProp(registry, function (mod) {
-                            if (mod.map.id.indexOf(id + '_unnormalized') === 0) {
-                                cleanRegistry(mod.map.id);
-                            }
-                        });
-
-                        onError(err);
-                    });
-
-                    //Allow plugins to load other code without having to know the
-                    //context or how to 'complete' the load.
-                    load.fromText = bind(this, function (text, textAlt) {
-                        /*jslint evil: true */
-                        var moduleName = map.name,
-                            moduleMap = makeModuleMap(moduleName),
-                            hasInteractive = useInteractive;
-
-                        //As of 2.1.0, support just passing the text, to reinforce
-                        //fromText only being called once per resource. Still
-                        //support old style of passing moduleName but discard
-                        //that moduleName in favor of the internal ref.
-                        if (textAlt) {
-                            text = textAlt;
-                        }
-
-                        //Turn off interactive script matching for IE for any define
-                        //calls in the text, then turn it back on at the end.
-                        if (hasInteractive) {
-                            useInteractive = false;
-                        }
-
-                        //Prime the system by creating a module instance for
-                        //it.
-                        getModule(moduleMap);
-
-                        //Transfer any config to this other module.
-                        if (hasProp(config.config, id)) {
-                            config.config[moduleName] = config.config[id];
-                        }
-
-                        try {
-                            req.exec(text);
-                        } catch (e) {
-                            return onError(makeError('fromtexteval',
-                                             'fromText eval for ' + id +
-                                            ' failed: ' + e,
-                                             e,
-                                             [id]));
-                        }
-
-                        if (hasInteractive) {
-                            useInteractive = true;
-                        }
-
-                        //Mark this as a dependency for the plugin
-                        //resource
-                        this.depMaps.push(moduleMap);
-
-                        //Support anonymous modules.
-                        context.completeLoad(moduleName);
-
-                        //Bind the value of that module to the value for this
-                        //resource ID.
-                        localRequire([moduleName], load);
-                    });
-
-                    //Use parentName here since the plugin's name is not reliable,
-                    //could be some weird string with no path that actually wants to
-                    //reference the parentName's path.
-                    plugin.load(map.name, localRequire, load, config);
-                }));
-
-                context.enable(pluginMap, this);
-                this.pluginMaps[pluginMap.id] = pluginMap;
-            },
-
-            enable: function () {
-                enabledRegistry[this.map.id] = this;
-                this.enabled = true;
-
-                //Set flag mentioning that the module is enabling,
-                //so that immediate calls to the defined callbacks
-                //for dependencies do not trigger inadvertent load
-                //with the depCount still being zero.
-                this.enabling = true;
-
-                //Enable each dependency
-                each(this.depMaps, bind(this, function (depMap, i) {
-                    var id, mod, handler;
-
-                    if (typeof depMap === 'string') {
-                        //Dependency needs to be converted to a depMap
-                        //and wired up to this module.
-                        depMap = makeModuleMap(depMap,
-                                               (this.map.isDefine ? this.map : this.map.parentMap),
-                                               false,
-                                               !this.skipMap);
-                        this.depMaps[i] = depMap;
-
-                        handler = getOwn(handlers, depMap.id);
-
-                        if (handler) {
-                            this.depExports[i] = handler(this);
-                            return;
-                        }
-
-                        this.depCount += 1;
-
-                        on(depMap, 'defined', bind(this, function (depExports) {
-                            this.defineDep(i, depExports);
-                            this.check();
-                        }));
-
-                        if (this.errback) {
-                            on(depMap, 'error', bind(this, this.errback));
-                        }
-                    }
-
-                    id = depMap.id;
-                    mod = registry[id];
-
-                    //Skip special modules like 'require', 'exports', 'module'
-                    //Also, don't call enable if it is already enabled,
-                    //important in circular dependency cases.
-                    if (!hasProp(handlers, id) && mod && !mod.enabled) {
-                        context.enable(depMap, this);
-                    }
-                }));
-
-                //Enable each plugin that is used in
-                //a dependency
-                eachProp(this.pluginMaps, bind(this, function (pluginMap) {
-                    var mod = getOwn(registry, pluginMap.id);
-                    if (mod && !mod.enabled) {
-                        context.enable(pluginMap, this);
-                    }
-                }));
-
-                this.enabling = false;
-
-                this.check();
-            },
-
-            on: function (name, cb) {
-                var cbs = this.events[name];
-                if (!cbs) {
-                    cbs = this.events[name] = [];
-                }
-                cbs.push(cb);
-            },
-
-            emit: function (name, evt) {
-                each(this.events[name], function (cb) {
-                    cb(evt);
-                });
-                if (name === 'error') {
-                    //Now that the error handler was triggered, remove
-                    //the listeners, since this broken Module instance
-                    //can stay around for a while in the registry.
-                    delete this.events[name];
-                }
-            }
-        };
-
-        function callGetModule(args) {
-            //Skip modules already defined.
-            if (!hasProp(defined, args[0])) {
-                getModule(makeModuleMap(args[0], null, true)).init(args[1], args[2]);
-            }
-        }
-
-        function removeListener(node, func, name, ieName) {
-            //Favor detachEvent because of IE9
-            //issue, see attachEvent/addEventListener comment elsewhere
-            //in this file.
-            if (node.detachEvent && !isOpera) {
-                //Probably IE. If not it will throw an error, which will be
-                //useful to know.
-                if (ieName) {
-                    node.detachEvent(ieName, func);
-                }
-            } else {
-                node.removeEventListener(name, func, false);
-            }
-        }
-
-        /**
-         * Given an event from a script node, get the requirejs info from it,
-         * and then removes the event listeners on the node.
-         * @param {Event} evt
-         * @returns {Object}
-         */
-        function getScriptData(evt) {
-            //Using currentTarget instead of target for Firefox 2.0's sake. Not
-            //all old browsers will be supported, but this one was easy enough
-            //to support and still makes sense.
-            var node = evt.currentTarget || evt.srcElement;
-
-            //Remove the listeners once here.
-            removeListener(node, context.onScriptLoad, 'load', 'onreadystatechange');
-            removeListener(node, context.onScriptError, 'error');
-
-            return {
-                node: node,
-                id: node && node.getAttribute('data-requiremodule')
-            };
-        }
-
-        function intakeDefines() {
-            var args;
-
-            //Any defined modules in the global queue, intake them now.
-            takeGlobalQueue();
-
-            //Make sure any remaining defQueue items get properly processed.
-            while (defQueue.length) {
-                args = defQueue.shift();
-                if (args[0] === null) {
-                    return onError(makeError('mismatch', 'Mismatched anonymous define() module: ' + args[args.length - 1]));
-                } else {
-                    //args are id, deps, factory. Should be normalized by the
-                    //define() function.
-                    callGetModule(args);
-                }
-            }
-        }
-
-        context = {
-            config: config,
-            contextName: contextName,
-            registry: registry,
-            defined: defined,
-            urlFetched: urlFetched,
-            defQueue: defQueue,
-            Module: Module,
-            makeModuleMap: makeModuleMap,
-            nextTick: req.nextTick,
-            onError: onError,
-
-            /**
-             * Set a configuration for the context.
-             * @param {Object} cfg config object to integrate.
-             */
-            configure: function (cfg) {
-                //Make sure the baseUrl ends in a slash.
-                if (cfg.baseUrl) {
-                    if (cfg.baseUrl.charAt(cfg.baseUrl.length - 1) !== '/') {
-                        cfg.baseUrl += '/';
-                    }
-                }
-
-                //Save off the paths since they require special processing,
-                //they are additive.
-                var shim = config.shim,
-                    objs = {
-                        paths: true,
-                        bundles: true,
-                        config: true,
-                        map: true
-                    };
-
-                eachProp(cfg, function (value, prop) {
-                    if (objs[prop]) {
-                        if (!config[prop]) {
-                            config[prop] = {};
-                        }
-                        mixin(config[prop], value, true, true);
-                    } else {
-                        config[prop] = value;
-                    }
-                });
-
-                //Reverse map the bundles
-                if (cfg.bundles) {
-                    eachProp(cfg.bundles, function (value, prop) {
-                        each(value, function (v) {
-                            if (v !== prop) {
-                                bundlesMap[v] = prop;
-                            }
-                        });
-                    });
-                }
-
-                //Merge shim
-                if (cfg.shim) {
-                    eachProp(cfg.shim, function (value, id) {
-                        //Normalize the structure
-                        if (isArray(value)) {
-                            value = {
-                                deps: value
-                            };
-                        }
-                        if ((value.exports || value.init) && !value.exportsFn) {
-                            value.exportsFn = context.makeShimExports(value);
-                        }
-                        shim[id] = value;
-                    });
-                    config.shim = shim;
-                }
-
-                //Adjust packages if necessary.
-                if (cfg.packages) {
-                    each(cfg.packages, function (pkgObj) {
-                        var location, name;
-
-                        pkgObj = typeof pkgObj === 'string' ? { name: pkgObj } : pkgObj;
-
-                        name = pkgObj.name;
-                        location = pkgObj.location;
-                        if (location) {
-                            config.paths[name] = pkgObj.location;
-                        }
-
-                        //Save pointer to main module ID for pkg name.
-                        //Remove leading dot in main, so main paths are normalized,
-                        //and remove any trailing .js, since different package
-                        //envs have different conventions: some use a module name,
-                        //some use a file name.
-                        config.pkgs[name] = pkgObj.name + '/' + (pkgObj.main || 'main')
-                                     .replace(currDirRegExp, '')
-                                     .replace(jsSuffixRegExp, '');
-                    });
-                }
-
-                //If there are any "waiting to execute" modules in the registry,
-                //update the maps for them, since their info, like URLs to load,
-                //may have changed.
-                eachProp(registry, function (mod, id) {
-                    //If module already has init called, since it is too
-                    //late to modify them, and ignore unnormalized ones
-                    //since they are transient.
-                    if (!mod.inited && !mod.map.unnormalized) {
-                        mod.map = makeModuleMap(id);
-                    }
-                });
-
-                //If a deps array or a config callback is specified, then call
-                //require with those args. This is useful when require is defined as a
-                //config object before require.js is loaded.
-                if (cfg.deps || cfg.callback) {
-                    context.require(cfg.deps || [], cfg.callback);
-                }
-            },
-
-            makeShimExports: function (value) {
-                function fn() {
-                    var ret;
-                    if (value.init) {
-                        ret = value.init.apply(global, arguments);
-                    }
-                    return ret || (value.exports && getGlobal(value.exports));
-                }
-                return fn;
-            },
-
-            makeRequire: function (relMap, options) {
-                options = options || {};
-
-                function localRequire(deps, callback, errback) {
-                    var id, map, requireMod;
-
-                    if (options.enableBuildCallback && callback && isFunction(callback)) {
-                        callback.__requireJsBuild = true;
-                    }
-
-                    if (typeof deps === 'string') {
-                        if (isFunction(callback)) {
-                            //Invalid call
-                            return onError(makeError('requireargs', 'Invalid require call'), errback);
-                        }
-
-                        //If require|exports|module are requested, get the
-                        //value for them from the special handlers. Caveat:
-                        //this only works while module is being defined.
-                        if (relMap && hasProp(handlers, deps)) {
-                            return handlers[deps](registry[relMap.id]);
-                        }
-
-                        //Synchronous access to one module. If require.get is
-                        //available (as in the Node adapter), prefer that.
-                        if (req.get) {
-                            return req.get(context, deps, relMap, localRequire);
-                        }
-
-                        //Normalize module name, if it contains . or ..
-                        map = makeModuleMap(deps, relMap, false, true);
-                        id = map.id;
-
-                        if (!hasProp(defined, id)) {
-                            return onError(makeError('notloaded', 'Module name "' +
-                                        id +
-                                        '" has not been loaded yet for context: ' +
-                                        contextName +
-                                        (relMap ? '' : '. Use require([])')));
-                        }
-                        return defined[id];
-                    }
-
-                    //Grab defines waiting in the global queue.
-                    intakeDefines();
-
-                    //Mark all the dependencies as needing to be loaded.
-                    context.nextTick(function () {
-                        //Some defines could have been added since the
-                        //require call, collect them.
-                        intakeDefines();
-
-                        requireMod = getModule(makeModuleMap(null, relMap));
-
-                        //Store if map config should be applied to this require
-                        //call for dependencies.
-                        requireMod.skipMap = options.skipMap;
-
-                        requireMod.init(deps, callback, errback, {
-                            enabled: true
-                        });
-
-                        checkLoaded();
-                    });
-
-                    return localRequire;
-                }
-
-                mixin(localRequire, {
-                    isBrowser: isBrowser,
-
-                    /**
-                     * Converts a module name + .extension into an URL path.
-                     * *Requires* the use of a module name. It does not support using
-                     * plain URLs like nameToUrl.
-                     */
-                    toUrl: function (moduleNamePlusExt) {
-                        var ext,
-                            index = moduleNamePlusExt.lastIndexOf('.'),
-                            segment = moduleNamePlusExt.split('/')[0],
-                            isRelative = segment === '.' || segment === '..';
-
-                        //Have a file extension alias, and it is not the
-                        //dots from a relative path.
-                        if (index !== -1 && (!isRelative || index > 1)) {
-                            ext = moduleNamePlusExt.substring(index, moduleNamePlusExt.length);
-                            moduleNamePlusExt = moduleNamePlusExt.substring(0, index);
-                        }
-
-                        return context.nameToUrl(normalize(moduleNamePlusExt,
-                                                relMap && relMap.id, true), ext,  true);
-                    },
-
-                    defined: function (id) {
-                        return hasProp(defined, makeModuleMap(id, relMap, false, true).id);
-                    },
-
-                    specified: function (id) {
-                        id = makeModuleMap(id, relMap, false, true).id;
-                        return hasProp(defined, id) || hasProp(registry, id);
-                    }
-                });
-
-                //Only allow undef on top level require calls
-                if (!relMap) {
-                    localRequire.undef = function (id) {
-                        //Bind any waiting define() calls to this context,
-                        //fix for #408
-                        takeGlobalQueue();
-
-                        var map = makeModuleMap(id, relMap, true),
-                            mod = getOwn(registry, id);
-
-                        removeScript(id);
-
-                        delete defined[id];
-                        delete urlFetched[map.url];
-                        delete undefEvents[id];
-
-                        //Clean queued defines too. Go backwards
-                        //in array so that the splices do not
-                        //mess up the iteration.
-                        eachReverse(defQueue, function(args, i) {
-                            if(args[0] === id) {
-                                defQueue.splice(i, 1);
-                            }
-                        });
-
-                        if (mod) {
-                            //Hold on to listeners in case the
-                            //module will be attempted to be reloaded
-                            //using a different config.
-                            if (mod.events.defined) {
-                                undefEvents[id] = mod.events;
-                            }
-
-                            cleanRegistry(id);
-                        }
-                    };
-                }
-
-                return localRequire;
-            },
-
-            /**
-             * Called to enable a module if it is still in the registry
-             * awaiting enablement. A second arg, parent, the parent module,
-             * is passed in for context, when this method is overridden by
-             * the optimizer. Not shown here to keep code compact.
-             */
-            enable: function (depMap) {
-                var mod = getOwn(registry, depMap.id);
-                if (mod) {
-                    getModule(depMap).enable();
-                }
-            },
-
-            /**
-             * Internal method used by environment adapters to complete a load event.
-             * A load event could be a script load or just a load pass from a synchronous
-             * load call.
-             * @param {String} moduleName the name of the module to potentially complete.
-             */
-            completeLoad: function (moduleName) {
-                var found, args, mod,
-                    shim = getOwn(config.shim, moduleName) || {},
-                    shExports = shim.exports;
-
-                takeGlobalQueue();
-
-                while (defQueue.length) {
-                    args = defQueue.shift();
-                    if (args[0] === null) {
-                        args[0] = moduleName;
-                        //If already found an anonymous module and bound it
-                        //to this name, then this is some other anon module
-                        //waiting for its completeLoad to fire.
-                        if (found) {
-                            break;
-                        }
-                        found = true;
-                    } else if (args[0] === moduleName) {
-                        //Found matching define call for this script!
-                        found = true;
-                    }
-
-                    callGetModule(args);
-                }
-
-                //Do this after the cycle of callGetModule in case the result
-                //of those calls/init calls changes the registry.
-                mod = getOwn(registry, moduleName);
-
-                if (!found && !hasProp(defined, moduleName) && mod && !mod.inited) {
-                    if (config.enforceDefine && (!shExports || !getGlobal(shExports))) {
-                        if (hasPathFallback(moduleName)) {
-                            return;
-                        } else {
-                            return onError(makeError('nodefine',
-                                             'No define call for ' + moduleName,
-                                             null,
-                                             [moduleName]));
-                        }
-                    } else {
-                        //A script that does not call define(), so just simulate
-                        //the call for it.
-                        callGetModule([moduleName, (shim.deps || []), shim.exportsFn]);
-                    }
-                }
-
-                checkLoaded();
-            },
-
-            /**
-             * Converts a module name to a file path. Supports cases where
-             * moduleName may actually be just an URL.
-             * Note that it **does not** call normalize on the moduleName,
-             * it is assumed to have already been normalized. This is an
-             * internal API, not a public one. Use toUrl for the public API.
-             */
-            nameToUrl: function (moduleName, ext, skipExt) {
-                var paths, syms, i, parentModule, url,
-                    parentPath, bundleId,
-                    pkgMain = getOwn(config.pkgs, moduleName);
-
-                if (pkgMain) {
-                    moduleName = pkgMain;
-                }
-
-                bundleId = getOwn(bundlesMap, moduleName);
-
-                if (bundleId) {
-                    return context.nameToUrl(bundleId, ext, skipExt);
-                }
-
-                //If a colon is in the URL, it indicates a protocol is used and it is just
-                //an URL to a file, or if it starts with a slash, contains a query arg (i.e. ?)
-                //or ends with .js, then assume the user meant to use an url and not a module id.
-                //The slash is important for protocol-less URLs as well as full paths.
-                if (req.jsExtRegExp.test(moduleName)) {
-                    //Just a plain path, not module name lookup, so just return it.
-                    //Add extension if it is included. This is a bit wonky, only non-.js things pass
-                    //an extension, this method probably needs to be reworked.
-                    url = moduleName + (ext || '');
-                } else {
-                    //A module that needs to be converted to a path.
-                    paths = config.paths;
-
-                    syms = moduleName.split('/');
-                    //For each module name segment, see if there is a path
-                    //registered for it. Start with most specific name
-                    //and work up from it.
-                    for (i = syms.length; i > 0; i -= 1) {
-                        parentModule = syms.slice(0, i).join('/');
-
-                        parentPath = getOwn(paths, parentModule);
-                        if (parentPath) {
-                            //If an array, it means there are a few choices,
-                            //Choose the one that is desired
-                            if (isArray(parentPath)) {
-                                parentPath = parentPath[0];
-                            }
-                            syms.splice(0, i, parentPath);
-                            break;
-                        }
-                    }
-
-                    //Join the path parts together, then figure out if baseUrl is needed.
-                    url = syms.join('/');
-                    url += (ext || (/^data\:|\?/.test(url) || skipExt ? '' : '.js'));
-                    url = (url.charAt(0) === '/' || url.match(/^[\w\+\.\-]+:/) ? '' : config.baseUrl) + url;
-                }
-
-                return config.urlArgs ? url +
-                                        ((url.indexOf('?') === -1 ? '?' : '&') +
-                                         config.urlArgs) : url;
-            },
-
-            //Delegates to req.load. Broken out as a separate function to
-            //allow overriding in the optimizer.
-            load: function (id, url) {
-                req.load(context, id, url);
-            },
-
-            /**
-             * Executes a module callback function. Broken out as a separate function
-             * solely to allow the build system to sequence the files in the built
-             * layer in the right sequence.
-             *
-             * @private
-             */
-            execCb: function (name, callback, args, exports) {
-                return callback.apply(exports, args);
-            },
-
-            /**
-             * callback for script loads, used to check status of loading.
-             *
-             * @param {Event} evt the event from the browser for the script
-             * that was loaded.
-             */
-            onScriptLoad: function (evt) {
-                //Using currentTarget instead of target for Firefox 2.0's sake. Not
-                //all old browsers will be supported, but this one was easy enough
-                //to support and still makes sense.
-                if (evt.type === 'load' ||
-                        (readyRegExp.test((evt.currentTarget || evt.srcElement).readyState))) {
-                    //Reset interactive script so a script node is not held onto for
-                    //to long.
-                    interactiveScript = null;
-
-                    //Pull out the name of the module and the context.
-                    var data = getScriptData(evt);
-                    context.completeLoad(data.id);
-                }
-            },
-
-            /**
-             * Callback for script errors.
-             */
-            onScriptError: function (evt) {
-                var data = getScriptData(evt);
-                if (!hasPathFallback(data.id)) {
-                    return onError(makeError('scripterror', 'Script error for: ' + data.id, evt, [data.id]));
-                }
-            }
-        };
-
-        context.require = context.makeRequire();
-        return context;
-    }
-
-    /**
-     * Main entry point.
-     *
-     * If the only argument to require is a string, then the module that
-     * is represented by that string is fetched for the appropriate context.
-     *
-     * If the first argument is an array, then it will be treated as an array
-     * of dependency string names to fetch. An optional function callback can
-     * be specified to execute when all of those dependencies are available.
-     *
-     * Make a local req variable to help Caja compliance (it assumes things
-     * on a require that are not standardized), and to give a short
-     * name for minification/local scope use.
-     */
-    req = requirejs = function (deps, callback, errback, optional) {
-
-        //Find the right context, use default
-        var context, config,
-            contextName = defContextName;
-
-        // Determine if have config object in the call.
-        if (!isArray(deps) && typeof deps !== 'string') {
-            // deps is a config object
-            config = deps;
-            if (isArray(callback)) {
-                // Adjust args if there are dependencies
-                deps = callback;
-                callback = errback;
-                errback = optional;
-            } else {
-                deps = [];
-            }
-        }
-
-        if (config && config.context) {
-            contextName = config.context;
-        }
-
-        context = getOwn(contexts, contextName);
-        if (!context) {
-            context = contexts[contextName] = req.s.newContext(contextName);
-        }
-
-        if (config) {
-            context.configure(config);
-        }
-
-        return context.require(deps, callback, errback);
-    };
-
-    /**
-     * Support require.config() to make it easier to cooperate with other
-     * AMD loaders on globally agreed names.
-     */
-    req.config = function (config) {
-        return req(config);
-    };
-
-    /**
-     * Execute something after the current tick
-     * of the event loop. Override for other envs
-     * that have a better solution than setTimeout.
-     * @param  {Function} fn function to execute later.
-     */
-    req.nextTick = typeof setTimeout !== 'undefined' ? function (fn) {
-        setTimeout(fn, 4);
-    } : function (fn) { fn(); };
-
-    /**
-     * Export require as a global, but only if it does not already exist.
-     */
-    if (!require) {
-        require = req;
-    }
-
-    req.version = version;
-
-    //Used to filter out dependencies that are already paths.
-    req.jsExtRegExp = /^\/|:|\?|\.js$/;
-    req.isBrowser = isBrowser;
-    s = req.s = {
-        contexts: contexts,
-        newContext: newContext
-    };
-
-    //Create default context.
-    req({});
-
-    //Exports some context-sensitive methods on global require.
-    each([
-        'toUrl',
-        'undef',
-        'defined',
-        'specified'
-    ], function (prop) {
-        //Reference from contexts instead of early binding to default context,
-        //so that during builds, the latest instance of the default context
-        //with its config gets used.
-        req[prop] = function () {
-            var ctx = contexts[defContextName];
-            return ctx.require[prop].apply(ctx, arguments);
-        };
-    });
-
-    if (isBrowser) {
-        head = s.head = document.getElementsByTagName('head')[0];
-        //If BASE tag is in play, using appendChild is a problem for IE6.
-        //When that browser dies, this can be removed. Details in this jQuery bug:
-        //http://dev.jquery.com/ticket/2709
-        baseElement = document.getElementsByTagName('base')[0];
-        if (baseElement) {
-            head = s.head = baseElement.parentNode;
-        }
-    }
-
-    /**
-     * Any errors that require explicitly generates will be passed to this
-     * function. Intercept/override it if you want custom error handling.
-     * @param {Error} err the error object.
-     */
-    req.onError = defaultOnError;
-
-    /**
-     * Creates the node for the load command. Only used in browser envs.
-     */
-    req.createNode = function (config, moduleName, url) {
-        var node = config.xhtml ?
-                document.createElementNS('http://www.w3.org/1999/xhtml', 'html:script') :
-                document.createElement('script');
-        node.type = config.scriptType || 'text/javascript';
-        node.charset = 'utf-8';
-        node.async = true;
-        return node;
-    };
-
-    /**
-     * Does the request to load a module for the browser case.
-     * Make this a separate function to allow other environments
-     * to override it.
-     *
-     * @param {Object} context the require context to find state.
-     * @param {String} moduleName the name of the module.
-     * @param {Object} url the URL to the module.
-     */
-    req.load = function (context, moduleName, url) {
-        var config = (context && context.config) || {},
-            node;
-        if (isBrowser) {
-            //In the browser so use a script tag
-            node = req.createNode(config, moduleName, url);
-
-            node.setAttribute('data-requirecontext', context.contextName);
-            node.setAttribute('data-requiremodule', moduleName);
-
-            //Set up load listener. Test attachEvent first because IE9 has
-            //a subtle issue in its addEventListener and script onload firings
-            //that do not match the behavior of all other browsers with
-            //addEventListener support, which fire the onload event for a
-            //script right after the script execution. See:
-            //https://connect.microsoft.com/IE/feedback/details/648057/script-onload-event-is-not-fired-immediately-after-script-execution
-            //UNFORTUNATELY Opera implements attachEvent but does not follow the script
-            //script execution mode.
-            if (node.attachEvent &&
-                    //Check if node.attachEvent is artificially added by custom script or
-                    //natively supported by browser
-                    //read https://github.com/jrburke/requirejs/issues/187
-                    //if we can NOT find [native code] then it must NOT natively supported.
-                    //in IE8, node.attachEvent does not have toString()
-                    //Note the test for "[native code" with no closing brace, see:
-                    //https://github.com/jrburke/requirejs/issues/273
-                    !(node.attachEvent.toString && node.attachEvent.toString().indexOf('[native code') < 0) &&
-                    !isOpera) {
-                //Probably IE. IE (at least 6-8) do not fire
-                //script onload right after executing the script, so
-                //we cannot tie the anonymous define call to a name.
-                //However, IE reports the script as being in 'interactive'
-                //readyState at the time of the define call.
-                useInteractive = true;
-
-                node.attachEvent('onreadystatechange', context.onScriptLoad);
-                //It would be great to add an error handler here to catch
-                //404s in IE9+. However, onreadystatechange will fire before
-                //the error handler, so that does not help. If addEventListener
-                //is used, then IE will fire error before load, but we cannot
-                //use that pathway given the connect.microsoft.com issue
-                //mentioned above about not doing the 'script execute,
-                //then fire the script load event listener before execute
-                //next script' that other browsers do.
-                //Best hope: IE10 fixes the issues,
-                //and then destroys all installs of IE 6-9.
-                //node.attachEvent('onerror', context.onScriptError);
-            } else {
-                node.addEventListener('load', context.onScriptLoad, false);
-                node.addEventListener('error', context.onScriptError, false);
-            }
-            node.src = url;
-
-            //For some cache cases in IE 6-8, the script executes before the end
-            //of the appendChild execution, so to tie an anonymous define
-            //call to the module name (which is stored on the node), hold on
-            //to a reference to this node, but clear after the DOM insertion.
-            currentlyAddingScript = node;
-            if (baseElement) {
-                head.insertBefore(node, baseElement);
-            } else {
-                head.appendChild(node);
-            }
-            currentlyAddingScript = null;
-
-            return node;
-        } else if (isWebWorker) {
-            try {
-                //In a web worker, use importScripts. This is not a very
-                //efficient use of importScripts, importScripts will block until
-                //its script is downloaded and evaluated. However, if web workers
-                //are in play, the expectation that a build has been done so that
-                //only one script needs to be loaded anyway. This may need to be
-                //reevaluated if other use cases become common.
-                importScripts(url);
-
-                //Account for anonymous modules
-                context.completeLoad(moduleName);
-            } catch (e) {
-                context.onError(makeError('importscripts',
-                                'importScripts failed for ' +
-                                    moduleName + ' at ' + url,
-                                e,
-                                [moduleName]));
-            }
-        }
-    };
-
-    function getInteractiveScript() {
-        if (interactiveScript && interactiveScript.readyState === 'interactive') {
-            return interactiveScript;
-        }
-
-        eachReverse(scripts(), function (script) {
-            if (script.readyState === 'interactive') {
-                return (interactiveScript = script);
-            }
-        });
-        return interactiveScript;
-    }
-
-    //Look for a data-main script attribute, which could also adjust the baseUrl.
-    if (isBrowser && !cfg.skipDataMain) {
-        //Figure out baseUrl. Get it from the script tag with require.js in it.
-        eachReverse(scripts(), function (script) {
-            //Set the 'head' where we can append children by
-            //using the script's parent.
-            if (!head) {
-                head = script.parentNode;
-            }
-
-            //Look for a data-main attribute to set main script for the page
-            //to load. If it is there, the path to data main becomes the
-            //baseUrl, if it is not already set.
-            dataMain = script.getAttribute('data-main');
-            if (dataMain) {
-                //Preserve dataMain in case it is a path (i.e. contains '?')
-                mainScript = dataMain;
-
-                //Set final baseUrl if there is not already an explicit one.
-                if (!cfg.baseUrl) {
-                    //Pull off the directory of data-main for use as the
-                    //baseUrl.
-                    src = mainScript.split('/');
-                    mainScript = src.pop();
-                    subPath = src.length ? src.join('/')  + '/' : './';
-
-                    cfg.baseUrl = subPath;
-                }
-
-                //Strip off any trailing .js since mainScript is now
-                //like a module name.
-                mainScript = mainScript.replace(jsSuffixRegExp, '');
-
-                 //If mainScript is still a path, fall back to dataMain
-                if (req.jsExtRegExp.test(mainScript)) {
-                    mainScript = dataMain;
-                }
-
-                //Put the data-main script in the files to load.
-                cfg.deps = cfg.deps ? cfg.deps.concat(mainScript) : [mainScript];
-
-                return true;
-            }
-        });
-    }
-
-    /**
-     * The function that handles definitions of modules. Differs from
-     * require() in that a string for the module should be the first argument,
-     * and the function to execute after dependencies are loaded should
-     * return a value to define the module corresponding to the first argument's
-     * name.
-     */
-    define = function (name, deps, callback) {
-        var node, context;
-
-        //Allow for anonymous modules
-        if (typeof name !== 'string') {
-            //Adjust args appropriately
-            callback = deps;
-            deps = name;
-            name = null;
-        }
-
-        //This module may not have dependencies
-        if (!isArray(deps)) {
-            callback = deps;
-            deps = null;
-        }
-
-        //If no name, and callback is a function, then figure out if it a
-        //CommonJS thing with dependencies.
-        if (!deps && isFunction(callback)) {
-            deps = [];
-            //Remove comments from the callback string,
-            //look for require calls, and pull them into the dependencies,
-            //but only if there are function args.
-            if (callback.length) {
-                callback
-                    .toString()
-                    .replace(commentRegExp, '')
-                    .replace(cjsRequireRegExp, function (match, dep) {
-                        deps.push(dep);
-                    });
-
-                //May be a CommonJS thing even without require calls, but still
-                //could use exports, and module. Avoid doing exports and module
-                //work though if it just needs require.
-                //REQUIRES the function to expect the CommonJS variables in the
-                //order listed below.
-                deps = (callback.length === 1 ? ['require'] : ['require', 'exports', 'module']).concat(deps);
-            }
-        }
-
-        //If in IE 6-8 and hit an anonymous define() call, do the interactive
-        //work.
-        if (useInteractive) {
-            node = currentlyAddingScript || getInteractiveScript();
-            if (node) {
-                if (!name) {
-                    name = node.getAttribute('data-requiremodule');
-                }
-                context = contexts[node.getAttribute('data-requirecontext')];
-            }
-        }
-
-        //Always save off evaluating the def call until the script onload handler.
-        //This allows multiple modules to be in a file without prematurely
-        //tracing dependencies, and allows for anonymous module support,
-        //where the module name is not known until the script onload event
-        //occurs. If no context, use the global queue, and get it processed
-        //in the onscript load callback.
-        (context ? context.defQueue : globalDefQueue).push([name, deps, callback]);
-    };
-
-    define.amd = {
-        jQuery: true
-    };
-
-
-    /**
-     * Executes the text. Normally just uses eval, but can be modified
-     * to use a better, environment-specific call. Only used for transpiling
-     * loader plugins, not for plain JS modules.
-     * @param {String} text the text to execute/evaluate.
-     */
-    req.exec = function (text) {
-        /*jslint evil: true */
-        return eval(text);
-    };
-
-    //Set up with config info.
-    req(cfg);
-}(this));
-define('jquery',[], function(){ return window.jQuery});
-/**
- * Patterns logging - minimal logging framework
- *
- * Copyright 2012 Simplon B.V.
- */
-
-(function() {
-    // source: https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Function/bind
-    if (!Function.prototype.bind) {
-        Function.prototype.bind = function (oThis) {
-            if (typeof this !== "function") {
-                // closest thing possible to the ECMAScript 5 internal IsCallable function
-                throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
-            }
-
-            var aArgs = Array.prototype.slice.call(arguments, 1),
-                fToBind = this,
-                fNOP = function () {},
-                fBound = function () {
-                    return fToBind.apply(this instanceof fNOP &&
-                            oThis ? this : oThis,
-                            aArgs.concat(Array.prototype.slice.call(arguments)));
-                };
-            fNOP.prototype = this.prototype;
-            fBound.prototype = new fNOP();
-
-            return fBound;
-        };
-    }
-
-    var root,    // root logger instance
-        writer;  // writer instance, used to output log entries
-
-    var Level = {
-        DEBUG: 10,
-        INFO: 20,
-        WARN: 30,
-        ERROR: 40,
-        FATAL: 50
-    };
-
-    function IEConsoleWriter() {
-    }
-
-    IEConsoleWriter.prototype = {
-        output:  function(log_name, level, messages) {
-            // console.log will magically appear in IE8 when the user opens the
-            // F12 Developer Tools, so we have to test for it every time.
-            if (typeof window.console==="undefined" || typeof console.log==="undefined")
-                    return;
-            if (log_name)
-                messages.unshift(log_name+":");
-            var message = messages.join(" ");
-
-            // Under some conditions console.log will be available but the
-            // other functions are missing.
-            if (typeof console.info===undefined) {
-                var level_name;
-                if (level<=Level.DEBUG)
-                    level_name="DEBUG";
-                else if (level<=Level.INFO)
-                    level_name="INFO";
-                else if (level<=Level.WARN)
-                    level_name="WARN";
-                else if (level<=Level.ERROR)
-                    level_name="ERROR";
-                else
-                    level_name="FATAL";
-                console.log("["+level_name+"] "+message);
-            } else {
-                if (level<=Level.DEBUG) {
-                    // console.debug exists but is deprecated
-                    message="[DEBUG] "+message;
-                    console.log(message);
-                } else if (level<=Level.INFO)
-                    console.info(message);
-                else if (level<=Level.WARN)
-                    console.warn(message);
-                else
-                    console.error(message);
-            }
-        }
-    };
-
-
-    function ConsoleWriter() {
-    }
-
-    ConsoleWriter.prototype = {
-        output: function(log_name, level, messages) {
-            if (log_name)
-                messages.unshift(log_name+":");
-            if (level<=Level.DEBUG) {
-                // console.debug exists but is deprecated
-                messages.unshift("[DEBUG]");
-                console.log.apply(console, messages);
-            } else if (level<=Level.INFO)
-                console.info.apply(console, messages);
-            else if (level<=Level.WARN)
-                console.warn.apply(console, messages);
-            else
-                console.error.apply(console, messages);
-        }
-    };
-
-
-    function Logger(name, parent) {
-        this._loggers={};
-        this.name=name || "";
-        this._parent=parent || null;
-        if (!parent) {
-            this._enabled=true;
-            this._level=Level.WARN;
-        }
-    }
-
-    Logger.prototype = {
-        getLogger: function(name) {
-            var path = name.split("."),
-                root = this,
-                route = this.name ? [this.name] : [];
-            while (path.length) {
-                var entry = path.shift();
-                route.push(entry);
-                if (!(entry in root._loggers))
-                    root._loggers[entry] = new Logger(route.join("."), root);
-                root=root._loggers[entry];
-            }
-            return root;
-        },
-
-        _getFlag: function(flag) {
-            var context=this;
-            flag="_"+flag;
-            while (context!==null) {
-                if (context[flag]!==undefined)
-                    return context[flag];
-                context=context._parent;
-            }
-            return null;
-        },
-
-        setEnabled: function(state) {
-            this._enabled=!!state;
-        },
-
-        isEnabled: function() {
-            this._getFlag("enabled");
-        },
-
-        setLevel: function(level) {
-            if (typeof level==="number")
-                this._level=level;
-            else if (typeof level==="string") {
-                level=level.toUpperCase();
-                if (level in Level)
-                    this._level=Level[level];
-            }
-        },
-
-        getLevel: function() {
-            return this._getFlag("level");
-        },
-
-        log: function(level, messages) {
-            if (!messages.length || !this._getFlag("enabled") || level<this._getFlag("level"))
-                return;
-            messages=Array.prototype.slice.call(messages);
-            writer.output(this.name, level, messages);
-        },
-
-        debug: function() {
-            this.log(Level.DEBUG, arguments);
-        },
-
-        info: function() {
-            this.log(Level.INFO, arguments);
-        },
-
-        warn: function() {
-            this.log(Level.WARN, arguments);
-        },
-
-        error: function() {
-            this.log(Level.ERROR, arguments);
-        },
-
-        fatal: function() {
-            this.log(Level.FATAL, arguments);
-        }
-    };
-
-    function getWriter() {
-        return writer;
-    }
-
-    function setWriter(w) {
-        writer=w;
-    }
-
-    if (!window.console || !window.console.log || typeof window.console.log.apply !== "function") {
-        setWriter(new IEConsoleWriter());
-    } else {
-        setWriter(new ConsoleWriter());
-    }
-
-    root=new Logger();
-
-    var logconfig = /loglevel(|-[^=]+)=([^&]+)/g,
-        match;
-
-    while ((match=logconfig.exec(window.location.search))!==null) {
-        var logger = (match[1]==="") ? root : root.getLogger(match[1].slice(1));
-        logger.setLevel(match[2].toUpperCase());
-    }
-
-    var api = {
-        Level: Level,
-        getLogger: root.getLogger.bind(root),
-        setEnabled: root.setEnabled.bind(root),
-        isEnabled: root.isEnabled.bind(root),
-        setLevel: root.setLevel.bind(root),
-        getLevel: root.getLevel.bind(root),
-        debug: root.debug.bind(root),
-        info: root.info.bind(root),
-        warn: root.warn.bind(root),
-        error: root.error.bind(root),
-        fatal: root.fatal.bind(root),
-        getWriter: getWriter,
-        setWriter: setWriter
-    };
-
-    // Expose as either an AMD module if possible. If not fall back to exposing
-    // a global object.
-    if (typeof define==="function")
-        define("logging", [], function () {
-            return api;
-        });
-    else
-        window.logging=api;
-})();
-
-/**
- * Patterns logger - wrapper around logging library
- *
- * Copyright 2012-2013 Florian Friesdorf
- */
-define('pat-logger',[
-    'logging'
-], function(logging) {
-    var log = logging.getLogger('patterns');
-    return log;
-});
-
-define('pat-utils',[
-    "jquery"
-], function($) {
-
-    var singleBoundJQueryPlugin = function (pattern, method, options) {
-        /* This is a jQuery plugin for patterns which are invoked ONCE FOR EACH
-         * matched element in the DOM.
-         *
-         * This is how the Mockup-type patterns behave. They are constructor
-         * functions which need to be invoked once per jQuery-wrapped DOM node
-         * for all DOM nodes on which the pattern applies.
-         */
-        var $this = this;
-        $this.each(function() {
-            var pat, $el = $(this);
-            pat = pattern.init($el, options);
-            if (method) {
-                if (pat[method] === undefined) {
-                    $.error("Method " + method +
-                            " does not exist on jQuery." + pattern.name);
-                    return false;
-                }
-                if (method.charAt(0) === '_') {
-                    $.error("Method " + method +
-                            " is private on jQuery." + pattern.name);
-                    return false;
-                }
-                pat[method].apply(pat, [options]);
-            }
-        });
-        return $this;
-    };
-
-    var pluralBoundJQueryPlugin = function (pattern, method, options) {
-        /* This is a jQuery plugin for patterns which are invoked ONCE FOR ALL
-         * matched elements in the DOM.
-         *
-         * This is how the vanilla Patternslib-type patterns behave. They are
-         * simple objects with an init method and this method gets called once
-         * with a list of jQuery-wrapped DOM nodes on which the pattern
-         * applies.
-         */
-        var $this = this;
-        if (method) {
-            if (pattern[method]) {
-                return pattern[method].apply($this, [$this].concat([options]));
-            } else {
-                $.error("Method " + method +
-                        " does not exist on jQuery." + pattern.name);
-            }
-        } else {
-            pattern.init.apply($this, [$this].concat([options]));
-        }
-        return $this;
-    };
-
-    var jqueryPlugin = function(pattern) {
-        return function(method, options) {
-            var $this = this;
-            if ($this.length === 0) {
-                return $this;
-            }
-            if (typeof method === 'object') {
-                options = method;
-                method = undefined;
-            }
-            if (typeof pattern === "function") {
-                return singleBoundJQueryPlugin.call(this, pattern, method, options);
-            } else {
-                return pluralBoundJQueryPlugin.call(this, pattern, method, options);
-            }
-        };
-    };
-
-    //     Underscore.js 1.3.1
-    //     (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
-    //     Underscore is freely distributable under the MIT license.
-    //     Portions of Underscore are inspired or borrowed from Prototype,
-    //     Oliver Steele's Functional, and John Resig's Micro-Templating.
-    //     For all details and documentation:
-    //     http://documentcloud.github.com/underscore
-    //
-    // Returns a function, that, as long as it continues to be invoked, will not
-    // be triggered. The function will be called after it stops being called for
-    // N milliseconds.
-    function debounce(func, wait) {
-        var timeout;
-        return function debounce_run() {
-            var context = this, args = arguments;
-            var later = function() {
-                timeout = null;
-                func.apply(context, args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-
-    // Is a given variable an object?
-    function isObject(obj) {
-        var type = typeof obj;
-        return type === 'function' || type === 'object' && !!obj;
-    }
-
-    // Extend a given object with all the properties in passed-in object(s).
-    function extend(obj) {
-        if (!isObject(obj)) return obj;
-        var source, prop;
-        for (var i = 1, length = arguments.length; i < length; i++) {
-            source = arguments[i];
-            for (prop in source) {
-                if (hasOwnProperty.call(source, prop)) {
-                    obj[prop] = source[prop];
-                }
-            }
-        }
-        return obj;
-    }
-    // END: Taken from Underscore.js until here.
-
-    function rebaseURL(base, url) {
-        if (url.indexOf("://")!==-1 || url[0]==="/")
-            return url;
-        return base.slice(0, base.lastIndexOf("/")+1) + url;
-    }
-
-    function findLabel(input) {
-        for (var label=input.parentNode; label && label.nodeType!==11; label=label.parentNode)
-            if (label.tagName==="LABEL")
-                return label;
-
-        var $label;
-
-        if (input.id)
-            $label = $("label[for="+input.id+"]");
-        if ($label && $label.length===0 && input.form)
-            $label = $("label[for="+input.name+"]", input.form);
-        if ($label && $label.length)
-            return $label[0];
-        else
-            return null;
-    }
-
-    // Taken from http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
-    function elementInViewport(el) {
-       var rect = el.getBoundingClientRect(),
-           docEl = document.documentElement,
-           vWidth = window.innerWidth || docEl.clientWidth,
-           vHeight = window.innerHeight || docEl.clientHeight;
-
-        if (rect.right<0 || rect.bottom<0 || rect.left>vWidth || rect.top>vHeight)
-            return false;
-        return true;
-    }
-
-    // Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    function escapeRegExp(str) {
-        return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-    }
-
-    function removeWildcardClass($targets, classes) {
-        if (classes.indexOf("*")===-1)
-            $targets.removeClass(classes);
-        else {
-            var matcher = classes.replace(/[\-\[\]{}()+?.,\\\^$|#\s]/g, "\\$&");
-            matcher = matcher.replace(/[*]/g, ".*");
-            matcher = new RegExp("^" + matcher + "$");
-            $targets.filter("[class]").each(function() {
-                var $this = $(this),
-                    classes = $this.attr("class").split(/\s+/),
-                    ok=[];
-                for (var i=0; i<classes.length; i++)
-                    if (!matcher.test(classes[i]))
-                        ok.push(classes[i]);
-                if (ok.length)
-                    $this.attr("class", ok.join(" "));
-                else
-                    $this.removeAttr("class");
-            });
-        }
-    }
-
-    var transitions = {
-        none: {hide: "hide", show: "show"},
-        fade: {hide: "fadeOut", show: "fadeIn"},
-        slide: {hide: "slideUp", show: "slideDown"}
-    };
-
-    function hideOrShow($slave, visible, options, pattern_name) {
-        var duration = (options.transition==="css" || options.transition==="none") ? null : options.effect.duration;
-
-        $slave.removeClass("visible hidden in-progress");
-        var onComplete = function() {
-            $slave
-                .removeClass("in-progress")
-                .addClass(visible ? "visible" : "hidden")
-                .trigger("pat-update",
-                        {pattern: pattern_name,
-                         transition: "complete"});
-        };
-        if (!duration) {
-            if (options.transition!=="css")
-                $slave[visible ? "show" : "hide"]();
-            onComplete();
-        } else {
-            var t = transitions[options.transition];
-            $slave
-                .addClass("in-progress")
-                .trigger("pat-update",
-                        {pattern: pattern_name,
-                         transition: "start"});
-            $slave[visible ? t.show : t.hide]({
-                duration: duration,
-                easing: options.effect.easing,
-                complete: onComplete
-            });
-        }
-    }
-
-    function addURLQueryParameter(fullURL, param, value) {
-        /* Using a positive lookahead (?=\=) to find the given parameter,
-         * preceded by a ? or &, and followed by a = with a value after
-         * than (using a non-greedy selector) and then followed by
-         * a & or the end of the string.
-         *
-         * Taken from http://stackoverflow.com/questions/7640270/adding-modify-query-string-get-variables-in-a-url-with-javascript
-         */
-        var val = new RegExp('(\\?|\\&)' + param + '=.*?(?=(&|$))'),
-            parts = fullURL.toString().split('#'),
-            url = parts[0],
-            hash = parts[1],
-            qstring = /\?.+$/,
-            newURL = url;
-        // Check if the parameter exists
-        if (val.test(url)) {
-            // if it does, replace it, using the captured group
-            // to determine & or ? at the beginning
-            newURL = url.replace(val, '$1' + param + '=' + value);
-        } else if (qstring.test(url)) {
-            // otherwise, if there is a query string at all
-            // add the param to the end of it
-            newURL = url + '&' + param + '=' + value;
-        } else {
-            // if there's no query string, add one
-            newURL = url + '?' + param + '=' + value;
-        }
-        if (hash) { newURL += '#' + hash; }
-        return newURL;
-    }
-
-    var utils = {
-        // pattern pimping - own module?
-        jqueryPlugin: jqueryPlugin,
-        debounce: debounce,
-        escapeRegExp: escapeRegExp,
-        isObject: isObject,
-        extend: extend,
-        rebaseURL: rebaseURL,
-        findLabel: findLabel,
-        elementInViewport: elementInViewport,
-        removeWildcardClass: removeWildcardClass,
-        hideOrShow: hideOrShow,
-        addURLQueryParameter: addURLQueryParameter
-    };
-    return utils;
-});
-
-define('pat-compat',[],function() {
-
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/every (JS 1.6)
-    if (!Array.prototype.every)
-    {
-        Array.prototype.every = function(fun /*, thisp */)
-        {
-            
-
-            if (this === null)
-                throw new TypeError();
-
-            var t = Object(this);
-            var len = t.length >>> 0;
-            if (typeof fun !== "function")
-                throw new TypeError();
-
-            var thisp = arguments[1];
-            for (var i = 0; i < len; i++)
-            {
-                if (i in t && !fun.call(thisp, t[i], i, t))
-                    return false;
-            }
-
-            return true;
-        };
-    }
-
-
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/filter (JS 1.6)
-    if (!Array.prototype.filter) {
-        Array.prototype.filter = function(fun /*, thisp */) {
-            
-
-            if (this === null)
-                throw new TypeError();
-
-            var t = Object(this);
-            var len = t.length >>> 0;
-            if (typeof fun !== "function")
-                throw new TypeError();
-
-            var res = [];
-            var thisp = arguments[1];
-            for (var i = 0; i < len; i++)
-            {
-                if (i in t)
-                {
-                    var val = t[i]; // in case fun mutates this
-                    if (fun.call(thisp, val, i, t))
-                        res.push(val);
-                }
-            }
-
-            return res;
-        };
-    }
-
-
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach (JS 1.6)
-    // Production steps of ECMA-262, Edition 5, 15.4.4.18
-    // Reference: http://es5.github.com/#x15.4.4.18
-    if ( !Array.prototype.forEach ) {
-
-        Array.prototype.forEach = function( callback, thisArg ) {
-
-            var T, k;
-
-            if ( this === null ) {
-                throw new TypeError( " this is null or not defined" );
-            }
-
-            // 1. Let O be the result of calling ToObject passing the |this| value as the argument.
-            var O = Object(this);
-
-            // 2. Let lenValue be the result of calling the Get internal method of O with the argument "length".
-            // 3. Let len be ToUint32(lenValue).
-            var len = O.length >>> 0; // Hack to convert O.length to a UInt32
-
-            // 4. If IsCallable(callback) is false, throw a TypeError exception.
-            // See: http://es5.github.com/#x9.11
-            if ( {}.toString.call(callback) !== "[object Function]" ) {
-                throw new TypeError( callback + " is not a function" );
-            }
-
-            // 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
-            if ( thisArg ) {
-                T = thisArg;
-            }
-
-            // 6. Let k be 0
-            k = 0;
-
-            // 7. Repeat, while k < len
-            while( k < len ) {
-
-                var kValue;
-
-                // a. Let Pk be ToString(k).
-                //   This is implicit for LHS operands of the in operator
-                // b. Let kPresent be the result of calling the HasProperty internal method of O with argument Pk.
-                //   This step can be combined with c
-                // c. If kPresent is true, then
-                if ( k in O ) {
-
-                    // i. Let kValue be the result of calling the Get internal method of O with argument Pk.
-                    kValue = O[ k ];
-
-                    // ii. Call the Call internal method of callback with T as the this value and
-                    // argument list containing kValue, k, and O.
-                    callback.call( T, kValue, k, O );
-                }
-                // d. Increase k by 1.
-                k++;
-            }
-            // 8. return undefined
-        };
-    }
-
-
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/indexOf (JS 1.6)
-    if (!Array.prototype.indexOf) {
-        Array.prototype.indexOf = function (searchElement /*, fromIndex */ ) {
-            
-            if (this === null) {
-                throw new TypeError();
-            }
-            var t = Object(this);
-            var len = t.length >>> 0;
-            if (len === 0) {
-                return -1;
-            }
-            var n = 0;
-            if (arguments.length > 0) {
-                n = Number(arguments[1]);
-                if (n !== n) { // shortcut for verifying if it's NaN
-                    n = 0;
-                } else if (n !== 0 && n !== Infinity && n !== -Infinity) {
-                    n = (n > 0 || -1) * Math.floor(Math.abs(n));
-                }
-            }
-            if (n >= len) {
-                return -1;
-            }
-            var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
-            for (; k < len; k++) {
-                if (k in t && t[k] === searchElement) {
-                    return k;
-                }
-            }
-            return -1;
-        };
-    }
-
-
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/lastIndexOf (JS 1.6)
-    if (!Array.prototype.lastIndexOf) {
-        Array.prototype.lastIndexOf = function(searchElement /*, fromIndex*/) {
-            
-
-            if (this === null)
-                throw new TypeError();
-
-            var t = Object(this);
-            var len = t.length >>> 0;
-            if (len === 0)
-                return -1;
-
-            var n = len;
-            if (arguments.length > 1)
-            {
-                n = Number(arguments[1]);
-                if (n !== n)
-                    n = 0;
-                else if (n !== 0 && n !== (1 / 0) && n !== -(1 / 0))
-                    n = (n > 0 || -1) * Math.floor(Math.abs(n));
-            }
-
-            var k = n >= 0 ? Math.min(n, len - 1) : len - Math.abs(n);
-
-            for (; k >= 0; k--)
-            {
-                if (k in t && t[k] === searchElement)
-                    return k;
-            }
-            return -1;
-        };
-    }
-
-
-    // source: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/map (JS 1.6)
-    // Production steps of ECMA-262, Edition 5, 15.4.4.19
-    // Reference: http://es5.github.com/#x15.4.4.19
-    if (!Array.prototype.map) {
-        Array.prototype.map = function(callback, thisArg) {
-
-            var T, A, k;
-
-            if (this === null) {
-                throw new TypeError(" this is null or not defined");
-            }
-
-            // 1. Let O be the result of calling ToObject passing the |this| value as the argument.
-            var O = Object(this);
-
-            // 2. Let lenValue be the result of calling the Get internal method of O with the argument "length".
-            // 3. Let len be ToUint32(lenValue).
-            var len = O.length >>> 0;
-
-            // 4. If IsCallable(callback) is false, throw a TypeError exception.
-            // See: http://es5.github.com/#x9.11
-            if ({}.toString.call(callback) !== "[object Function]") {
-                throw new TypeError(callback + " is not a function");
-            }
-
-            // 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
-            if (thisArg) {
-                T = thisArg;
-            }
-
-            // 6. Let A be a new array created as if by the expression new Array(len) where Array is
-            // the standard built-in constructor with that name and len is the value of len.
-            A = new Array(len);
-
-            // 7. Let k be 0
-            k = 0;
-
-            // 8. Repeat, while k < len
-            while(k < len) {
-
-                var kValue, mappedValue;
-
-                // a. Let Pk be ToString(k).
-                //   This is implicit for LHS operands of the in operator
-                // b. Let kPresent be the result of calling the HasProperty internal method of O with argument Pk.
-                //   This step can be combined with c
-                // c. If kPresent is true, then
-                if (k in O) {
-
-                    // i. Let kValue be the result of calling the Get internal method of O with argument Pk.
-                    kValue = O[ k ];
-
-                    // ii. Let mappedValue be the result of calling the Call internal method of callback
-                    // with T as the this value and argument list containing kValue, k, and O.
-                    mappedValue = callback.call(T, kValue, k, O);
-
-                    // iii. Call the DefineOwnProperty internal method of A with arguments
-                    // Pk, Property Descriptor {Value: mappedValue, Writable: true, Enumerable: true, Configurable: true},
-                    // and false.
-
-                    // In browsers that support Object.defineProperty, use the following:
-                    // Object.defineProperty(A, Pk, { value: mappedValue, writable: true, enumerable: true, configurable: true });
-
-                    // For best browser support, use the following:
-                    A[ k ] = mappedValue;
-                }
-                // d. Increase k by 1.
-                k++;
-            }
-
-            // 9. return A
-            return A;
-        };
-    }
-
-
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/Reduce (JS 1.8)
-    if (!Array.prototype.reduce) {
-        Array.prototype.reduce = function reduce(accumulator){
-            if (this===null || this===undefined) throw new TypeError("Object is null or undefined");
-            var i = 0, l = this.length >> 0, curr;
-
-            if(typeof accumulator !== "function") // ES5 : "If IsCallable(callbackfn) is false, throw a TypeError exception."
-                throw new TypeError("First argument is not callable");
-
-            if(arguments.length < 2) {
-                if (l === 0) throw new TypeError("Array length is 0 and no second argument");
-                curr = this[0];
-                i = 1; // start accumulating at the second element
-            }
-            else
-                curr = arguments[1];
-
-            while (i < l) {
-                if(i in this) curr = accumulator.call(undefined, curr, this[i], i, this);
-                ++i;
-            }
-
-            return curr;
-        };
-    }
-
-
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/ReduceRight (JS 1.8)
-    if (!Array.prototype.reduceRight)
-    {
-        Array.prototype.reduceRight = function(callbackfn /*, initialValue */)
-        {
-            
-
-            if (this === null)
-                throw new TypeError();
-
-            var t = Object(this);
-            var len = t.length >>> 0;
-            if (typeof callbackfn !== "function")
-                throw new TypeError();
-
-            // no value to return if no initial value, empty array
-            if (len === 0 && arguments.length === 1)
-                throw new TypeError();
-
-            var k = len - 1;
-            var accumulator;
-            if (arguments.length >= 2)
-            {
-                accumulator = arguments[1];
-            }
-            else
-            {
-                do
-                {
-                    if (k in this)
-                    {
-                        accumulator = this[k--];
-                        break;
-                    }
-
-                    // if array contains no values, no initial value to return
-                    if (--k < 0)
-                        throw new TypeError();
-                }
-                while (true);
-            }
-
-            while (k >= 0)
-            {
-                if (k in t)
-                    accumulator = callbackfn.call(undefined, accumulator, t[k], k, t);
-                k--;
-            }
-
-            return accumulator;
-        };
-    }
-
-
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/some (JS 1.6)
-    if (!Array.prototype.some)
-    {
-        Array.prototype.some = function(fun /*, thisp */)
-        {
-            
-
-            if (this === null)
-                throw new TypeError();
-
-            var t = Object(this);
-            var len = t.length >>> 0;
-            if (typeof fun !== "function")
-                throw new TypeError();
-
-            var thisp = arguments[1];
-            for (var i = 0; i < len; i++)
-            {
-                if (i in t && fun.call(thisp, t[i], i, t))
-                    return true;
-            }
-
-            return false;
-        };
-    }
-
-
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/isArray (JS 1.8.5)
-    if (!Array.isArray) {
-        Array.isArray = function (arg) {
-            return Object.prototype.toString.call(arg) === "[object Array]";
-        };
-    }
-
-    // source: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/Trim (JS 1.8.1)
-    if (!String.prototype.trim) {
-        String.prototype.trim = function () {
-            return this.replace(/^\s+|\s+$/g, "");
-        };
-    }
-
-    // source: https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Function/bind
-    if (!Function.prototype.bind) {
-        Function.prototype.bind = function (oThis) {
-            if (typeof this !== "function") {
-                // closest thing possible to the ECMAScript 5 internal IsCallable function
-                throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
-            }
-
-            var aArgs = Array.prototype.slice.call(arguments, 1),
-                fToBind = this,
-                fNOP = function () {},
-                fBound = function () {
-                    return fToBind.apply(this instanceof fNOP &&
-                            oThis ? this : oThis,
-                            aArgs.concat(Array.prototype.slice.call(arguments)));
-                };
-            fNOP.prototype = this.prototype;
-            fBound.prototype = new fNOP();
-
-            return fBound;
-        };
-    }
-
-    // https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/keys
-    if (!Object.keys) {
-        Object.keys = (function () {
-            var _hasOwnProperty = Object.prototype.hasOwnProperty,
-            hasDontEnumBug = !({toString: null}).propertyIsEnumerable("toString"),
-            dontEnums = [
-            "toString",
-            "toLocaleString",
-            "valueOf",
-            "hasOwnProperty",
-            "isPrototypeOf",
-            "propertyIsEnumerable",
-            "constructor"
-            ],
-            dontEnumsLength = dontEnums.length;
-
-            return function (obj) {
-                if (typeof obj !== "object" && typeof obj !== "function" || obj === null)
-                    throw new TypeError("Object.keys called on non-object");
-
-                var result = [];
-                for (var prop in obj)
-                    if (_hasOwnProperty.call(obj, prop))
-                        result.push(prop);
-
-                if (hasDontEnumBug)
-                    for (var i=0; i < dontEnumsLength; i++)
-                        if (_hasOwnProperty.call(obj, dontEnums[i]))
-                            result.push(dontEnums[i]);
-                return result;
-            };
-        })();
-    }
-});
-
-/**
- * @license
- * Patterns @VERSION@ jquery-ext - various jQuery extensions
- *
- * Copyright 2011 Humberto Sermeño
- */
-define('pat-jquery-ext',["jquery"], function($) {
-    var methods = {
-        init: function( options ) {
-            var settings = {
-                time: 3, /* time it will wait before moving to "timeout" after a move event */
-                initialTime: 8, /* time it will wait before first adding the "timeout" class */
-                exceptionAreas: [] /* IDs of elements that, if the mouse is over them, will reset the timer */
-            };
-            return this.each(function() {
-                var $this = $(this),
-                    data = $this.data("timeout");
-
-                if (!data) {
-                    if ( options ) {
-                        $.extend( settings, options );
-                    }
-                    $this.data("timeout", {
-                        "lastEvent": new Date(),
-                        "trueTime": settings.time,
-                        "time": settings.initialTime,
-                        "untouched": true,
-                        "inExceptionArea": false
-                    });
-
-                    $this.bind( "mouseover.timeout", methods.mouseMoved );
-                    $this.bind( "mouseenter.timeout", methods.mouseMoved );
-
-                    $(settings.exceptionAreas).each(function() {
-                        $this.find(this)
-                            .live( "mouseover.timeout", {"parent":$this}, methods.enteredException )
-                            .live( "mouseleave.timeout", {"parent":$this}, methods.leftException );
-                    });
-
-                    if (settings.initialTime > 0)
-                        $this.timeout("startTimer");
-                    else
-                        $this.addClass("timeout");
-                }
-            });
-        },
-
-        enteredException: function(event) {
-            var data = event.data.parent.data("timeout");
-            data.inExceptionArea = true;
-            event.data.parent.data("timeout", data);
-            event.data.parent.trigger("mouseover");
-        },
-
-        leftException: function(event) {
-            var data = event.data.parent.data("timeout");
-            data.inExceptionArea = false;
-            event.data.parent.data("timeout", data);
-        },
-
-        destroy: function() {
-            return this.each( function() {
-                var $this = $(this),
-                    data = $this.data("timeout");
-
-                $(window).unbind(".timeout");
-                data.timeout.remove();
-                $this.removeData("timeout");
-            });
-        },
-
-        mouseMoved: function() {
-            var $this = $(this), data = $this.data("timeout");
-
-            if ($this.hasClass("timeout")) {
-                $this.removeClass("timeout");
-                $this.timeout("startTimer");
-            } else if ( data.untouched ) {
-                data.untouched = false;
-                data.time = data.trueTime;
-            }
-
-            data.lastEvent = new Date();
-            $this.data("timeout", data);
-        },
-
-        startTimer: function() {
-            var $this = $(this), data = $this.data("timeout");
-            var fn = function(){
-                var data = $this.data("timeout");
-                if ( data && data.lastEvent ) {
-                    if ( data.inExceptionArea ) {
-                        setTimeout( fn, Math.floor( data.time*1000 ) );
-                    } else {
-                        var now = new Date();
-                        var diff = Math.floor(data.time*1000) - ( now - data.lastEvent );
-                        if ( diff > 0 ) {
-                            // the timeout has not ocurred, so set the timeout again
-                            setTimeout( fn, diff+100 );
-                        } else {
-                            // timeout ocurred, so set the class
-                            $this.addClass("timeout");
-                        }
-                    }
-                }
-            };
-
-            setTimeout( fn, Math.floor( data.time*1000 ) );
-        }
-    };
-
-    $.fn.timeout = function( method ) {
-        if ( methods[method] ) {
-            return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ));
-        } else if ( typeof method === "object" || !method ) {
-            return methods.init.apply( this, arguments );
-        } else {
-            $.error( "Method " + method + " does not exist on jQuery.timeout" );
-        }
-    };
-
-    // Custom jQuery selector to find elements with scrollbars
-    $.extend($.expr[":"], {
-        scrollable: function(element) {
-            var vertically_scrollable, horizontally_scrollable;
-            if ($(element).css("overflow") === "scroll" ||
-                $(element).css("overflowX") === "scroll" ||
-                $(element).css("overflowY") === "scroll")
-                return true;
-
-            vertically_scrollable = (element.clientHeight < element.scrollHeight) && (
-                $.inArray($(element).css("overflowY"), ["scroll", "auto"]) !== -1 || $.inArray($(element).css("overflow"), ["scroll", "auto"]) !== -1);
-
-            if (vertically_scrollable)
-                return true;
-
-            horizontally_scrollable = (element.clientWidth < element.scrollWidth) && (
-                $.inArray($(element).css("overflowX"), ["scroll", "auto"]) !== -1 || $.inArray($(element).css("overflow"), ["scroll", "auto"]) !== -1);
-            return horizontally_scrollable;
-        }
-    });
-
-    // Make Visible in scroll
-    $.fn.makeVisibleInScroll = function( parent_id ) {
-        var absoluteParent = null;
-        if ( typeof parent_id === "string" ) {
-            absoluteParent = $("#" + parent_id);
-        } else if ( parent_id ) {
-            absoluteParent = $(parent_id);
-        }
-
-        return this.each(function() {
-            var $this = $(this), parent;
-            if (!absoluteParent) {
-                parent = $this.parents(":scrollable");
-                if (parent.length > 0) {
-                    parent = $(parent[0]);
-                } else {
-                    parent = $(window);
-                }
-            } else {
-                parent = absoluteParent;
-            }
-
-            var elemTop = $this.position().top;
-            var elemBottom = $this.height() + elemTop;
-
-            var viewTop = parent.scrollTop();
-            var viewBottom = parent.height() + viewTop;
-
-            if (elemTop < viewTop) {
-                parent.scrollTop(elemTop);
-            } else if ( elemBottom > viewBottom - parent.height()/2 ) {
-                parent.scrollTop( elemTop - (parent.height() - $this.height())/2 );
-            }
-        });
-    };
-
-    //Make absolute location
-    $.fn.setPositionAbsolute = function(element,offsettop,offsetleft) {
-        return this.each(function() {
-            // set absolute location for based on the element passed
-            // dynamically since every browser has different settings
-            var $this = $(this);
-            var thiswidth = $(this).width();
-            var    pos   = element.offset();
-            var    width = element.width();
-            var    height = element.height();
-            var setleft = (pos.left + width - thiswidth + offsetleft);
-            var settop = (pos.top + height + offsettop);
-            $this.css({ "z-index" : 1, "position": "absolute", "marginLeft": 0, "marginTop": 0, "left": setleft + "px", "top":settop + "px" ,"width":thiswidth});
-            $this.remove().appendTo("body").show();
-        });
-    };
-
-    $.fn.positionAncestor = function(selector) {
-        var left = 0;
-        var top = 0;
-        this.each(function() {
-            // check if current element has an ancestor matching a selector
-            // and that ancestor is positioned
-            var $ancestor = $(this).closest(selector);
-            if ($ancestor.length && $ancestor.css("position") !== "static") {
-                var $child = $(this);
-                var childMarginEdgeLeft = $child.offset().left - parseInt($child.css("marginLeft"), 10);
-                var childMarginEdgeTop = $child.offset().top - parseInt($child.css("marginTop"), 10);
-                var ancestorPaddingEdgeLeft = $ancestor.offset().left + parseInt($ancestor.css("borderLeftWidth"), 10);
-                var ancestorPaddingEdgeTop = $ancestor.offset().top + parseInt($ancestor.css("borderTopWidth"), 10);
-                left = childMarginEdgeLeft - ancestorPaddingEdgeLeft;
-                top = childMarginEdgeTop - ancestorPaddingEdgeTop;
-                // we have found the ancestor and computed the position
-                // stop iterating
-                return false;
-            }
-        });
-        return {
-            left:    left,
-            top:    top
-        };
-    };
-
-
-    // XXX: In compat.js we include things for browser compatibility,
-    // but these two seem to be only convenience. Do we really want to
-    // include these as part of patterns?
-    String.prototype.startsWith = function(str) { return (this.match("^"+str) !== null); };
-    String.prototype.endsWith = function(str) { return (this.match(str+"$") !== null); };
-
-
-    /******************************
-
-     Simple Placeholder
-
-     ******************************/
-
-    $.simplePlaceholder = {
-        placeholder_class: null,
-
-        hide_placeholder: function(){
-            var $this = $(this);
-            if($this.val() === $this.attr("placeholder")){
-                $this.val("").removeClass($.simplePlaceholder.placeholder_class);
-            }
-        },
-
-        show_placeholder: function(){
-            var $this = $(this);
-            if($this.val() === ""){
-                $this.val($this.attr("placeholder")).addClass($.simplePlaceholder.placeholder_class);
-            }
-        },
-
-        prevent_placeholder_submit: function(){
-            $(this).find(".simple-placeholder").each(function() {
-                var $this = $(this);
-                if ($this.val() === $this.attr("placeholder")){
-                    $this.val("");
-                }
-            });
-            return true;
-        }
-    };
-
-    $.fn.simplePlaceholder = function(options) {
-        if(document.createElement("input").placeholder === undefined){
-            var config = {
-                placeholder_class : "placeholding"
-            };
-
-            if(options) $.extend(config, options);
-            $.simplePlaceholder.placeholder_class = config.placeholder_class;
-
-            this.each(function() {
-                var $this = $(this);
-                $this.focus($.simplePlaceholder.hide_placeholder);
-                $this.blur($.simplePlaceholder.show_placeholder);
-                if($this.val() === "") {
-                    $this.val($this.attr("placeholder"));
-                    $this.addClass($.simplePlaceholder.placeholder_class);
-                }
-                $this.addClass("simple-placeholder");
-                $(this.form).submit($.simplePlaceholder.prevent_placeholder_submit);
-            });
-        }
-
-        return this;
-    };
-
-    $.fn.findInclusive = function(selector) {
-        return this.find('*').addBack().filter(selector);
-    };
-
-    $.fn.slideIn = function(speed, easing, callback) {
-        return this.animate({width: "show"}, speed, easing, callback);
-    };
-
-    $.fn.slideOut = function(speed, easing, callback) {
-        return this.animate({width: "hide"}, speed, easing, callback);
-    };
-
-    // case-insensitive :contains
-    $.expr[":"].Contains = function(a, i, m) {
-        return $(a).text().toUpperCase().indexOf(m[3].toUpperCase()) >= 0;
-    };
-
-    $.fn.scopedFind = function (selector) {
-        /*  If the selector starts with an object id do a global search,
-         *  otherwise do a local search.
-         */
-        if (selector.startsWith('#')) {
-            return $(selector);
-        } else {
-            return this.find(selector);
-        }
-    };
-});
-
-/**
- * Patterns registry - Central registry and scan logic for patterns
- *
- * Copyright 2012-2013 Simplon B.V.
- * Copyright 2012-2013 Florian Friesdorf
- * Copyright 2013 Marko Durkovic
- * Copyright 2013 Rok Garbas
- */
-
-/*
- * changes to previous patterns.register/scan mechanism
- * - if you want initialised class, do it in init
- * - init returns set of elements actually initialised
- * - handle once within init
- * - no turnstile anymore
- * - set pattern.jquery_plugin if you want it
- */
-define('pat-registry',[
-    "jquery",
-    "pat-logger",
-    "pat-utils",
-    // below here modules that are only loaded
-    "pat-compat",
-    "pat-jquery-ext"
-], function($, logger, utils) {
-    var log = logger.getLogger("registry");
-
-    var disable_re = /patterns-disable=([^&]+)/g,
-        dont_catch_re = /patterns-dont-catch/g,
-        dont_catch = false,
-        disabled = {}, match;
-
-    while ((match=disable_re.exec(window.location.search)) !== null) {
-        disabled[match[1]] = true;
-        log.info('Pattern disabled via url config:', match[1]);
-    }
-
-    while ((match=dont_catch_re.exec(window.location.search)) !== null) {
-        dont_catch = true;
-        log.info('I will not catch init exceptions');
-    }
-
-    var registry = {
-        patterns: {},
-        // as long as the registry is not initialized, pattern
-        // registration just registers a pattern. Once init is called,
-        // the DOM is scanned. After that registering a new pattern
-        // results in rescanning the DOM only for this pattern.
-        initialized: false,
-        init: function registry_init() {
-            $(document).ready(function() {
-                log.info('loaded: ' + Object.keys(registry.patterns).sort().join(', '));
-                registry.scan(document.body);
-                registry.initialized = true;
-                log.info('finished initial scan.');
-            });
-        },
-
-        scan: function registry_scan(content, patterns, trigger) {
-            var $content = $(content),
-                all = [], allsel,
-                $match, plog;
-
-            // If no list of patterns was specified, we scan for all patterns
-            patterns = patterns || Object.keys(registry.patterns);
-
-            // selector for all patterns
-            patterns.forEach(function registry_scan_loop(name) {
-                if (disabled[name]) {
-                    log.debug('Skipping disabled pattern:', name);
-                    return;
-                }
-                var pattern = registry.patterns[name];
-                if (pattern.transform) {
-                    try {
-                        pattern.transform($content);
-                    } catch (e) {
-                        if (dont_catch) { throw(e); }
-                        log.error("Transform error for pattern" + name, e);
-                    }
-                }
-                if (pattern.trigger) {
-                    all.push(pattern.trigger);
-                }
-            });
-            // Find all elements that belong to any pattern.
-            allsel = all.join(",");
-            $match = $content.findInclusive(allsel);
-            $match = $match.filter(function() { return $(this).parents('pre').length === 0; });
-            $match = $match.filter(":not(.cant-touch-this)");
-
-            // walk list backwards and initialize patterns inside-out.
-            $match.toArray().reduceRight(function registry_pattern_init(acc, el) {
-                var pattern, $el = $(el);
-                for (var name in registry.patterns) {
-                    pattern = registry.patterns[name];
-                    if (pattern.init) {
-                        plog = logger.getLogger("pat." + name);
-                        if ($el.is(pattern.trigger)) {
-                            plog.debug("Initialising:", $el);
-                            try {
-                                pattern.init($el, null, trigger);
-                                plog.debug("done.");
-                            } catch (e) {
-                                if (dont_catch) { throw(e); }
-                                plog.error("Caught error:", e);
-                            }
-                        }
-                    }
-                }
-            }, null);
-            $('body').addClass('patterns-loaded');
-        },
-
-        register: function registry_register(pattern, name) {
-            var plugin_name, jquery_plugin;
-            name = name || pattern.name;
-            if (!name) {
-                log.error("Pattern lacks a name:", pattern);
-                return false;
-            }
-            if (registry.patterns[name]) {
-                log.error("Already have a pattern called: " + name);
-                return false;
-            }
-
-            // register pattern to be used for scanning new content
-            registry.patterns[name] = pattern;
-
-            // register pattern as jquery plugin
-            if (pattern.jquery_plugin) {
-                plugin_name = ("pat-" + name)
-                        .replace(/-([a-zA-Z])/g, function(match, p1) {
-                            return p1.toUpperCase();
-                        });
-                $.fn[plugin_name] = utils.jqueryPlugin(pattern);
-                // BBB 2012-12-10 and also for Mockup patterns.
-                $.fn[plugin_name.replace(/^pat/, "pattern")] = utils.jqueryPlugin(pattern);
-            }
-            log.debug("Registered pattern:", name, pattern);
-            if (registry.initialized) {
-                registry.scan(document.body, [name]);
-            }
-            return true;
-        }
-    };
-
-    $(document).on("patterns-injected.patterns",
-            function registry_onInject(ev, inject_config, inject_trigger) {
-                registry.scan(ev.target, null, {type: "injection", element: inject_trigger});
-                $(ev.target).trigger("patterns-injected-scanned");
-            });
-
-    return registry;
-});
-// jshint indent: 4, browser: true, jquery: true, quotmark: double
-// vim: sw=4 expandtab
-;
-define('mockup-parser',[
-  'jquery'
-], function($) {
-  
-
-  var parser = {
-    getOptions: function getOptions($el, patternName, options) {
-      /* This is the Mockup parser. It parses a DOM element for pattern
-      * configuration options.
-      */
-      options = options || {};
-      // get options from parent element first, stop if element tag name is 'body'
-      if ($el.length !== 0 && !$.nodeName($el[0], 'body')) {
-        options = getOptions($el.parent(), patternName, options);
-      }
-      // collect all options from element
-      var elOptions = {};
-      if ($el.length !== 0) {
-        elOptions = $el.data('pat-' + patternName);
-        if (elOptions) {
-          // parse options if string
-          if (typeof(elOptions) === 'string') {
-              var tmpOptions = {};
-              $.each(elOptions.split(';'), function(i, item) {
-                  item = item.split(':');
-                  item.reverse();
-                  var key = item.pop();
-                  key = key.replace(/^\s+|\s+$/g, '');  // trim
-                  item.reverse();
-                  var value = item.join(':');
-                  value = value.replace(/^\s+|\s+$/g, '');  // trim
-                  tmpOptions[key] = value;
-              });
-              elOptions = tmpOptions;
-          }
-        }
-      }
-      return $.extend(true, {}, options, elOptions);
-    }
-  };
-  return parser;
-});
-
-/* Base Pattern
- */
-
-define('mockup-patterns-base',[
-  'jquery',
-  'pat-registry',
-  'mockup-parser',
-  "pat-logger"
-], function($, Registry, mockupParser, logger) {
-  
-  var log = logger.getLogger("Mockup Base");
-
-  var initMockup = function initMockup($el, options, trigger) {
-    var name = this.prototype.name;
-    var log = logger.getLogger("pat." + name);
-    var pattern = $el.data('pattern-' + name);
-    if (pattern === undefined && Registry.patterns[name]) {
-      options = this.prototype.parser === "mockup" ? mockupParser.getOptions($el, name, options) : options;
-      try {
-          pattern = new Registry.patterns[name]($el, options);
-      } catch (e) {
-          log.error('Failed while initializing "' + name + '" pattern.');
-      }
-      $el.data('pattern-' + name, pattern);
-    }
-    return pattern;
-  };
-
-  // Base Pattern
-  var Base = function($el, options) {
-    this.$el = $el;
-    this.options = $.extend(true, {}, this.defaults || {}, options || {});
-    this.init($el, options);
-    this.emit('init');
-  };
-
-  Base.prototype = {
-    constructor: Base,
-    on: function(eventName, eventCallback) {
-      this.$el.on(eventName + '.' + this.name + '.patterns', eventCallback);
-    },
-    emit: function(eventName, args) {
-      // args should be a list
-      if (args === undefined) {
-        args = [];
-      }
-      this.$el.trigger(eventName + '.' + this.name + '.patterns', args);
-    }
-  };
-
-  Base.extend = function(patternProps) {
-    /* Helper function to correctly set up the prototype chain for new patterns.
-     */
-    var parent = this;
-    var child;
-
-    // Check that the required configuration properties are given.
-    if (!patternProps) {
-      throw new Error("Pattern configuration properties required when calling Base.extend");
-    }
-
-    // The constructor function for the new subclass is either defined by you
-    // (the "constructor" property in your `extend` definition), or defaulted
-    // by us to simply call the parent's constructor.
-    if (patternProps.hasOwnProperty('constructor')) {
-      child = patternProps.constructor;
-    } else {
-      child = function() { parent.apply(this, arguments); };
-    }
-
-    // Allow patterns to be extended indefinitely
-    child.extend = Base.extend;
-
-    // Static properties required by the Patternslib registry 
-    child.init = initMockup;
-    child.jquery_plugin = true;
-    child.trigger = patternProps.trigger;
-
-    // Set the prototype chain to inherit from `parent`, without calling
-    // `parent`'s constructor function.
-    var Surrogate = function() { this.constructor = child; };
-    Surrogate.prototype = parent.prototype;
-    child.prototype = new Surrogate();
-
-    // Fall back to mockup parser if not specified otherwise.
-    patternProps.parser = patternProps.parser || 'mockup';
-
-    // Add pattern's configuration properties (instance properties) to the subclass,
-    $.extend(true, child.prototype, patternProps);
-
-    // Set a convenience property in case the parent's prototype is needed
-    // later.
-    child.__super__ = parent.prototype;
-
-    // Register the pattern in the Patternslib registry.
-    if (!patternProps.name) {
-      log.warn("This mockup pattern without a name attribute will not be registered!");
-    } else if (!patternProps.trigger) {
-      log.warn("The mockup pattern '"+patternProps.name+"' does not have a trigger attribute, it will not be registered.");
-    } else {
-      Registry.register(child, patternProps.name);
-    }
-    return child;
-  };
-  return Base;
-});
-
 /*!
  *
  * MediaElement.js
@@ -3685,7 +16,7 @@ define('mockup-patterns-base',[
 var mejs = mejs || {};
 
 // version number
-mejs.version = '2.16.4'; 
+mejs.version = '2.18.2'; 
 
 
 // player number (for missing, same id attr)
@@ -3697,7 +28,7 @@ mejs.plugins = {
 		{version: [3,0], types: ['video/mp4','video/m4v','video/mov','video/wmv','audio/wma','audio/m4a','audio/mp3','audio/wav','audio/mpeg']}
 	],
 	flash: [
-		{version: [9,0,124], types: ['video/mp4','video/m4v','video/mov','video/flv','video/rtmp','video/x-flv','audio/flv','audio/x-flv','audio/mp3','audio/m4a','audio/mpeg', 'video/youtube', 'video/x-youtube', 'application/x-mpegURL']}
+		{version: [9,0,124], types: ['video/mp4','video/m4v','video/mov','video/flv','video/rtmp','video/x-flv','audio/flv','audio/x-flv','audio/mp3','audio/m4a','audio/mpeg', 'video/youtube', 'video/x-youtube', 'video/dailymotion', 'video/x-dailymotion', 'application/x-mpegURL']}
 		//,{version: [12,0], types: ['video/webm']} // for future reference (hopefully!)
 	],
 	youtube: [
@@ -3769,25 +100,123 @@ mejs.Utility = {
 		// send the best path back
 		return codePath;
 	},
-	secondsToTimeCode: function(time, forceHours, showFrameCount, fps) {
-		//add framecount
-		if (typeof showFrameCount == 'undefined') {
-		    showFrameCount=false;
-		} else if(typeof fps == 'undefined') {
+	/*
+	 * Calculate the time format to use. We have a default format set in the
+	 * options but it can be imcomplete. We ajust it according to the media
+	 * duration.
+	 *
+	 * We support format like 'hh:mm:ss:ff'.
+	 */
+	calculateTimeFormat: function(time, options, fps) {
+		if (time < 0) {
+			time = 0;
+		}
+
+		if(typeof fps == 'undefined') {
 		    fps = 25;
 		}
-	
-		var hours = Math.floor(time / 3600) % 24,
+
+		var format = options.timeFormat,
+			firstChar = format[0],
+			firstTwoPlaces = (format[1] == format[0]),
+			separatorIndex = firstTwoPlaces? 2: 1,
+			separator = ':',
+			hours = Math.floor(time / 3600) % 24,
 			minutes = Math.floor(time / 60) % 60,
 			seconds = Math.floor(time % 60),
 			frames = Math.floor(((time % 1)*fps).toFixed(3)),
-			result = 
-					( (forceHours || hours > 0) ? (hours < 10 ? '0' + hours : hours) + ':' : '')
-						+ (minutes < 10 ? '0' + minutes : minutes) + ':'
-						+ (seconds < 10 ? '0' + seconds : seconds)
-						+ ((showFrameCount) ? ':' + (frames < 10 ? '0' + frames : frames) : '');
-	
-		return result;
+			lis = [
+				[frames, 'f'],
+				[seconds, 's'],
+				[minutes, 'm'],
+				[hours, 'h']
+			];
+
+		// Try to get the separator from the format
+		if (format.length < separatorIndex) {
+			separator = format[separatorIndex];
+		}
+
+		var required = false;
+
+		for (var i=0, len=lis.length; i < len; i++) {
+			if (format.indexOf(lis[i][1]) !== -1) {
+				required=true;
+			}
+			else if (required) {
+				var hasNextValue = false;
+				for (var j=i; j < len; j++) {
+					if (lis[j][0] > 0) {
+						hasNextValue = true;
+						break;
+					}
+				}
+
+				if (! hasNextValue) {
+					break;
+				}
+
+				if (!firstTwoPlaces) {
+					format = firstChar + format;
+				}
+				format = lis[i][1] + separator + format;
+				if (firstTwoPlaces) {
+					format = lis[i][1] + format;
+				}
+				firstChar = lis[i][1];
+			}
+		}
+		options.currentTimeFormat = format;
+	},
+	/*
+	 * Prefix the given number by zero if it is lower than 10.
+	 */
+	twoDigitsString: function(n) {
+		if (n < 10) {
+			return '0' + n;
+		}
+		return String(n);
+	},
+	secondsToTimeCode: function(time, options) {
+		if (time < 0) {
+			time = 0;
+		}
+
+		// Maintain backward compatibility with method signature before v2.18.
+		if (typeof options !== 'object') {
+			var format = 'm:ss';
+			format = arguments[1] ? 'hh:mm:ss' : format; // forceHours
+			format = arguments[2] ? format + ':ff' : format; // showFrameCount
+
+			options = {
+				currentTimeFormat: format,
+				framesPerSecond: arguments[3] || 25
+			};
+		}
+
+		var fps = options.framesPerSecond;
+		if(typeof fps === 'undefined') {
+			fps = 25;
+		}
+
+		var format = options.currentTimeFormat,
+			hours = Math.floor(time / 3600) % 24,
+			minutes = Math.floor(time / 60) % 60,
+			seconds = Math.floor(time % 60),
+			frames = Math.floor(((time % 1)*fps).toFixed(3));
+			lis = [
+				[frames, 'f'],
+				[seconds, 's'],
+				[minutes, 'm'],
+				[hours, 'h']
+			];
+
+		var res = format;
+		for (i=0,len=lis.length; i < len; i++) {
+			res = res.replace(lis[i][1]+lis[i][1], this.twoDigitsString(lis[i][0]));
+			res = res.replace(lis[i][1], lis[i][0]);
+		}
+		return res;
 	},
 	
 	timeCodeToSeconds: function(hh_mm_ss_ff, forceHours, showFrameCount, fps){
@@ -4299,7 +728,7 @@ mejs.PluginMediaElement.prototype = {
 				media = url[i];
 				if (this.canPlayType(media.type)) {
 					this.pluginApi.setSrc(mejs.Utility.absolutizeUrl(media.src));
-					this.src = mejs.Utility.absolutizeUrl(url);
+					this.src = mejs.Utility.absolutizeUrl(media.src);
 					break;
 				}
 			}
@@ -4339,7 +768,7 @@ mejs.PluginMediaElement.prototype = {
 					this.pluginApi.unMute();
 				}
 				this.muted = muted;
-				this.dispatchEvent('volumechange');
+				this.dispatchEvent({type:'volumechange'});
 			} else {
 				this.pluginApi.setMuted(muted);
 			}
@@ -4398,15 +827,14 @@ mejs.PluginMediaElement.prototype = {
 		}
 		return false;
 	},	
-	dispatchEvent: function (eventName) {
+	dispatchEvent: function (event) {
 		var i,
 			args,
-			callbacks = this.events[eventName];
+			callbacks = this.events[event.type];
 
 		if (callbacks) {
-			args = Array.prototype.slice.call(arguments, 1);
 			for (i = 0; i < callbacks.length; i++) {
-				callbacks[i].apply(this, args);
+				callbacks[i].apply(this, [event]);
 			}
 		}
 	},
@@ -4514,7 +942,7 @@ mejs.MediaPluginBridge = {
 			length: 1
 		};
 
-		pluginMediaElement.dispatchEvent(e.type, e);
+		pluginMediaElement.dispatchEvent(e);
 	}
 };
 
@@ -4543,6 +971,8 @@ mejs.MediaElementDefaults = {
 	flashName: 'flashmediaelement.swf',
 	// streamer for RTMP streaming
 	flashStreamer: '',
+	// set to 'always' for CDN version
+	flashScriptAccess: 'sameDomain',	
 	// turns on the smoothing filter in Flash
 	enablePluginSmoothing: false,
 	// enabled pseudo-streaming (seek) on .mp4 files
@@ -4583,7 +1013,7 @@ mejs.HtmlMediaElementShim = {
 
 	create: function(el, o) {
 		var
-			options = mejs.MediaElementDefaults,
+			options = {},
 			htmlMediaElement = (typeof(el) == 'string') ? document.getElementById(el) : el,
 			tagName = htmlMediaElement.tagName.toLowerCase(),
 			isMediaTag = (tagName === 'audio' || tagName === 'video'),
@@ -4596,9 +1026,13 @@ mejs.HtmlMediaElementShim = {
 			prop;
 
 		// extend options
+		for (prop in mejs.MediaElementDefaults) {
+			options[prop] = mejs.MediaElementDefaults[prop];
+		}
 		for (prop in o) {
 			options[prop] = o[prop];
-		}
+		}		
+		
 
 		// clean up attributes
 		src = 		(typeof src == 'undefined' 	|| src === null || src == '') ? null : src;		
@@ -4775,7 +1209,7 @@ mejs.HtmlMediaElementShim = {
 							// test for plugin playback types
 							for (l=0; l<pluginInfo.types.length; l++) {
 								// find plugin that can play the type
-								if (type == pluginInfo.types[l]) {
+								if (type.toLowerCase() == pluginInfo.types[l].toLowerCase()) {
 									result.method = pluginName;
 									result.url = mediaFiles[i].url;
 									return result;
@@ -4802,8 +1236,6 @@ mejs.HtmlMediaElementShim = {
 	},
 
 	formatType: function(url, type) {
-		var ext;
-
 		// if no type is supplied, fake it with the extension
 		if (url && !type) {		
 			return this.getTypeFromFile(url);
@@ -4822,34 +1254,46 @@ mejs.HtmlMediaElementShim = {
 	
 	getTypeFromFile: function(url) {
 		url = url.split('?')[0];
-		var ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase();
-		return (/(mp4|m4v|ogg|ogv|m3u8|webm|webmv|flv|wmv|mpeg|mov)/gi.test(ext) ? 'video' : 'audio') + '/' + this.getTypeFromExtension(ext);
+		var
+			ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase(),
+			av = /(mp4|m4v|ogg|ogv|m3u8|webm|webmv|flv|wmv|mpeg|mov)/gi.test(ext) ? 'video/' : 'audio/';
+		return this.getTypeFromExtension(ext, av);
 	},
 	
-	getTypeFromExtension: function(ext) {
+	getTypeFromExtension: function(ext, av) {
+		av = av || '';
 		
 		switch (ext) {
 			case 'mp4':
 			case 'm4v':
 			case 'm4a':
-				return 'mp4';
+			case 'f4v':
+			case 'f4a':
+				return av + 'mp4';
+			case 'flv':
+				return av + 'x-flv';
 			case 'webm':
 			case 'webma':
 			case 'webmv':	
-				return 'webm';
+				return av + 'webm';
 			case 'ogg':
 			case 'oga':
 			case 'ogv':	
-				return 'ogg';
+				return av + 'ogg';
+			case 'm3u8':
+				return 'application/x-mpegurl';
+			case 'ts':
+				return av + 'mp2t';
 			default:
-				return ext;
+				return av + ext;
 		}
 	},
 
 	createErrorMessage: function(playback, options, poster) {
 		var 
 			htmlMediaElement = playback.htmlMediaElement,
-			errorContainer = document.createElement('div');
+			errorContainer = document.createElement('div'),
+			errorContent = options.customError;
 			
 		errorContainer.className = 'me-cannotplay';
 
@@ -4858,13 +1302,17 @@ mejs.HtmlMediaElementShim = {
 			errorContainer.style.height = htmlMediaElement.height + 'px';
 		} catch (e) {}
 
-    if (options.customError) {
-      errorContainer.innerHTML = options.customError;
-    } else {
-      errorContainer.innerHTML = (poster !== '') ?
-        '<a href="' + playback.url + '"><img src="' + poster + '" width="100%" height="100%" /></a>' :
-        '<a href="' + playback.url + '"><span>' + mejs.i18n.t('Download File') + '</span></a>';
-    }
+		if (!errorContent) {
+			errorContent = '<a href="' + playback.url + '">';
+
+			if (poster !== '') {
+				errorContent += '<img src="' + poster + '" width="100%" height="100%" alt="" />';
+			}
+
+			errorContent += '<span>' + mejs.i18n.t('Download File') + '</span></a>';
+		}
+
+		errorContainer.innerHTML = errorContent;
 
 		htmlMediaElement.parentNode.insertBefore(errorContainer, htmlMediaElement);
 		htmlMediaElement.style.display = 'none';
@@ -4890,14 +1338,16 @@ mejs.HtmlMediaElementShim = {
 		// copy attributes from html media element to plugin media element
 		for (var i = 0; i < htmlMediaElement.attributes.length; i++) {
 			var attribute = htmlMediaElement.attributes[i];
-			if (attribute.specified == true) {
+			if (attribute.specified) {
 				pluginMediaElement.setAttribute(attribute.name, attribute.value);
 			}
 		}
 
 		// check for placement inside a <p> tag (sometimes WYSIWYG editors do this)
 		node = htmlMediaElement.parentNode;
-		while (node !== null && node.tagName.toLowerCase() !== 'body' && node.parentNode != null) {
+
+		while (node !== null && node.tagName != null && node.tagName.toLowerCase() !== 'body' && 
+				node.parentNode != null && node.parentNode.tagName != null && node.parentNode.constructor != null && node.parentNode.constructor.name === "ShadowRoot") {
 			if (node.parentNode.tagName.toLowerCase() === 'p') {
 				node.parentNode.parentNode.insertBefore(node, node.parentNode);
 				break;
@@ -4962,9 +1412,9 @@ mejs.HtmlMediaElementShim = {
 		if (options.enablePluginSmoothing) {
 			initVars.push('smoothing=true');
 		}
-    if (options.enablePseudoStreaming) {
-      initVars.push('pseudostreaming=true');
-    }
+		if (options.enablePseudoStreaming) {
+			initVars.push('pseudostreaming=true');
+		}
 		if (controls) {
 			initVars.push('controls=true'); // shows controls in the plugin if desired
 		}
@@ -4998,7 +1448,7 @@ mejs.HtmlMediaElementShim = {
 '<param name="quality" value="high" />' +
 '<param name="bgcolor" value="#000000" />' +
 '<param name="wmode" value="transparent" />' +
-'<param name="allowScriptAccess" value="always" />' +
+'<param name="allowScriptAccess" value="' + options.flashScriptAccess + '" />' +
 '<param name="allowFullScreen" value="true" />' +
 '<param name="scale" value="default" />' + 
 '</object>';
@@ -5012,7 +1462,7 @@ mejs.HtmlMediaElementShim = {
 'quality="high" ' +
 'bgcolor="#000000" ' +
 'wmode="transparent" ' +
-'allowScriptAccess="always" ' +
+'allowScriptAccess="' + options.flashScriptAccess + '" ' +
 'allowFullScreen="true" ' +
 'type="application/x-shockwave-flash" pluginspage="//www.macromedia.com/go/getflashplayer" ' +
 'src="' + options.pluginPath + options.flashName + '" ' +
@@ -5049,7 +1499,7 @@ mejs.HtmlMediaElementShim = {
 					};				
 				
 				if (mejs.PluginDetector.hasPluginVersion('flash', [10,0,0]) ) {
-					mejs.YouTubeApi.createFlash(youtubeSettings);
+					mejs.YouTubeApi.createFlash(youtubeSettings, options);
 				} else {
 					mejs.YouTubeApi.enqueueIframe(youtubeSettings);		
 				}
@@ -5093,15 +1543,15 @@ mejs.HtmlMediaElementShim = {
 						}						
 
 						function createEvent(player, pluginMediaElement, eventName, e) {
-							var obj = {
+							var event = {
 								type: eventName,
 								target: pluginMediaElement
 							};
 							if (eventName == 'timeupdate') {
-								pluginMediaElement.currentTime = obj.currentTime = e.seconds;
-								pluginMediaElement.duration = obj.duration = e.duration;
+								pluginMediaElement.currentTime = event.currentTime = e.seconds;
+								pluginMediaElement.duration = event.duration = e.duration;
 							}
-							pluginMediaElement.dispatchEvent(obj.type, obj);
+							pluginMediaElement.dispatchEvent(event);
 						}
 
 						player.addEvent('play', function() {
@@ -5251,7 +1701,7 @@ mejs.YouTubeApi = {
 	},
 	
 	createEvent: function (player, pluginMediaElement, eventName) {
-		var obj = {
+		var event = {
 			type: eventName,
 			target: pluginMediaElement
 		};
@@ -5259,25 +1709,25 @@ mejs.YouTubeApi = {
 		if (player && player.getDuration) {
 			
 			// time 
-			pluginMediaElement.currentTime = obj.currentTime = player.getCurrentTime();
-			pluginMediaElement.duration = obj.duration = player.getDuration();
+			pluginMediaElement.currentTime = event.currentTime = player.getCurrentTime();
+			pluginMediaElement.duration = event.duration = player.getDuration();
 			
 			// state
-			obj.paused = pluginMediaElement.paused;
-			obj.ended = pluginMediaElement.ended;			
+			event.paused = pluginMediaElement.paused;
+			event.ended = pluginMediaElement.ended;			
 			
 			// sound
-			obj.muted = player.isMuted();
-			obj.volume = player.getVolume() / 100;
+			event.muted = player.isMuted();
+			event.volume = player.getVolume() / 100;
 			
 			// progress
-			obj.bytesTotal = player.getVideoBytesTotal();
-			obj.bufferedBytes = player.getVideoBytesLoaded();
+			event.bytesTotal = player.getVideoBytesTotal();
+			event.bufferedBytes = player.getVideoBytesLoaded();
 			
 			// fake the W3C buffered TimeRange
-			var bufferedTime = obj.bufferedBytes / obj.bytesTotal * obj.duration;
+			var bufferedTime = event.bufferedBytes / event.bytesTotal * event.duration;
 			
-			obj.target.buffered = obj.buffered = {
+			event.target.buffered = event.buffered = {
 				start: function(index) {
 					return 0;
 				},
@@ -5290,7 +1740,7 @@ mejs.YouTubeApi = {
 		}
 		
 		// send event up the chain
-		pluginMediaElement.dispatchEvent(obj.type, obj);
+		pluginMediaElement.dispatchEvent(event);
 	},	
 	
 	iFrameReady: function() {
@@ -5314,7 +1764,7 @@ mejs.YouTubeApi = {
 		settings.container.innerHTML =
 			'<object type="application/x-shockwave-flash" id="' + settings.pluginId + '" data="//www.youtube.com/apiplayer?enablejsapi=1&amp;playerapiid=' + settings.pluginId  + '&amp;version=3&amp;autoplay=0&amp;controls=0&amp;modestbranding=1&loop=0" ' +
 				'width="' + settings.width + '" height="' + settings.height + '" style="visibility: visible; " class="mejs-shim">' +
-				'<param name="allowScriptAccess" value="always">' +
+				'<param name="allowScriptAccess" value="sameDomain">' +
 				'<param name="wmode" value="transparent">' +
 			'</object>';
 		*/
@@ -5330,14 +1780,14 @@ mejs.YouTubeApi = {
 'id="' + settings.pluginId + '" width="' + settings.width + '" height="' + settings.height + '" class="mejs-shim">' +
 	'<param name="movie" value="' + youtubeUrl + '" />' +
 	'<param name="wmode" value="transparent" />' +
-	'<param name="allowScriptAccess" value="always" />' +
+	'<param name="allowScriptAccess" value="' + options.flashScriptAccess + '" />' +
 	'<param name="allowFullScreen" value="true" />' +
 '</object>';
 		} else {
 		settings.container.innerHTML =
 			'<object type="application/x-shockwave-flash" id="' + settings.pluginId + '" data="' + youtubeUrl + '" ' +
 				'width="' + settings.width + '" height="' + settings.height + '" style="visibility: visible; " class="mejs-shim">' +
-				'<param name="allowScriptAccess" value="always">' +
+				'<param name="allowScriptAccess" value="' + options.flashScriptAccess + '">' +
 				'<param name="wmode" value="transparent">' +
 			'</object>';
 		}		
@@ -5409,13 +1859,13 @@ mejs.YouTubeApi = {
 	}
 }
 // IFRAME
-function onYouTubePlayerAPIReady() {
+window.onYouTubePlayerAPIReady = function() {
 	mejs.YouTubeApi.iFrameReady();
-}
+};
 // FLASH
-function onYouTubePlayerReady(id) {
+window.onYouTubePlayerReady = function(id) {
 	mejs.YouTubeApi.flashReady(id);
-}
+};
 
 window.mejs = mejs;
 window.MediaElement = mejs.MediaElement;
@@ -5459,7 +1909,7 @@ window.MediaElement = mejs.MediaElement;
  *
  */
 ;(function(context, exports, undefined) {
-    
+    "use strict";
 
     var i18n = {
         "locale": {
@@ -5575,7 +2025,7 @@ window.MediaElement = mejs.MediaElement;
 // i18n fixes for compatibility with WordPress
 ;(function(exports, undefined) {
 
-    
+    "use strict";
 
     if ( typeof mejsL10n != 'undefined' ) {
         exports[mejsL10n.language] = mejsL10n.strings;
@@ -5597,6 +2047,19 @@ window.MediaElement = mejs.MediaElement;
  */
 if (typeof jQuery != 'undefined') {
 	mejs.$ = jQuery;
+} else if (typeof Zepto != 'undefined') {
+	mejs.$ = Zepto;
+
+	// define `outerWidth` method which has not been realized in Zepto
+	Zepto.fn.outerWidth = function(includeMargin) {
+		var width = $(this).width();
+		if (includeMargin) {
+			width += parseInt($(this).css('margin-right'), 10);
+			width += parseInt($(this).css('margin-left'), 10);
+		}
+		return width
+	}
+
 } else if (typeof ender != 'undefined') {
 	mejs.$ = ender;
 }
@@ -5645,9 +2108,25 @@ if (typeof jQuery != 'undefined') {
                 autoRewind: true,
 		// resize to media dimensions
 		enableAutosize: true,
+
+		/*
+		 * Time format to use. Default: 'mm:ss'
+		 * Supported units:
+		 *   h: hour
+		 *   m: minute
+		 *   s: second
+		 *   f: frame count
+		 * When using 'hh', 'mm', 'ss' or 'ff' we always display 2 digits.
+		 * If you use 'h', 'm', 's' or 'f' we display 1 digit if possible.
+		 *
+		 * Example to display 75 seconds:
+		 * Format 'mm:ss': 01:15
+		 * Format 'm:ss': 1:15
+		 * Format 'm:s': 1:15
+		 */
+		timeFormat: '',
 		// forces the hour marker (##:00:00)
 		alwaysShowHours: false,
-
 		// show framecount in timecode (##:00:00:00)
 		showTimecodeFrameCount: false,
 		// used when showTimecodeFrameCount is set to true
@@ -5687,9 +2166,9 @@ if (typeof jQuery != 'undefined') {
 							  ],
 						action: function(player, media) {
 								if (media.paused || media.ended) {
-										player.play();
+										media.play();
 								} else {
-										player.pause();
+										media.pause();
 								}
 						}
 				},
@@ -5802,12 +2281,13 @@ if (typeof jQuery != 'undefined') {
 		t.$media = t.$node = $(node);
 		t.node = t.media = t.$media[0];
 
+		if(!t.node) {
+			return
+		}
+
 		// check for existing player
 		if (typeof t.node.player != 'undefined') {
 			return t.node.player;
-		} else {
-			// attach player to DOM node for reference
-			t.node.player = t;
 		}
 
 
@@ -5818,6 +2298,19 @@ if (typeof jQuery != 'undefined') {
 
 		// extend default options
 		t.options = $.extend({},mejs.MepDefaults,o);
+
+		if (!t.options.timeFormat) {
+			// Generate the time format according to options
+			t.options.timeFormat = 'mm:ss';
+			if (t.options.alwaysShowHours) {
+				t.options.timeFormat = 'hh:mm:ss';
+			}
+			if (t.options.showTimecodeFrameCount) {
+				t.options.timeFormat += ':ff';
+			}
+		}
+
+		mejs.Utility.calculateTimeFormat(0, t.options, t.options.framesPerSecond || 25);
 
 		// unique ID
 		t.id = 'mep_' + mejs.mepIndex++;
@@ -5936,6 +2429,9 @@ if (typeof jQuery != 'undefined') {
 					// normal way of moving it into place (doesn't work on iOS)
 					t.container.find('.mejs-mediaelement').append(t.$media);
 				}
+
+				// needs to be assigned here, after iOS remap
+				t.node.player = t;
 
 				// find parts
 				t.controls = t.container.find('.mejs-controls');
@@ -6215,7 +2711,7 @@ if (typeof jQuery != 'undefined') {
 
 						// show/hide controls
 						t.container
-							.bind('mouseenter mouseover', function () {
+							.bind('mouseenter', function () {
 								if (t.controlsEnabled) {
 									if (!t.options.alwaysShowControls ) {
 										t.killControlsTimer('enter');
@@ -6329,6 +2825,15 @@ if (typeof jQuery != 'undefined') {
 					}
 				}, false);
 
+				// Only change the time format when necessary
+				var duration = null;
+				t.media.addEventListener('timeupdate',function() {
+					if (duration !== this.duration) {
+						duration = this.duration;
+						mejs.Utility.calculateTimeFormat(duration, t.options, t.options.framesPerSecond || 25);
+					}
+				}, false);
+
 				t.container.focusout(function (e) {
 					if( e.relatedTarget ) { //FF is working on supporting focusout https://bugzilla.mozilla.org/show_bug.cgi?id=687787
 						var $target = $(e.relatedTarget);
@@ -6408,7 +2913,7 @@ if (typeof jQuery != 'undefined') {
 			}
 
 			// detect 100% mode - use currentStyle for IE since css() doesn't return percentages
-			if (t.height.toString().indexOf('%') > 0 || t.$node.css('max-width') === '100%' || (t.$node[0].currentStyle && t.$node[0].currentStyle.maxWidth === '100%')) {
+			if (t.height.toString().indexOf('%') > 0 || (t.$node.css('max-width') !== 'none' && t.$node.css('max-width') !== 't.width') || (t.$node[0].currentStyle && t.$node[0].currentStyle.maxWidth === '100%')) {
 
 				// do we have the native dimensions yet?
 				var nativeWidth = (function() {
@@ -6449,7 +2954,7 @@ if (typeof jQuery != 'undefined') {
 					newHeight = parentHeight;
 				}
 
-				if (t.container.parent()[0].tagName.toLowerCase() === 'body') { // && t.container.siblings().count == 0) {
+				if (t.container.parent().length > 0 && t.container.parent()[0].tagName.toLowerCase() === 'body') { // && t.container.siblings().count == 0) {
 					parentWidth = $(window).width();
 					newHeight = $(window).height();
 				}
@@ -6492,13 +2997,6 @@ if (typeof jQuery != 'undefined') {
 
 			}
 
-			// special case for big play button so it doesn't go over the controls area
-			var playLayer = t.layers.find('.mejs-overlay-play'),
-				playButton = playLayer.find('.mejs-overlay-button');
-
-			playLayer.height(t.container.height() - t.controls.height());
-			playButton.css('margin-top', '-' + (playButton.height()/2 - t.controls.height()/2).toString() + 'px'  );
-
 		},
 
 		setControlsSize: function() {
@@ -6507,8 +3005,6 @@ if (typeof jQuery != 'undefined') {
 				railWidth = 0,
 				rail = t.controls.find('.mejs-time-rail'),
 				total = t.controls.find('.mejs-time-total'),
-				current = t.controls.find('.mejs-time-current'),
-				loaded = t.controls.find('.mejs-time-loaded'),
 				others = rail.siblings(),
 				lastControl = others.last(),
 				lastControlPosition = null;
@@ -6551,15 +3047,12 @@ if (typeof jQuery != 'undefined') {
 				total.width(railWidth - (total.outerWidth(true) - total.width()));
 
 				if (lastControl.css('position') != 'absolute') {
-					lastControlPosition = lastControl.position();
+					lastControlPosition = lastControl.length ? lastControl.position() : null;
 					railWidth--;
 				}
 			} while (lastControlPosition !== null && lastControlPosition.top > 0 && railWidth > 0);
 
-			if (t.setProgressRail)
-				t.setProgressRail();
-			if (t.setCurrentRail)
-				t.setCurrentRail();
+			t.container.trigger('controlsresize');
 		},
 
 
@@ -6600,7 +3093,7 @@ if (typeof jQuery != 'undefined') {
 				posterImg = posterDiv.find('img');
 
 			if (posterImg.length === 0) {
-				posterImg = $('<img width="100%" height="100%" />').appendTo(posterDiv);
+				posterImg = $('<img width="100%" height="100%" alt="" />').appendTo(posterDiv);
 			}
 
 			posterImg.attr('src', url);
@@ -6712,11 +3205,12 @@ if (typeof jQuery != 'undefined') {
 			}, false);
 
 			// error handling
-			media.addEventListener('error',function() {
+			media.addEventListener('error',function(e) {
+				t.handleError(e);
 				loading.hide();
-				controls.find('.mejs-time-buffering').hide();
+				bigPlay.hide();
 				error.show();
-				error.find('mejs-overlay-error').html("Error loading this resource");
+				error.find('.mejs-overlay-error').html("Error loading this resource");
 			}, false);
 
 			media.addEventListener('keydown', function(e) {
@@ -6733,8 +3227,9 @@ if (typeof jQuery != 'undefined') {
 				});
 
 				// listen for key presses
-				t.globalBind('keydown', function(e) {
-					return t.onkeydown(player, media, e);
+				t.globalBind('keydown', function(event) {
+					player.hasFocus = $(event.target).closest('.mejs-container').length !== 0;
+					return t.onkeydown(player, media, event);
 				});
 
 
@@ -6825,6 +3320,8 @@ if (typeof jQuery != 'undefined') {
 		remove: function() {
 			var t = this, featureIndex, feature;
 
+			t.container.prev('.mejs-offscreen').remove();
+
 			// invoke features cleanup
 			for (featureIndex in t.options.features) {
 				feature = t.options.features[featureIndex];
@@ -6869,6 +3366,15 @@ if (typeof jQuery != 'undefined') {
 			var t = this;
 			t.findTracks();
 			t.buildtracks(t, t.controls, t.layers, t.media);
+		},
+		resetSize: function(){
+			var t = this;
+			// webkit has trouble doing this without a delay
+			setTimeout(function () {
+				//
+				t.setPlayerSize(t.width, t.height);
+				t.setControlsSize();
+			}, 50);
 		}
 	};
 
@@ -6894,16 +3400,20 @@ if (typeof jQuery != 'undefined') {
 		}
 
 		mejs.MediaElementPlayer.prototype.globalBind = function(events, data, callback) {
-			var t = this;
+    	var t = this;
+      var doc = t.node ? t.node.ownerDocument : document;
+
 			events = splitEvents(events, t.id);
-			if (events.d) $(document).bind(events.d, data, callback);
+			if (events.d) $(doc).bind(events.d, data, callback);
 			if (events.w) $(window).bind(events.w, data, callback);
 		};
 
 		mejs.MediaElementPlayer.prototype.globalUnbind = function(events, callback) {
 			var t = this;
+      var doc = t.node ? t.node.ownerDocument : document;
+
 			events = splitEvents(events, t.id);
-			if (events.d) $(document).unbind(events.d, callback);
+			if (events.d) $(doc).unbind(events.d, callback);
 			if (events.w) $(window).unbind(events.w, callback);
 		};
 	})();
@@ -7018,9 +3528,9 @@ if (typeof jQuery != 'undefined') {
 	// STOP BUTTON
 	$.extend(MediaElementPlayer.prototype, {
 		buildstop: function(player, controls, layers, media) {
-			var t = this,
-				stop = 
-				$('<div class="mejs-button mejs-stop-button mejs-stop">' +
+			var t = this;
+
+			$('<div class="mejs-button mejs-stop-button mejs-stop">' +
 					'<button type="button" aria-controls="' + t.id + '" title="' + t.options.stopText + '" aria-label="' + t.options.stopText + '"></button>' +
 				'</div>')
 				.appendTo(controls)
@@ -7033,8 +3543,8 @@ if (typeof jQuery != 'undefined') {
                         media.pause();
 						controls.find('.mejs-time-current').width('0px');
 						controls.find('.mejs-time-handle').css('left', '0px');
-						controls.find('.mejs-time-float-current').html( mejs.Utility.secondsToTimeCode(0) );
-						controls.find('.mejs-currenttime').html( mejs.Utility.secondsToTimeCode(0) );					
+						controls.find('.mejs-time-float-current').html( mejs.Utility.secondsToTimeCode(0, player.options));
+						controls.find('.mejs-currenttime').html( mejs.Utility.secondsToTimeCode(0, player.options));
 						layers.find('.mejs-poster').show();
 					}
 				});
@@ -7057,15 +3567,16 @@ if (typeof jQuery != 'undefined') {
 			$('<div class="mejs-time-rail">' +
 				'<span  class="mejs-time-total mejs-time-slider">' +
 				//'<span class="mejs-offscreen">' + this.options.progessHelpText + '</span>' +
-				'<span class="mejs-time-buffering"></span>' +
-				'<span class="mejs-time-loaded"></span>' +
-				'<span class="mejs-time-current"></span>' +
-				'<span class="mejs-time-handle"></span>' +
-				'<span class="mejs-time-float">' +
-				'<span class="mejs-time-float-current">00:00</span>' +
-				'<span class="mejs-time-float-corner"></span>' +
+					'<span class="mejs-time-buffering"></span>' +
+					'<span class="mejs-time-loaded"></span>' +
+					'<span class="mejs-time-current"></span>' +
+					'<span class="mejs-time-handle"></span>' +
+					'<span class="mejs-time-float">' +
+						'<span class="mejs-time-float-current">00:00</span>' +
+						'<span class="mejs-time-float-corner"></span>' +
+					'</span>' +
 				'</span>' +
-				'</div>')
+			'</div>')
 				.appendTo(controls);
 			controls.find('.mejs-time-buffering').hide();
 
@@ -7081,16 +3592,18 @@ if (typeof jQuery != 'undefined') {
 				handleMouseMove = function (e) {
 					
                     var offset = total.offset(),
-						width = total.outerWidth(true),
+						width = total.width(),
 						percentage = 0,
 						newTime = 0,
 						pos = 0,
                         x;
                     
                     // mouse or touch position relative to the object
-					if (e.originalEvent.changedTouches) {
+					if (e.originalEvent && e.originalEvent.changedTouches) {
 						x = e.originalEvent.changedTouches[0].pageX;
-					}else{
+					} else if (e.changedTouches) { // for Zepto
+						x = e.changedTouches[0].pageX;
+					} else {
 						x = e.pageX;
 					}
 
@@ -7113,7 +3626,7 @@ if (typeof jQuery != 'undefined') {
 						// position floating time box
 						if (!mejs.MediaFeatures.hasTouch) {
 								timefloat.css('left', pos);
-								timefloatcurrent.html( mejs.Utility.secondsToTimeCode(newTime) );
+								timefloatcurrent.html( mejs.Utility.secondsToTimeCode(newTime, player.options) );
 								timefloat.show();
 						}
 					}
@@ -7128,7 +3641,7 @@ if (typeof jQuery != 'undefined') {
 
 				var seconds = media.currentTime,
 					timeSliderText = mejs.i18n.t('Time Slider'),
-					time = mejs.Utility.secondsToTimeCode(seconds),
+					time = mejs.Utility.secondsToTimeCode(seconds, player.options),
 					duration = media.duration;
 
 				slider.attr({
@@ -7263,6 +3776,10 @@ if (typeof jQuery != 'undefined') {
 				updateSlider(e);
 			}, false);
 			
+			t.container.on('controlsresize', function() {
+				player.setProgressRail();
+				player.setCurrentRail();
+			});
 			
 			// store for later use
 			t.loaded = loaded;
@@ -7279,8 +3796,8 @@ if (typeof jQuery != 'undefined') {
 
 			// newest HTML5 spec has buffered array (FF4, Webkit)
 			if (target && target.buffered && target.buffered.length > 0 && target.buffered.end && target.duration) {
-				// TODO: account for a real array with multiple values (only Firefox 4 has this so far) 
-				percent = target.buffered.end(0) / target.duration;
+				// account for a real array with multiple values - always read the end of the last buffer
+				percent = target.buffered.end(target.buffered.length - 1) / target.duration;
 			} 
 			// Some browsers (e.g., FF3.6 and Safari 5) cannot calculate target.bufferered.end()
 			// to be anything other than 0. If the byte count is available we use this instead.
@@ -7323,6 +3840,7 @@ if (typeof jQuery != 'undefined') {
 		}
 	});
 })(mejs.$);
+
 (function($) {
 	
 	// options
@@ -7339,8 +3857,7 @@ if (typeof jQuery != 'undefined') {
 			
 			$('<div class="mejs-time" role="timer" aria-live="off">' +
 					'<span class="mejs-currenttime">' + 
-                        (player.options.alwaysShowHours ? '00:' : '') +
-                        (player.options.showTimecodeFrameCount? '00:00:00':'00:00') + 
+						mejs.Utility.secondsToTimeCode(0, player.options) +
                     '</span>'+
 				'</div>')
 			.appendTo(controls);
@@ -7359,10 +3876,7 @@ if (typeof jQuery != 'undefined') {
 			if (controls.children().last().find('.mejs-currenttime').length > 0) {
 				$(t.options.timeAndDurationSeparator +
 					'<span class="mejs-duration">' + 
-						(t.options.duration > 0 ? 
-							mejs.Utility.secondsToTimeCode(t.options.duration, t.options.alwaysShowHours || t.media.duration > 3600, t.options.showTimecodeFrameCount,  t.options.framesPerSecond || 25) :
-							((player.options.alwaysShowHours ? '00:' : '') + (player.options.showTimecodeFrameCount? '00:00:00':'00:00'))
-						) + 
+						mejs.Utility.secondsToTimeCode(t.options.duration, t.options) +
 					'</span>')
 					.appendTo(controls.find('.mejs-time'));
 			} else {
@@ -7372,10 +3886,7 @@ if (typeof jQuery != 'undefined') {
 				
 				$('<div class="mejs-time mejs-duration-container">'+
 					'<span class="mejs-duration">' + 
-						(t.options.duration > 0 ? 
-							mejs.Utility.secondsToTimeCode(t.options.duration, t.options.alwaysShowHours || t.media.duration > 3600, t.options.showTimecodeFrameCount,  t.options.framesPerSecond || 25) :
-							((player.options.alwaysShowHours ? '00:' : '') + (player.options.showTimecodeFrameCount? '00:00:00':'00:00')) 
-						) + 
+						mejs.Utility.secondsToTimeCode(t.options.duration, t.options) +
 					'</span>' +
 				'</div>')
 				.appendTo(controls);
@@ -7392,7 +3903,7 @@ if (typeof jQuery != 'undefined') {
 			var t = this;
 
 			if (t.currenttime) {
-				t.currenttime.html(mejs.Utility.secondsToTimeCode(t.media.currentTime, t.options.alwaysShowHours || t.media.duration > 3600, t.options.showTimecodeFrameCount,  t.options.framesPerSecond || 25));
+				t.currenttime.html(mejs.Utility.secondsToTimeCode(t.media.currentTime, t.options));
 			}
 		},
 		
@@ -7403,7 +3914,7 @@ if (typeof jQuery != 'undefined') {
 			t.container.toggleClass("mejs-long-video", t.media.duration > 3600);
 			
 			if (t.durationD && (t.options.duration > 0 || t.media.duration)) {
-				t.durationD.html(mejs.Utility.secondsToTimeCode(t.options.duration > 0 ? t.options.duration : t.media.duration, t.options.alwaysShowHours, t.options.showTimecodeFrameCount, t.options.framesPerSecond || 25));
+				t.durationD.html(mejs.Utility.secondsToTimeCode(t.options.duration > 0 ? t.options.duration : t.media.duration, t.options));
 			}		
 		}
 	});
@@ -7483,8 +3994,10 @@ if (typeof jQuery != 'undefined') {
 				// ajust mute button style
 				if (volume === 0) {
 					mute.removeClass('mejs-mute').addClass('mejs-unmute');
+					mute.children('button').attr('title', mejs.i18n.t('Unmute')).attr('aria-label', mejs.i18n.t('Unmute'));
 				} else {
 					mute.removeClass('mejs-unmute').addClass('mejs-mute');
+					mute.children('button').attr('title', mejs.i18n.t('Mute')).attr('aria-label', mejs.i18n.t('Mute'));
 				}
 
                 // top/left of full size volume slider background
@@ -7530,7 +4043,6 @@ if (typeof jQuery != 'undefined') {
 				
 					var
 						railHeight = volumeTotal.height(),
-						totalTop = parseInt(volumeTotal.css('top').replace(/px/,''),10),
 						newY = e.pageY - totalOffset.top;
 						
 					volume = (railHeight - newY) / railHeight;
@@ -7635,9 +4147,6 @@ if (typeof jQuery != 'undefined') {
 					positionVolumeHandle(volume);
 					media.setVolume(volume);
 					return false;
-				})
-				.bind('blur', function () {
-					volumeSlider.hide();
 				});
 
 			// MUTE button
@@ -7663,25 +4172,25 @@ if (typeof jQuery != 'undefined') {
 				}
 				updateVolumeSlider(e);
 			}, false);
-
-			if (t.container.is(':visible')) {
-				// set initial volume
-				positionVolumeHandle(player.options.startVolume);
-
-				// mutes the media and sets the volume icon muted if the initial volume is set to 0
-				if (player.options.startVolume === 0) {
-					media.setMuted(true);
-				}
-
-				// shim gets the startvolume as a parameter, but we have to set it on the native <video> and <audio> elements
-				if (media.pluginType === 'native') {
-					media.setVolume(player.options.startVolume);
-				}
+			
+			// mutes the media and sets the volume icon muted if the initial volume is set to 0
+			if (player.options.startVolume === 0) {
+				media.setMuted(true);
 			}
+			
+			// shim gets the startvolume as a parameter, but we have to set it on the native <video> and <audio> elements
+			if (media.pluginType === 'native') {
+				media.setVolume(player.options.startVolume);
+			}
+			
+			t.container.on('controlsresize', function() {
+				positionVolumeHandle(media.volume);
+			});
 		}
 	});
 	
 })(mejs.$);
+
 (function($) {
 
 	$.extend(mejs.MepDefaults, {
@@ -7728,9 +4237,6 @@ if (typeof jQuery != 'undefined') {
 			}
 
 			var t = this,
-				normalHeight = 0,
-				normalWidth = 0,
-				container = player.container,
 				fullscreenBtn =
 					$('<div class="mejs-button mejs-fullscreen-button">' +
 						'<button type="button" aria-controls="' + t.id + '" title="' + t.options.fullscreenText + '" aria-label="' + t.options.fullscreenText + '"></button>' +
@@ -7960,6 +4466,9 @@ if (typeof jQuery != 'undefined') {
 					player.exitFullScreen();
 				}
 			});
+			
+			t.normalHeight = 0;
+			t.normalWidth = 0;
 
 		},
 
@@ -7984,8 +4493,8 @@ if (typeof jQuery != 'undefined') {
             $(document.documentElement).addClass('mejs-fullscreen');
 
 			// store sizing
-			normalHeight = t.container.height();
-			normalWidth = t.container.width();
+			t.normalHeight = t.container.height();
+			t.normalWidth = t.container.width();
 
 			// attempt to do true fullscreen (Safari 5.1 and Firefox Nightly only for now)
 			if (t.media.pluginType === 'native') {
@@ -8000,13 +4509,25 @@ if (typeof jQuery != 'undefined') {
 						setTimeout(function checkFullscreen() {
 
 							if (t.isNativeFullScreen) {
-								var zoomMultiplier = window["devicePixelRatio"] || 1;
+								var zoomMultiplier = window["devicePixelRatio"] || 1,
 								// Use a percent error margin since devicePixelRatio is a float and not exact.
-								var percentErrorMargin = 0.002; // 0.2%
-								var windowWidth = zoomMultiplier * $(window).width();
-								var screenWidth = screen.width;
-								var absDiff = Math.abs(screenWidth - windowWidth);
-								var marginError = screenWidth * percentErrorMargin;
+									percentErrorMargin = 0.002, // 0.2%
+									windowWidth = zoomMultiplier * $(window).width(),
+									screenWidth = screen.width,
+									// ** 13twelve
+									// Screen width is sort of useless: http://www.quirksmode.org/blog/archives/2013/11/screenwidth_is.html
+									// My rMBP ignores devicePixelRatio when returning the values, so fullscreen would always fail the "suddenly not fullscreen" test
+									// Theory: the gap between reported values should give us an indication of browser behavior with screen.width and devicePixelRatio
+									zoomedWindowWidth = zoomMultiplier * windowWidth;
+									
+								if (Math.abs(screenWidth-windowWidth) > Math.abs(screenWidth-zoomedWindowWidth)) {
+									// screen.width is likely true pixels, not CSS pixels, so we need to use the zoomed window width for comparison
+									windowWidth = zoomedWindowWidth;
+								}
+								// ** / 13twelve
+
+								var absDiff = Math.abs(screenWidth - windowWidth),
+									marginError = screenWidth * percentErrorMargin;
 
 								// check if the video is suddenly not really fullscreen
 								if (absDiff > marginError) {
@@ -8017,9 +4538,8 @@ if (typeof jQuery != 'undefined') {
 									setTimeout(checkFullscreen, 500);
 								}
 							}
-
-
-						}, 500);
+							
+						}, 1000);
 					}
 
 				} else if (mejs.MediaFeatures.hasSemiNativeFullScreen) {
@@ -8101,6 +4621,8 @@ if (typeof jQuery != 'undefined') {
 
 			t.container.find('.mejs-captions-text').css('font-size', screen.width / t.width * 1.00 * 100 + '%');
 			t.container.find('.mejs-captions-position').css('bottom', '45px');
+
+			t.container.trigger('enteredfullscreen');
 		},
 
 		exitFullScreen: function() {
@@ -8127,25 +4649,24 @@ if (typeof jQuery != 'undefined') {
 
 			t.container
 				.removeClass('mejs-container-fullscreen')
-				.width(normalWidth)
-				.height(normalHeight);
-				//.css({position: '', left: '', top: '', right: '', bottom: '', overflow: 'inherit', width: normalWidth + 'px', height: normalHeight + 'px', 'z-index': 1});
+				.width(t.normalWidth)
+				.height(t.normalHeight);
 
 			if (t.media.pluginType === 'native') {
 				t.$media
-					.width(normalWidth)
-					.height(normalHeight);
+					.width(t.normalWidth)
+					.height(t.normalHeight);
 			} else {
 				t.container.find('.mejs-shim')
-					.width(normalWidth)
-					.height(normalHeight);
+					.width(t.normalWidth)
+					.height(t.normalHeight);
 
-				t.media.setVideoSize(normalWidth, normalHeight);
+				t.media.setVideoSize(t.normalWidth, t.normalHeight);
 			}
 
 			t.layers.children('div')
-				.width(normalWidth)
-				.height(normalHeight);
+				.width(t.normalWidth)
+				.height(t.normalHeight);
 
 			t.fullscreenBtn
 				.removeClass('mejs-unfullscreen')
@@ -8156,6 +4677,8 @@ if (typeof jQuery != 'undefined') {
 
 			t.container.find('.mejs-captions-text').css('font-size','');
 			t.container.find('.mejs-captions-position').css('bottom', '');
+
+			t.container.trigger('exitedfullscreen');
 		}
 	});
 
@@ -8166,6 +4689,8 @@ if (typeof jQuery != 'undefined') {
 	// Speed
 	$.extend(mejs.MepDefaults, {
 
+		// We also support to pass object like this:
+		// [{name: 'Slow', value: '0.75'}, {name: 'Normal', value: '1.00'}, ...]
 		speeds: ['2.00', '1.50', '1.25', '1.00', '0.75'],
 
 		defaultSpeed: '1.00',
@@ -8184,53 +4709,96 @@ if (typeof jQuery != 'undefined') {
 					speedButton = null,
 					speedSelector = null,
 					playbackSpeed = null,
-					html = '<div class="mejs-button mejs-speed-button">' + 
-								'<button type="button">' + t.options.defaultSpeed + t.options.speedChar + '</button>' + 
-								'<div class="mejs-speed-selector">' + 
-								'<ul>';
-				
-				if ($.inArray(t.options.defaultSpeed, t.options.speeds) === -1) {
-					t.options.speeds.push(t.options.defaultSpeed);
+					inputId = null;
+
+				var speeds = [];
+				var defaultInArray = false;
+				for (var i=0, len=t.options.speeds.length; i < len; i++) {
+					var s = t.options.speeds[i];
+					if (typeof(s) === 'string'){
+						speeds.push({
+							name: s + t.options.speedChar,
+							value: s
+						});
+						if(s === t.options.defaultSpeed) {
+							defaultInArray = true;
+						}
+					}
+					else {
+						speeds.push(s);
+						if(s.value === t.options.defaultSpeed) {
+							defaultInArray = true;
+						}
+					}
 				}
 
-				t.options.speeds.sort(function(a, b) {
-					return parseFloat(b) - parseFloat(a);
+				if (!defaultInArray) {
+					speeds.push({
+						name: t.options.defaultSpeed + t.options.speedChar,
+						value: t.options.defaultSpeed
+					});
+				}
+
+				speeds.sort(function(a, b) {
+					return parseFloat(b.value) - parseFloat(a.value);
 				});
 
-				for (var i = 0, il = t.options.speeds.length; i<il; i++) {
+				var getSpeedNameFromValue = function(value) {
+					for(i=0,len=speeds.length; i <len; i++) {
+						if (speeds[i].value === value) {
+							return speeds[i].name;
+						}
+					}
+				};
+
+				var html = '<div class="mejs-button mejs-speed-button">' +
+							'<button type="button">' + getSpeedNameFromValue(t.options.defaultSpeed) + '</button>' +
+							'<div class="mejs-speed-selector">' +
+							'<ul>';
+
+				for (i = 0, il = speeds.length; i<il; i++) {
+					inputId = t.id + '-speed-' + speeds[i].value;
 					html += '<li>' + 
 								'<input type="radio" name="speed" ' + 
-											'value="' + t.options.speeds[i] + '" ' + 
-											'id="' + t.options.speeds[i] + '" ' +
-											(t.options.speeds[i] == t.options.defaultSpeed ? ' checked' : '') + 
+											'value="' + speeds[i].value + '" ' +
+											'id="' + inputId + '" ' +
+											(speeds[i].value === t.options.defaultSpeed ? ' checked' : '') +
 											' />' +
-								'<label for="' + t.options.speeds[i] + '" ' + 
-											(t.options.speeds[i] == t.options.defaultSpeed ? ' class="mejs-speed-selected"' : '') +
-											'>' + t.options.speeds[i] + t.options.speedChar + '</label>' + 
+								'<label for="' + inputId + '" ' +
+											(speeds[i].value === t.options.defaultSpeed ? ' class="mejs-speed-selected"' : '') +
+											'>' + speeds[i].name + '</label>' +
 							'</li>';
 				}
 				html += '</ul></div></div>';
 
 				speedButton = $(html).appendTo(controls);
-				speedSelector = speedButton.find('.mejs-speed-selector');				
+				speedSelector = speedButton.find('.mejs-speed-selector');
 
-				playbackspeed = t.options.defaultSpeed;
+				playbackSpeed = t.options.defaultSpeed;
+
+				media.addEventListener('loadedmetadata', function(e) {
+					if (playbackSpeed) {
+						media.playbackRate = parseFloat(playbackSpeed);
+					}
+				}, true);
 
 				speedSelector
 					.on('click', 'input[type="radio"]', function() {
 						var newSpeed = $(this).attr('value');
-						playbackspeed = newSpeed;
+						playbackSpeed = newSpeed;
 						media.playbackRate = parseFloat(newSpeed);
-						speedButton.find('button').html(newSpeed + t.options.speedChar);
+						speedButton.find('button').html(getSpeedNameFromValue(newSpeed));
 						speedButton.find('.mejs-speed-selected').removeClass('mejs-speed-selected');
 						speedButton.find('input[type="radio"]:checked').next().addClass('mejs-speed-selected');
 					});
-
-				speedSelector
-					.height(
-						speedButton.find('.mejs-speed-selector ul').outerHeight(true) + 
-						speedButton.find('.mejs-speed-translations').outerHeight(true))
-					.css('top', (-1 * speedSelector.height()) + 'px');
+				speedButton
+					.one( 'mouseenter focusin', function() {
+						speedSelector
+							.height(
+								speedButton.find('.mejs-speed-selector ul').outerHeight(true) +
+								speedButton.find('.mejs-speed-translations').outerHeight(true))
+							.css('top', (-1 * speedSelector.height()) + 'px');
+					});
 			}
 		}
 	});
@@ -8245,6 +4813,10 @@ if (typeof jQuery != 'undefined') {
 		startLanguage: '',
 
 		tracksText: mejs.i18n.t('Captions/Subtitles'),
+
+		// By default, no WAI-ARIA live region - don't make a
+		// screen reader speak captions over an audio track.
+		tracksAriaLive: false,
 
 		// option to remove the [cc] button when no <track kind="subtitles"> are present
 		hideCaptionsButtonWhenEmpty: true,
@@ -8273,8 +4845,9 @@ if (typeof jQuery != 'undefined') {
 				return;
 
 			var t = this,
-				i,
-				options = '';
+				attr = t.options.tracksAriaLive ?
+					'role="log" aria-live="assertive" aria-atomic="false"' : '',
+				i;
 
 			if (t.domNode.textTracks) { // if browser will do native captions, prefer mejs captions, loop through tracks and hide
 				for (i = t.domNode.textTracks.length - 1; i >= 0; i--) {
@@ -8286,7 +4859,8 @@ if (typeof jQuery != 'undefined') {
 					$('<div class="mejs-chapters mejs-layer"></div>')
 						.prependTo(layers).hide();
 			player.captions =
-					$('<div class="mejs-captions-layer mejs-layer"><div class="mejs-captions-position mejs-captions-position-hover" role="log" aria-live="assertive" aria-atomic="false"><span class="mejs-captions-text"></span></div></div>')
+					$('<div class="mejs-captions-layer mejs-layer"><div class="mejs-captions-position mejs-captions-position-hover" ' +
+					attr + '><span class="mejs-captions-text"></span></div></div>')
 						.prependTo(layers).hide();
 			player.captionsText = player.captions.find('.mejs-captions-text');
 			player.captionsButton =
@@ -8406,6 +4980,10 @@ if (typeof jQuery != 'undefined') {
 					}
 				});
 
+			t.container.on('controlsresize', function() {
+				t.adjustLanguageBox();
+			});
+			
 			// check for autoplay
 			if (player.node.getAttribute('autoplay') !== null) {
 				player.chapters.css('visibility','hidden');
@@ -8457,8 +5035,6 @@ if (typeof jQuery != 'undefined') {
 
 					track.isLoaded = true;
 
-					// create button
-					//t.addTrackButton(track.srclang);
 					t.enableTrackButton(track.srclang, track.label);
 
 					t.loadNextTrack();
@@ -8493,6 +5069,7 @@ if (typeof jQuery != 'undefined') {
 					}
 				},
 				error: function() {
+					t.removeTrackButton(track.srclang);
 					t.loadNextTrack();
 				}
 			});
@@ -8516,6 +5093,14 @@ if (typeof jQuery != 'undefined') {
 				$('#' + t.id + '_captions_' + lang).prop('checked', true).trigger('click');
 			}
 
+			t.adjustLanguageBox();
+		},
+		
+		removeTrackButton: function(lang) {
+			var t = this;
+			
+			t.captionsButton.find('input[value=' + lang + ']').closest('li').remove();
+			
 			t.adjustLanguageBox();
 		},
 
@@ -8555,7 +5140,7 @@ if (typeof jQuery != 'undefined') {
 			// check if any subtitles
 			if (t.options.hideCaptionsButtonWhenEmpty) {
 				for (i=0; i<t.tracks.length; i++) {
-					if (t.tracks[i].kind == 'subtitles') {
+					if (t.tracks[i].kind == 'subtitles' && t.tracks[i].isLoaded) {
 						hasSubtitles = true;
 						break;
 					}
@@ -8701,7 +5286,7 @@ if (typeof jQuery != 'undefined') {
 					'<div class="mejs-chapter" rel="' + chapters.entries.times[i].start + '" style="left: ' + usedPercent.toString() + '%;width: ' + percent.toString() + '%;">' +
 						'<div class="mejs-chapter-block' + ((i==chapters.entries.times.length-1) ? ' mejs-chapter-block-last' : '') + '">' +
 							'<span class="ch-title">' + chapters.entries.text[i] + '</span>' +
-							'<span class="ch-time">' + mejs.Utility.secondsToTimeCode(chapters.entries.times[i].start) + '&ndash;' + mejs.Utility.secondsToTimeCode(chapters.entries.times[i].stop) + '</span>' +
+							'<span class="ch-time">' + mejs.Utility.secondsToTimeCode(chapters.entries.times[i].start, t.options) + '&ndash;' + mejs.Utility.secondsToTimeCode(chapters.entries.times[i].stop, t.options) + '</span>' +
 						'</div>' +
 					'</div>'));
 				usedPercent += percent;
@@ -8851,8 +5436,6 @@ if (typeof jQuery != 'undefined') {
 					lines = container.find("p"),
 					styleNode = trackText.find("#" + container.attr("style")),
 					styles,
-					begin,
-					end,
 					text,
 					entries = {text:[], times:[]};
 
@@ -9121,6 +5704,38 @@ $.extend(mejs.MepDefaults,
 	});
 	
 })(mejs.$);
+(function($) {
+	// skip back button
+
+	$.extend(mejs.MepDefaults, {
+		skipBackInterval: 30,
+		// %1 will be replaced with skipBackInterval in this string
+		skipBackText: mejs.i18n.t('Skip back %1 seconds')
+	});
+
+	$.extend(MediaElementPlayer.prototype, {
+		buildskipback: function(player, controls, layers, media) {
+			var
+				t = this,
+				// Replace %1 with skip back interval
+				backText = t.options.skipBackText.replace('%1', t.options.skipBackInterval),
+				// create the loop button
+				loop =
+				$('<div class="mejs-button mejs-skip-back-button">' +
+					'<button type="button" aria-controls="' + t.id + '" title="' + backText + '" aria-label="' + backText + '">' + t.options.skipBackInterval + '</button>' +
+				'</div>')
+				// append it to the toolbar
+				.appendTo(controls)
+				// add a click toggle event
+				.click(function() {
+					media.setCurrentTime(Math.max(media.currentTime - t.options.skipBackInterval, 0));
+					$(this).find('button').blur();
+				});
+		}
+	});
+
+})(mejs.$);
+
 /**
  * Postroll plugin
  */
@@ -9164,7 +5779,7 @@ define('wildcard-patterns-video',[
   'mockup-patterns-base',
   'mediaelement'
 ], function($, Base) {
-  
+  'use strict';
  
   var Media = Base.extend({
     name: 'media',
@@ -9188,7 +5803,7 @@ require([
   'pat-registry',
   'wildcard-patterns-video'
   ], function($, Registry){
-  
+  'use strict';
 
   $(document).ready(function(){
     if (!Registry.initialized) {
@@ -9239,6 +5854,7 @@ require([
     if($(selector).change(checkFields).size() > 0){
       checkFields();
     }
+
   });
 
 });
