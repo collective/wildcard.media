@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2014-07-10 14:25+0000\n"
+"POT-Creation-Date: 2015-11-12 08:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI +ZONE\n"
 "Last-Translator: Luca Fabbri <keul@redturtle.it>\n"
 "Language-Team: RedTurtle Technology <sviluppoplone@redturtle.it>\n"
@@ -18,29 +18,43 @@ msgstr ""
 msgid "Additional Video Formats"
 msgstr "Formati Video Aggiuntivi"
 
-#: ../behavior.py:66
-msgid "Alternatively, you can provide a youtube video url. If this is specified, video file will be ignored."
-msgstr ""
-"In alternativa, puoi fornire un URL ad un video YouTube.\n"
-"Se specificato, il file video sarà ignorato."
+#: ../behavior.py:94
+msgid "Alternatively, you can provide a youtube video url. If this is specified, video file will be ignored. If video was uploaded to youtube, this field will be filled with video url."
+msgstr "In alternativa, puoi fornire l'url di un video su YouTube. Se lo inserisci, il file video verrà ignorato. Se il file video è stato caricato su YouTube, questo campo verrà popolato con il suo url."
 
 #: ../interfaces.py:47
 msgid "Async Quota Size"
 msgstr "Dimensione Quota Async"
 
-#: ../behavior.py:116
+#: ../behavior.py:146
 msgid "Audio File"
 msgstr "File Audio"
 
-#: ../behavior.py:35
+#: ../interfaces.py:53
+msgid "Convert Infile Options"
+msgstr "Opzioni di Infile per la conversione"
+
+#: ../interfaces.py:64
+msgid "Convert Outfile Options"
+msgstr "Opzioni di Outfile per la conversione"
+
+#: ../behavior.py:54
 msgid "Cover Image"
 msgstr "Immagine Copertina"
 
-#: ../behavior.py:82
+#: ../interfaces.py:79
+msgid "Default video height"
+msgstr "Altezza di default del video"
+
+#: ../interfaces.py:75
+msgid "Default video width"
+msgstr "Larghezza di default del video"
+
+#: ../behavior.py:112
 msgid "Height"
 msgstr "Altezza"
 
-#: ../browser.py:86
+#: ../browser/views.py:56
 #: ../profiles/default/controlpanel.xml
 msgid "Media Settings"
 msgstr "Impostazioni Multimedia"
@@ -51,27 +65,35 @@ msgstr ""
 "Numero di conversioni da lanciare in una volta.\n"
 "Il nome della quota assegnata è  `wildcard.media`."
 
-#: ../behavior.py:88
+#: ../behavior.py:118
 msgid "Provide a file in srt format"
 msgstr "Fornisci un file in formato srt"
 
-#: ../behavior.py:87
+#: ../behavior.py:72
+msgid "Requires having youtube account connected. Videos that are private will remain unlisted on YouTube. Once published, video will be made public on YouTube. "
+msgstr "E' necessatio avere un account YouTube collegato. I video privati non saranno visibili su YouTube. Una volta pubblicati, verranno anche resi visibili su YouTube."
+
+#: ../behavior.py:117
 msgid "Subtitle file"
 msgstr "File sottotitoli"
 
-#: ../behavior.py:98
+#: ../behavior.py:128
 msgid "Transcript"
 msgstr "Trascrizione"
 
-#: ../behavior.py:44
+#: ../behavior.py:71
+msgid "Upload to youtube"
+msgstr "Carica su YouTube"
+
+#: ../behavior.py:63
 msgid "Video File"
 msgstr "File Video"
 
-#: ../behavior.py:77
+#: ../behavior.py:107
 msgid "Width"
 msgstr "Larghezza"
 
-#: ../behavior.py:65
+#: ../behavior.py:93
 msgid "Youtube URL"
 msgstr "URL YouTube"
 
@@ -82,13 +104,22 @@ msgstr ""
 "Per fornire una migliore supporto HTML 5, vengono generati formati video differenti usando avconv (anche noto come ffmpeg).\n"
 "Se si preferisce salvare spazio disco, ma fornendo un supporto HTML 5 più limitato, modifica i formati video addizionali qui generati."
 
+#. Default: "Pass optional infile parameters to aconv during the conversion process.\n"
+#: ../interfaces.py:54
+msgid "convert_infile_options_help"
+msgstr "Passa un parametro opzionale per infile ad aconv durante il processo di conversione."
+
+#. Default: "Pass optional outfile parameters to aconv during the conversion process."
+#: ../interfaces.py:65
+msgid "convert_outfile_options_help"
+msgstr "Passa un parametro opzionale per outfile ad aconv durante il processo di conversione."
+
 #. Default: "Configure the parameters for media."
-#: ../browser.py:87
+#: ../browser/views.py:57
 msgid "description_media_global_settings_form"
 msgstr "Configura i parametri per il multimedia."
 
 #. Default: "Media View"
-#: ../tiles/mediaview.py:42
+#: ../tiles/mediaview.py:41
 msgid "msg_short_name_mediaview"
 msgstr "Vista Multimedia"
-

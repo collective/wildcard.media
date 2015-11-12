@@ -7,6 +7,9 @@ Changelog
 - fix condition to show youtube video or file video
   [neilferreira, cekk]
 
+- updated Italian translations
+  [cekk]
+
 2.0.1 (2015-11-11)
 ------------------
 
