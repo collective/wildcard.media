@@ -4,7 +4,11 @@ Changelog
 2.0.2 (unreleased)
 ------------------
 
-- nothing yet.
+- fix condition to show youtube video or file video
+  [neilferreira, cekk]
+
+- updated Italian translations
+  [cekk]
 
 2.0.1 (2015-11-11)
 ------------------
@@ -83,7 +87,7 @@ Changelog
 
 - Fix minor typo in available views for audio/video types. This previously
   prevented saving type settings via the control panel.
-  [davidjb] 
+  [davidjb]
 
 
 1.0b1 (2014-02-15)
@@ -108,7 +112,7 @@ Changelog
 
 - Add widget that supports streaming partial ranges of video content
   from video and audio fields. This package now supports video seeking
-  in Chrome and iOS video display with content-range request support. 
+  in Chrome and iOS video display with content-range request support.
   [davidjb]
 - Configure CSS to apply prefix to local resources utilised for
   MediaElement.js. Previously, images used in CSS did not load

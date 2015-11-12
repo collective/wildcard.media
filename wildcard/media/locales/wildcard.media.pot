@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2014-07-10 14:25+0000\n"
+"POT-Creation-Date: 2015-11-12 08:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI +ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,27 +21,43 @@ msgstr ""
 msgid "Additional Video Formats"
 msgstr ""
 
-#: ../behavior.py:66
-msgid "Alternatively, you can provide a youtube video url. If this is specified, video file will be ignored."
+#: ../behavior.py:94
+msgid "Alternatively, you can provide a youtube video url. If this is specified, video file will be ignored. If video was uploaded to youtube, this field will be filled with video url."
 msgstr ""
 
 #: ../interfaces.py:47
 msgid "Async Quota Size"
 msgstr ""
 
-#: ../behavior.py:116
+#: ../behavior.py:146
 msgid "Audio File"
 msgstr ""
 
-#: ../behavior.py:35
+#: ../interfaces.py:53
+msgid "Convert Infile Options"
+msgstr ""
+
+#: ../interfaces.py:64
+msgid "Convert Outfile Options"
+msgstr ""
+
+#: ../behavior.py:54
 msgid "Cover Image"
 msgstr ""
 
-#: ../behavior.py:82
+#: ../interfaces.py:79
+msgid "Default video height"
+msgstr ""
+
+#: ../interfaces.py:75
+msgid "Default video width"
+msgstr ""
+
+#: ../behavior.py:112
 msgid "Height"
 msgstr ""
 
-#: ../browser.py:86
+#: ../browser/views.py:56
 #: ../profiles/default/controlpanel.xml
 msgid "Media Settings"
 msgstr ""
@@ -50,27 +66,35 @@ msgstr ""
 msgid "Number of conversions to run at a time. The quota name assigned is `wildcard.media`."
 msgstr ""
 
-#: ../behavior.py:88
+#: ../behavior.py:118
 msgid "Provide a file in srt format"
 msgstr ""
 
-#: ../behavior.py:87
+#: ../behavior.py:72
+msgid "Requires having youtube account connected. Videos that are private will remain unlisted on YouTube. Once published, video will be made public on YouTube. "
+msgstr ""
+
+#: ../behavior.py:117
 msgid "Subtitle file"
 msgstr ""
 
-#: ../behavior.py:98
+#: ../behavior.py:128
 msgid "Transcript"
 msgstr ""
 
-#: ../behavior.py:44
+#: ../behavior.py:71
+msgid "Upload to youtube"
+msgstr ""
+
+#: ../behavior.py:63
 msgid "Video File"
 msgstr ""
 
-#: ../behavior.py:77
+#: ../behavior.py:107
 msgid "Width"
 msgstr ""
 
-#: ../behavior.py:65
+#: ../behavior.py:93
 msgid "Youtube URL"
 msgstr ""
 
@@ -79,13 +103,23 @@ msgstr ""
 msgid "additional_video_formats_help"
 msgstr ""
 
+#. Default: "Pass optional infile parameters to aconv during the conversion process.\n"
+#: ../interfaces.py:54
+msgid "convert_infile_options_help"
+msgstr ""
+
+#. Default: "Pass optional outfile parameters to aconv during the conversion process."
+#: ../interfaces.py:65
+msgid "convert_outfile_options_help"
+msgstr ""
+
 #. Default: "Configure the parameters for media."
-#: ../browser.py:87
+#: ../browser/views.py:57
 msgid "description_media_global_settings_form"
 msgstr ""
 
 #. Default: "Media View"
-#: ../tiles/mediaview.py:42
+#: ../tiles/mediaview.py:41
 msgid "msg_short_name_mediaview"
 msgstr ""
 
