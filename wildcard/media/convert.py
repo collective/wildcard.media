@@ -98,7 +98,6 @@ class AVConvProcess(BaseSubProcess):
         self._run_command(cmd)
 
     def get_avconv_params(self, settings, video_type, video):
-        import pdb; pdb.set_trace( )
         params = {}
         for op in ('in', 'out'):
             option = getattr(settings, 'avconv_%s_%s' % (op, video_type)) or ''
