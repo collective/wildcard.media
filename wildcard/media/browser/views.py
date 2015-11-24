@@ -107,6 +107,8 @@ GlobalSettingsFormView = wrap_form(GlobalSettingsForm)
 
 class ConvertVideo(BrowserView):
     def __call__(self):
+        # Mark the video as not converted
+        self.context.video_converted = False
         video_edited(self.context, None)
         self.request.response.redirect(self.context.absolute_url())
 
