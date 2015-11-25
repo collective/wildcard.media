@@ -1,1 +1,27 @@
 node_modules
+components/ace-builds/
+components/backbone.paginator/
+components/dropzone/
+components/google-code-prettify/
+components/jqtree/
+components/jquery.browser/
+components/jquery.cookie/
+components/jquery.recurrenceinput.js/
+components/mediaelement/build/DO NOT CHANGE THESE FILES. USE -src- FOLDER.txt
+components/mediaelement/build/jquery.js
+components/mediaelement/build/mediaelement-and-player.min.js
+components/mediaelement/build/mediaelement.js
+components/mediaelement/build/mediaelement.min.js
+components/mediaelement/build/mediaelementplayer.js
+components/mediaelement/build/mediaelementplayer.min.js
+components/mediaelement/build/mejs-skins.css
+components/mediaelement/changelog.md
+components/mockup/
+components/photoswipe/
+components/pickadate/
+components/pikaday/
+components/requirejs-tpl-jcbrand/
+components/showdown/
+components/tinymce-builded/
+components/validate/
+

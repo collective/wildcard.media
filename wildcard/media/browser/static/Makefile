@@ -9,4 +9,3 @@ bootstrap:
 
 prod:
 	$(GRUNT) prod
-	cp build/bundle.js integration.js

@@ -10,10 +10,10 @@ PROFILE_ID_PLONE5 = 'profile-wildcard.media:plone5'
 def upgrade_resources(context, logger=None):
     setup = getToolByName(context, 'portal_setup')
     if getFSVersionTuple()[0] == 4:
-        setup.runImportStepFromProfile(PROFILE_ID, 'cssregistry')
-        setup.runImportStepFromProfile(PROFILE_ID, 'jsregistry')
+        setup.runImportStepFromProfile(PROFILE_ID_PLONE4, 'cssregistry')
+        setup.runImportStepFromProfile(PROFILE_ID_PLONE4, 'jsregistry')
     else:
-        setup.runImportStepFromProfile(PROFILE_ID, 'plone.app.registry')
+        setup.runImportStepFromProfile(PROFILE_ID_PLONE5, 'plone.app.registry')
 
 
 def upgrade_types(context, logger=None):

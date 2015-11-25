@@ -72,5 +72,13 @@
       sortkey="1"
       profile="wildcard.media:default"
       />
+   <genericsetup:upgradeStep
+      title="Upgrade to version 2.0.2"
+      source="2000"
+      destination="2001"
+      handler="wildcard.media.upgrades.upgrade_to_2"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
 
 </configure>

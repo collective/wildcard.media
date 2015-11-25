@@ -4,6 +4,9 @@ Changelog
 2.0.2 (unreleased)
 ------------------
 
+- fix plone 4 compatibility
+  [vangheem]
+
 - fix condition to show youtube video or file video
   [neilferreira, cekk]
 

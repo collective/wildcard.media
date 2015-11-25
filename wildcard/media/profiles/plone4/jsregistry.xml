@@ -1,16 +1,17 @@
 <?xml version="1.0"?>
 <object name="portal_javascripts">
 
-    <javascript
-        remove="True"
-        compression="none"
+    <javascript remove="True"
         id="++resource++wildcard-media/mediaelementjs/mediaelement-and-player.min.js"
+        />
+    <javascript remove="True"
+        id="++resource++wildcard-media/integration.js"
         />
     <javascript 
         cacheable="True" compression="safe" 
         enabled="True" inline="False"
         expression="python: 'theming-controlpanel-mapper' not in request.get('ACTUAL_URL', '')"
-        id="++resource++wildcard-media/integration.js"
+        id="++resource++wildcard-media/integration-p4.js"
         />
 
 </object>
