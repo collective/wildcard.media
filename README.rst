@@ -89,5 +89,5 @@ Finally, go to the url: http://plonesite/authorize-google
 Support
 -------
 
-Only tested on Plone 5.0, 4.3.x, Plone 4.1
+Only tested on Plone 5.0 and 4.3.x
 
