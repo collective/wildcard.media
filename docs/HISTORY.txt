@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.0.2 (unreleased)
+2.0.2 (2015-11-25)
 ------------------
 
 - fix plone 4 compatibility
