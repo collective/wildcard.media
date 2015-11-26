@@ -224,6 +224,14 @@ class Video(BaseAdapter):
     def __init__(self, context):
         self.context = context
 
+    # For when a fileUpload sends us a file
+    def _get_file(self):
+        return self.context.video_file
+
+    def _set_file(self, value):
+        self.video_file = value
+    file = property(_get_file, _set_file)
+
     def _get_video_file(self):
         return self.context.video_file
 
