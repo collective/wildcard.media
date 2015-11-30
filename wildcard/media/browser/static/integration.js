@@ -3431,7 +3431,7 @@ if (typeof jQuery != 'undefined') {
 				});
 			}
 			else {
-				this.each(function () {
+				$(this).not('.mejs-container').each(function () {
 					$(this).data('mediaelementplayer', new mejs.MediaElementPlayer(this, options));
 				});
 			}
