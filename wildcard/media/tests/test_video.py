@@ -124,6 +124,15 @@ class VideoIntegrationTest(unittest.TestCase):
         self.assertEquals(info.fieldname, 'video_file')
         self.assertTrue(IPrimaryField.providedBy(info.field))
 
+    def test_file_field(self):
+        '''Although video_file is the Primary field, DX might attempt to set
+        the file on the file attribute'''
+        video = self.create('videof')
+        blob = getVideoBlob('mp4')
+        video.file = blob
+        self.assertEqual(video.video_file.size, blob.size)
+        self.assertEqual(video.video_file.filename, blob.filename)
+
 
 class VideoFunctionalTest(unittest.TestCase):
 
