@@ -80,5 +80,13 @@
       sortkey="1"
       profile="wildcard.media:default"
       />
+   <genericsetup:upgradeStep
+      title="Upgrade to version 2.0.3"
+      source="2001"
+      destination="2003"
+      handler="wildcard.media.upgrades.upgrade_to_2003"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
 
 </configure>
