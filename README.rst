@@ -52,15 +52,25 @@ Must have plone.app.jquery >= 1.8.3
 Conversion
 ----------
 
-Some versions of ``avconv`` may require extra arguments during the conversion
-process so that the conversion process succeeds and produces output files in
-a valid format. Extra ``infile`` and ``outfile`` options can be configured in
-the control panel::
+Force Conversion
+~~~~~~~~~~~~~~~~
 
-    avconv [infile options] -i infile [outfile options] outfile
+Uploaded videos can be forced through the video conversion process by enabling
+the ``Force video conversion`` option. This option is useful if you would like
+to transcode all videos down to a certain resolution; or if you want to enforce
+a certain quality setting or video profile across all uploads.
+
+Conversion Parameters
+~~~~~~~~~~~~~~~~~~~~~
+
+You may like to pass certain parameters to ``avconv`` to customise the video
+transcoding process. Extra ``infile`` and ``outfile`` options can be configured
+in the control panel per video format:
+
+    avconv [infile options] -i infile [outfile options] outfile.{format}
 
 The latest version of ``avconv`` on Ubuntu may require 
-``-strict experimental`` as an ``outfile`` option.
+``-strict experimental`` as an ``outfile`` option for the mp4 format.
 
 
 YouTube API Support
