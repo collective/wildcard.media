@@ -27,6 +27,7 @@
     for="..interfaces.IVideoEnabled"
     template="templates/video_view.pt"
     permission="zope2.View"
+    class=".views.VideoView"
     layer="..interfaces.ILayer"
   />
   <browser:page
@@ -94,5 +95,5 @@
     class=".forms.VideoEditForm"
     permission="cmf.ModifyPortalContent"
     />
-   
+
 </configure>

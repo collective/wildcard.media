@@ -7,7 +7,7 @@ from wildcard.media.async import (
 
 
 def video_added(video, event):
-    if video.video_file:
+    if getattr(video, 'video_file', None):
         if getattr(video, 'upload_video_to_youtube', False):
             uploadToYouTube(video)
         else:
