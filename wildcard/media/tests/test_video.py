@@ -170,5 +170,46 @@ class VideoFunctionalTest(unittest.TestCase):
             self.browser.contents)
 
 
+class YoutubeVideoIntegrationTest(unittest.TestCase):
+
+    layer = MEDIA_INTEGRATION_TESTING
+
+    def setUp(self):
+        self.portal = self.layer['portal']
+        self.request = self.layer['request']
+        self.request['ACTUAL_URL'] = self.portal.absolute_url()
+        self.video_id = "2Lb2BiUC898"
+        setRoles(self.portal, TEST_USER_ID, ['Manager'])
+
+    def getFti(self):
+        return queryUtility(IDexterityFTI, name='WildcardVideo')
+
+    def create(self, id, video_url):
+        self.portal.invokeFactory('WildcardVideo', id,
+                                  youtube_url=video_url)
+        return self.portal[id]
+
+    def test_yt_url_generation_short(self):
+        self.create('video1', 'https://youtu.be/' + self.video_id)
+        video = self.portal['video1']
+        view = video.restrictedTraverse('@@wildcard_video_view')
+        embed_url = 'https://www.youtube.com/embed/' + self.video_id
+        self.assertEqual(view.get_embed_url(), embed_url)
+
+    def test_yt_url_generation_classic(self):
+        self.create('video2', 'https://www.youtube.com/watch?v=2Lb2BiUC898')
+        video = self.portal['video2']
+        view = video.restrictedTraverse('@@wildcard_video_view')
+        embed_url = 'https://www.youtube.com/embed/' + self.video_id
+        self.assertEqual(view.get_embed_url(), embed_url)
+
+    def test_yt_url_generation_embed(self):
+        self.create('video3', 'https://www.youtube.com/embed/' + self.video_id)
+        video = self.portal['video3']
+        view = video.restrictedTraverse('@@wildcard_video_view')
+        embed_url = 'https://www.youtube.com/embed/' + self.video_id
+        self.assertEqual(view.get_embed_url(), embed_url)
+
+
 def test_suite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)

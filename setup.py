@@ -39,6 +39,7 @@ setup(name='wildcard.media',
       extras_require={
           'test': [
               'plone.app.testing',
+              'unittest2'
           ],
           'youtube': [
               'requests',

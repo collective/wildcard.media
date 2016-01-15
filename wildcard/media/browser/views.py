@@ -1,4 +1,5 @@
 import urllib
+import re
 
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone import PloneMessageFactory as pmf
@@ -48,6 +49,27 @@ class AudioView(MediaView):
         )
         self.ct = self.context.audio_file.contentType
         return self.index()
+
+
+class VideoView(BrowserView):
+
+    def get_embed_url(self):
+        """
+        Try to guess video id from a various case of possible youtube urls and
+        returns the correct url for embed.
+        For example:
+        - 'https://youtu.be/VIDEO_ID'
+        - 'https://www.youtube.com/watch?v=VIDEO_ID'
+        - 'https://www.youtube.com/embed/2Lb2BiUC898'
+        """
+        if not getattr(self.context, 'youtube_url', None):
+            return ""
+        pattern = r"((?<=(v|V)/)|(?<=be/)|(?<=(\?|\&)v=)|(?<=embed/))([\w-]+)"
+        match = re.search(pattern, self.context.youtube_url)
+        if not match:
+            return ""
+        video_id = match.group()
+        return "https://www.youtube.com/embed/" + video_id
 
 
 class GlobalSettingsForm(form.EditForm):

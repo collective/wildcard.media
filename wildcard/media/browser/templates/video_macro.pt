@@ -7,7 +7,7 @@
                  height height|video/height|settings/default_video_height|string:720;
                  width width|video/width|settings/default_video_width|string:400;
                  upload_to_youtube video/upload_video_to_youtube|nothing;
-                 youtube_url video/youtube_url|nothing">
+                 youtube_url view/get_embed_url|nothing">
 <tal:has_video tal:condition="python: util.mp4_url and not upload_to_youtube and not youtube_url">
     <video width="320" height="240" poster="poster.jpg" controls="controls" preload="none" class="active pat-media"
           tal:attributes="poster util/image_url;
@@ -40,12 +40,19 @@
     </video>
 </tal:has_video>
 <tal:yt tal:condition="youtube_url">
-    <video width="640" height="360" id="player1" preload="none" class="active pat-media"
+  <iframe
+    tal:attributes="width width;
+                    height height;
+                    src youtube_url"
+    frameborder="0"
+    allowfullscreen>
+  </iframe>
+    <!-- <video width="640" height="360" id="player1" preload="none" class="active pat-media"
            tal:attributes="width width;
                            height height;">
         <source type="video/youtube" src="http://www.youtube.com/watch?v=nOEw9iiopwI"
                 tal:attributes="src video/youtube_url" />
-    </video>
+    </video> -->
 </tal:yt>
 </div>
 
