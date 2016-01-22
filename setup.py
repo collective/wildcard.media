@@ -13,6 +13,8 @@ setup(name='wildcard.media',
       classifiers=[
           "Framework :: Plone",
           "Programming Language :: Python",
+          "Framework :: Plone :: 4.3",
+          "Framework :: Plone :: 5.0"
       ],
       keywords='video audio media plone tiny html5 mediaelement',
       author='Nathan Van Gheem',
