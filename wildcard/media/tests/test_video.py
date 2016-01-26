@@ -11,6 +11,7 @@ from plone.app.testing import SITE_OWNER_NAME
 from plone.app.testing import SITE_OWNER_PASSWORD
 from plone.testing.z2 import Browser
 
+from wildcard.media.behavior import IVideo
 from wildcard.media.interfaces import IVideoEnabled
 from wildcard.media.browser.widget import MediaStream
 
@@ -179,6 +180,12 @@ class YoutubeVideoIntegrationTest(unittest.TestCase):
         self.request = self.layer['request']
         self.request['ACTUAL_URL'] = self.portal.absolute_url()
         self.video_id = "2Lb2BiUC898"
+        self.create('video1', 'https://youtu.be/' + self.video_id)
+        self.video1 = self.portal['video1']
+        self.create('video2', 'https://www.youtube.com/watch?v=2Lb2BiUC898')
+        self.video2 = self.portal['video2']
+        self.create('video3', 'https://www.youtube.com/embed/' + self.video_id)
+        self.video3 = self.portal['video3']
         setRoles(self.portal, TEST_USER_ID, ['Manager'])
 
     def getFti(self):
@@ -189,26 +196,38 @@ class YoutubeVideoIntegrationTest(unittest.TestCase):
                                   youtube_url=video_url)
         return self.portal[id]
 
+    def test_extract_yt_video_id(self):
+        behavior1 = IVideo(self.video1)
+        behavior2 = IVideo(self.video2)
+        behavior3 = IVideo(self.video3)
+        self.assertEqual(behavior1.get_youtube_id_from_url(), self.video_id)
+        self.assertEqual(behavior2.get_youtube_id_from_url(), self.video_id)
+        self.assertEqual(behavior3.get_youtube_id_from_url(), self.video_id)
+
     def test_yt_url_generation_short(self):
-        self.create('video1', 'https://youtu.be/' + self.video_id)
-        video = self.portal['video1']
-        view = video.restrictedTraverse('@@wildcard_video_view')
+        view = self.video1.restrictedTraverse('@@wildcard_video_view')
         embed_url = 'https://www.youtube.com/embed/' + self.video_id
         self.assertEqual(view.get_embed_url(), embed_url)
 
     def test_yt_url_generation_classic(self):
-        self.create('video2', 'https://www.youtube.com/watch?v=2Lb2BiUC898')
-        video = self.portal['video2']
-        view = video.restrictedTraverse('@@wildcard_video_view')
+        view = self.video2.restrictedTraverse('@@wildcard_video_view')
         embed_url = 'https://www.youtube.com/embed/' + self.video_id
         self.assertEqual(view.get_embed_url(), embed_url)
 
     def test_yt_url_generation_embed(self):
-        self.create('video3', 'https://www.youtube.com/embed/' + self.video_id)
-        video = self.portal['video3']
-        view = video.restrictedTraverse('@@wildcard_video_view')
+        view = self.video3.restrictedTraverse('@@wildcard_video_view')
         embed_url = 'https://www.youtube.com/embed/' + self.video_id
         self.assertEqual(view.get_embed_url(), embed_url)
+
+    def test_yt_video_thumb(self):
+        image1 = getattr(self.video1, 'image', None)
+        self.assertNotEqual(image1, None)
+        self.assertEqual(image1.getImageSize(), (480, 360))
+        self.assertEqual(image1.filename, "%s.jpg" % self.video_id)
+
+        self.create('video4', 'https://youtu.be/foo')
+        image4 = getattr(self.portal['video4'], 'image', None)
+        self.assertEqual(image4, None)
 
 
 def test_suite():

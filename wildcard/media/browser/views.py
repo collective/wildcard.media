@@ -7,6 +7,7 @@ from Products.Five import BrowserView
 from plone.app.z3cform.layout import wrap_form
 from plone.memoize.instance import memoize
 from wildcard.media import _
+from wildcard.media.behavior import IVideo
 from wildcard.media.config import getFormat
 from wildcard.media.interfaces import IGlobalMediaSettings
 from wildcard.media.interfaces import IMediaEnabled
@@ -17,7 +18,6 @@ from z3c.form import field
 from z3c.form import form
 from zope.component.hooks import getSite
 from zope.interface import alsoProvides
-
 
 try:
     from wildcard.media import youtube
@@ -62,13 +62,12 @@ class VideoView(BrowserView):
         - 'https://www.youtube.com/watch?v=VIDEO_ID'
         - 'https://www.youtube.com/embed/2Lb2BiUC898'
         """
-        if not getattr(self.context, 'youtube_url', None):
+        video_behavior = IVideo(self.context)
+        if not video_behavior:
             return ""
-        pattern = r"((?<=(v|V)/)|(?<=be/)|(?<=(\?|\&)v=)|(?<=embed/))([\w-]+)"
-        match = re.search(pattern, self.context.youtube_url)
-        if not match:
+        video_id = video_behavior.get_youtube_id_from_url()
+        if not video_id:
             return ""
-        video_id = match.group()
         return "https://www.youtube.com/embed/" + video_id
 
 

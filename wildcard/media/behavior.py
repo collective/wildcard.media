@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import re
 
 from plone.app.textfield import RichText
 from plone.autoform import directives as form
@@ -235,6 +236,16 @@ class Video(BaseAdapter):
         elif value != getattr(self.context, 'video_file', _marker):
             self.context.video_converted = False
             self.context.video_file = value
+
+    def get_youtube_id_from_url(self):
+        if not getattr(self.context, 'youtube_url', None):
+            return ""
+        pattern = r"((?<=(v|V)/)|(?<=be/)|(?<=(\?|\&)v=)|(?<=embed/))([\w-]+)"
+        match = re.search(pattern, self.context.youtube_url)
+        if not match:
+            return ""
+        return match.group()
+
     video_file = property(_get_video_file, _set_video_file)
 
     image = BasicProperty(IVideo['image'])
