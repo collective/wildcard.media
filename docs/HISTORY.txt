@@ -4,9 +4,11 @@ Changelog
 2.0.3 (Unreleased)
 ------------------
 
-- For youtube videos, use the iframe instead simple html5 video tag.
+- For youtube videos, use the iframe instead simple html5 video tag
   [cekk]
 
+- Automatically get thumbnail image for youtube videos on creation/edit
+  [cekk]
 
 2.0.2 (2015-11-25)
 ------------------
