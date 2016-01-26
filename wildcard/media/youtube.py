@@ -1,8 +1,11 @@
-from zope.globalrequest import getRequest
 from oauthlib.oauth2 import WebApplicationClient
-from zope.component import getUtility
-from plone.registry.interfaces import IRegistry
 from plone import api
+from plone.namedfile.file import NamedBlobImage
+from plone.registry.interfaces import IRegistry
+from requests.exceptions import Timeout
+from wildcard.media import logger
+from zope.component import getUtility
+from zope.globalrequest import getRequest
 
 import json
 import requests
@@ -192,8 +195,16 @@ def uploadToYouTube(video):
     except:
         removeFromYouTube(video)
         raise
-    video.youtube_url = u'https://www.youtube.com/watch?v=%s' % video.youtube_data['id']
+    video_id = video.youtube_data['id']
+    video.youtube_url = u'https://www.youtube.com/watch?v=%s' % video_id
     video.video_converted = True
+    # get thumbnail from youtube. In youtube_data there are the urls for thumbs
+    # but i prefer to pass the id to a common method.
+    logger.info(video.youtube_data['snippet']['thumbnails'])
+    image = downloadThumbFromYouTube(video_id)
+    if not image:
+        return
+    video.image = NamedBlobImage(image, filename=u'%s.jpg' % video_id)
 
 
 def removeFromYouTube(video):
@@ -235,3 +246,25 @@ def editYouTubeVideo(video):
     if not api.authorized:
         raise Exception("Website is not authorized to upload to YouTube")
     api.edit_video(video.youtube_data, video.Title(), video.Description())
+
+
+def downloadThumbFromYouTube(video_id):
+    if not video_id:
+        return None
+    url = "https://i.ytimg.com/vi/%s/hqdefault.jpg" % video_id
+    try:
+        res = requests.get(url, stream=True, timeout=10)
+    except Timeout:
+        logger.error('Unable to retrieve thumbnail image for "%s": timeout.' % video_id)
+        return
+    except Exception as e:
+        logger.error('Unable to retrieve thumbnail from "%s".' % url)
+        logger.exception(e)
+        return
+    if not res.ok:
+        if res.status_code == 404:
+            logger.error('Unable to retrieve thumbnail from "%s". Not found.' % url)
+        else:
+            logger.error('Unable to retrieve thumbnail from "%s". Error: %s' % (url, res.status_code))
+        return None
+    return res.raw.data
