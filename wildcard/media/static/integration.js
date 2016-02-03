@@ -26,7 +26,20 @@
             // add desired features in order
             features: ['backlight', 'googleanalytics'],
             // the time in milliseconds between re-drawing the light
-            backlightTimeout: 200
+            backlightTimeout: 200,
+            success: function(media, node, player) {
+          		media.addEventListener('play', function(e) {
+                console.log("event play " + e.type);
+          		}, false);
+
+              media.addEventListener('pause', function(e) {
+                console.log("event pause " + e.type);
+          		}, false);
+
+              media.addEventListener('ended', function(e) {
+                console.log("event ended " + e.type);
+          		}, false);
+          	}
           });
         }
       });
