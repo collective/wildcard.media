@@ -26,11 +26,14 @@
     </metal:content-core>
       <script>
           $(document).ready(function(){
-            $('video.active').mediaelementplayer({pluginPath: '++resource++wildcard-media/mediaelementjs/'});
+            $('video.active').mediaelementplayer({
+              pluginPath: '++resource++wildcard-media/mediaelementjs/',
+              features: ['playpause','current','progress','duration','tracks','volume','fullscreen',
+              'googleanalytics', 'universalgoogleanalytics']
+            });
           });
       </script>
 </metal:content-core>
 
 </body>
 </html>
-

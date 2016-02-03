@@ -9,7 +9,11 @@
   <metal:js fill-slot="javascript_head_slot">
       <script>
           $(document).ready(function(){
-            $('audio.active').mediaelementplayer({pluginPath: '++resource++wildcard-media/mediaelementjs/'});
+            $('audio.active').mediaelementplayer({
+              pluginPath: '++resource++wildcard-media/mediaelementjs/',
+              features: ['playpause','current','progress','duration','tracks','volume','fullscreen',
+              'googleanalytics', 'universalgoogleanalytics']
+            });
           });
       </script>
       <meta property="og:type" content="music.song" />
@@ -32,4 +36,3 @@
 
 </body>
 </html>
-

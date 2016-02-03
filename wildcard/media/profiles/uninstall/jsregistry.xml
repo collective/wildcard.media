@@ -7,6 +7,14 @@
         />
     <javascript
         remove="True"
+        id="++resource++wildcard-media/mediaelementjs/mep-feature-googleanalytics.js"
+        />
+    <javascript
+        remove="True"
+        id="++resource++wildcard-media/mediaelementjs/mep-feature-universalgoogleanalytics.js"
+        />
+    <javascript
+        remove="True"
         id="++resource++wildcard-media/integration.js"
         />
 

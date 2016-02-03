@@ -1,13 +1,23 @@
 <?xml version="1.0"?>
 <object name="portal_javascripts">
 
-    <javascript 
-        cacheable="True" compression="safe" 
+    <javascript
+        cacheable="True" compression="safe"
         enabled="True" inline="False"
         id="++resource++wildcard-media/mediaelementjs/mediaelement-and-player.min.js"
         />
-    <javascript 
-        cacheable="True" compression="safe" 
+    <javascript
+        cacheable="True" compression="safe"
+        enabled="True" inline="False"
+        id="++resource++wildcard-media/mediaelementjs/mep-feature-googleanalytics.js"
+        />
+    <javascript
+        cacheable="True" compression="safe"
+        enabled="True" inline="False"
+        id="++resource++wildcard-media/mediaelementjs/mep-feature-universalgoogleanalytics.js"
+        />
+    <javascript
+        cacheable="True" compression="safe"
         enabled="True" inline="False"
         id="++resource++wildcard-media/integration.js"
         />

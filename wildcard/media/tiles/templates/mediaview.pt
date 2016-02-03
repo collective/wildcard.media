@@ -34,12 +34,15 @@
             var videoplayer = new MediaElementPlayer('video.active', {
                 videoWidth: '100%',
                 videoHeight: '100%',
-                enableAutoSize: true
+                enableAutoSize: true,
+                features: ['playpause','current','progress','duration','tracks','volume','fullscreen',
+                'googleanalytics', 'universalgoogleanalytics']
             });
         </script>
         <script tal:condition="not: view/is_video">
             $(document).ready(function(){
-                $('audio.active').mediaelementplayer();
+                $('audio.active').mediaelementplayer({features: ['playpause','current','progress','duration','tracks','volume','fullscreen',
+                'googleanalytics', 'universalgoogleanalytics']});
             });
         </script>
     </div>
