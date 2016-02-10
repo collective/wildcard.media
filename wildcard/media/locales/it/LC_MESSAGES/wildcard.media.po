@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2016-02-10 15:49+0000\n"
+"POT-Creation-Date: 2016-02-10 16:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI +ZONE\n"
 "Last-Translator: Luca Fabbri <keul@redturtle.it>\n"
 "Language-Team: RedTurtle Technology <sviluppoplone@redturtle.it>\n"
@@ -50,6 +50,10 @@ msgstr "Altezza di default del video"
 msgid "Default video width"
 msgstr "Larghezza di default del video"
 
+#: ../browser/templates/video_macro.pt:47
+msgid "Edit"
+msgstr "Modificalo"
+
 #: ../behavior.py:119
 msgid "Height"
 msgstr "Altezza"
@@ -84,6 +88,10 @@ msgstr "Scarica la miniatura originale da youtube"
 #: ../behavior.py:124
 msgid "Subtitle file"
 msgstr "File sottotitoli"
+
+#: ../browser/templates/video_macro.pt:46
+msgid "This video doesn't have a saved thumbnail image."
+msgstr "Questo video non ha una miniatura salvata."
 
 #: ../behavior.py:135
 msgid "Transcript"
@@ -126,6 +134,10 @@ msgstr "Passa un parametro opzionale per outfile ad aconv durante il processo di
 #: ../browser/views.py:91
 msgid "description_media_global_settings_form"
 msgstr "Configura i parametri per il multimedia."
+
+#: ../browser/templates/video_macro.pt:48
+msgid "it and enable \"Retrieve original thumbnail\" field. <br /> If you uploaded a video to YouTube, it is possible that the thumbnail wasn't available at upload time. Try to re-save the video to reload the image."
+msgstr "e abilita il campo \"Retrieve original thumbnail\". <br /> Se hai fatto un upload su YouTube, è possibile che l'immagine non sia ancora disponibile. Riprova a salvare il video più tardi."
 
 #. Default: "Media View"
 #: ../tiles/mediaview.py:41

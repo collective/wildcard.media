@@ -1,4 +1,4 @@
-<div metal:define-macro="video">
+<div metal:define-macro="video" i18n:domain="wildcard.media">
 
 <div class="wcvideo-container"
      tal:define="util video/@@wcmedia-utils|context/@@wcmedia-utils;
@@ -43,11 +43,13 @@
   <tal:no_image condition="not:util/image_url">
     <p class="discreet" tal:define="edit_url view/get_edit_url"
        tal:condition="edit_url">
-      The video doesn't have a saved thumbnail image. Try to
-      <a tal:attributes="href edit_url" title="edit video"> edit </a>
-      it and enable "Retrieve original thumbnail" field.
-      <br /> If you uploaded a video to YouTube, it is possible that the thumbnail wasn't available
-      at upload time. Try to re-save the video to reload the image.
+      <tal:no_image i18n:translate="">This video doesn't have a saved thumbnail image. </tal:no_image>
+      <br /><a tal:attributes="href edit_url" title="edit video" i18n:translate="">Edit </a>
+      <tal:no_image i18n:translate="">
+        it and enable "Retrieve original thumbnail" field.
+        <br /> If you uploaded a video to YouTube, it is possible that the thumbnail wasn't available
+        at upload time. Try to re-save the video to reload the image.
+      </tal:no_image>
     </p>
   </tal:no_image>
   <iframe
