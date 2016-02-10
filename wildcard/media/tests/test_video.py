@@ -191,9 +191,10 @@ class YoutubeVideoIntegrationTest(unittest.TestCase):
     def getFti(self):
         return queryUtility(IDexterityFTI, name='WildcardVideo')
 
-    def create(self, id, video_url):
+    def create(self, id, video_url, retrieve_thumb=False):
         self.portal.invokeFactory('WildcardVideo', id,
-                                  youtube_url=video_url)
+                                  youtube_url=video_url,
+                                  retrieve_thumb=retrieve_thumb)
         return self.portal[id]
 
     def test_extract_yt_video_id(self):
@@ -221,13 +222,21 @@ class YoutubeVideoIntegrationTest(unittest.TestCase):
 
     def test_yt_video_thumb(self):
         image1 = getattr(self.video1, 'image', None)
-        self.assertNotEqual(image1, None)
-        self.assertEqual(image1.getImageSize(), (480, 360))
-        self.assertEqual(image1.filename, "%s.jpg" % self.video_id)
+        self.assertEqual(image1, None)
 
-        self.create('video4', 'https://youtu.be/foo')
-        image4 = getattr(self.portal['video4'], 'image', None)
-        self.assertEqual(image4, None)
+        self.create(
+            id='video4',
+            video_url='https://www.youtube.com/embed/' + self.video_id,
+            retrieve_thumb=True)
+        video4 = self.portal['video4']
+        image4 = getattr(video4, 'image', None)
+        self.assertNotEqual(image4, None)
+        self.assertEqual(image4.getImageSize(), (480, 360))
+        self.assertEqual(image4.filename, "%s.jpg" % self.video_id)
+
+        self.create('video5', 'https://youtu.be/foo')
+        image5 = getattr(self.portal['video5'], 'image', None)
+        self.assertEqual(image5, None)
 
 
 def test_suite():
