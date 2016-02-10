@@ -40,6 +40,16 @@
     </video>
 </tal:has_video>
 <tal:yt tal:condition="youtube_url">
+  <tal:no_image condition="not:util/image_url">
+    <p class="discreet" tal:define="edit_url view/get_edit_url"
+       tal:condition="edit_url">
+      The video doesn't have a saved thumbnail image. Try to
+      <a tal:attributes="href edit_url" title="edit video"> edit </a>
+      it and enable "Retrieve original thumbnail" field.
+      <br /> If you uploaded a video to YouTube, it is possible that the thumbnail wasn't available
+      at upload time. Try to re-save the video to reload the image.
+    </p>
+  </tal:no_image>
   <iframe
     tal:attributes="width width;
                     height height;
@@ -47,12 +57,6 @@
     frameborder="0"
     allowfullscreen>
   </iframe>
-    <!-- <video width="640" height="360" id="player1" preload="none" class="active pat-media"
-           tal:attributes="width width;
-                           height height;">
-        <source type="video/youtube" src="http://www.youtube.com/watch?v=nOEw9iiopwI"
-                tal:attributes="src video/youtube_url" />
-    </video> -->
 </tal:yt>
 </div>
 

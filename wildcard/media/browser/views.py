@@ -4,6 +4,7 @@ import re
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone import PloneMessageFactory as pmf
 from Products.Five import BrowserView
+from plone import api
 from plone.app.z3cform.layout import wrap_form
 from plone.memoize.instance import memoize
 from wildcard.media import _
@@ -69,6 +70,18 @@ class VideoView(BrowserView):
         if not video_id:
             return ""
         return "https://www.youtube.com/embed/" + video_id
+
+    def get_edit_url(self):
+        """
+        If the user can edit the video, returns the edit url.
+        """
+        if not api.user.has_permission(
+            'Modify portal content',
+            obj=self.context):
+            return ""
+        from plone.protect.utils import addTokenToUrl
+        url = "%s/@@edit" % self.context.absolute_url()
+        return addTokenToUrl(url)
 
 
 class GlobalSettingsForm(form.EditForm):
