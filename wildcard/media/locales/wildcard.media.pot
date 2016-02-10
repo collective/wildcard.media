@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2015-11-12 08:29+0000\n"
+"POT-Creation-Date: 2016-02-10 15:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI +ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,7 +21,7 @@ msgstr ""
 msgid "Additional Video Formats"
 msgstr ""
 
-#: ../behavior.py:94
+#: ../behavior.py:95
 msgid "Alternatively, you can provide a youtube video url. If this is specified, video file will be ignored. If video was uploaded to youtube, this field will be filled with video url."
 msgstr ""
 
@@ -29,7 +29,7 @@ msgstr ""
 msgid "Async Quota Size"
 msgstr ""
 
-#: ../behavior.py:146
+#: ../behavior.py:153
 msgid "Audio File"
 msgstr ""
 
@@ -41,7 +41,7 @@ msgstr ""
 msgid "Convert Outfile Options"
 msgstr ""
 
-#: ../behavior.py:54
+#: ../behavior.py:55
 msgid "Cover Image"
 msgstr ""
 
@@ -53,11 +53,15 @@ msgstr ""
 msgid "Default video width"
 msgstr ""
 
-#: ../behavior.py:112
+#: ../behavior.py:119
 msgid "Height"
 msgstr ""
 
-#: ../browser/views.py:56
+#: ../behavior.py:103
+msgid "If checked, try to download original thumbnail from youtube into this video."
+msgstr ""
+
+#: ../browser/views.py:90
 #: ../profiles/default/controlpanel.xml
 msgid "Media Settings"
 msgstr ""
@@ -66,35 +70,39 @@ msgstr ""
 msgid "Number of conversions to run at a time. The quota name assigned is `wildcard.media`."
 msgstr ""
 
-#: ../behavior.py:118
+#: ../behavior.py:125
 msgid "Provide a file in srt format"
 msgstr ""
 
-#: ../behavior.py:72
+#: ../behavior.py:73
 msgid "Requires having youtube account connected. Videos that are private will remain unlisted on YouTube. Once published, video will be made public on YouTube. "
 msgstr ""
 
-#: ../behavior.py:117
+#: ../behavior.py:102
+msgid "Retrieve original thumbnail from youtube"
+msgstr ""
+
+#: ../behavior.py:124
 msgid "Subtitle file"
 msgstr ""
 
-#: ../behavior.py:128
+#: ../behavior.py:135
 msgid "Transcript"
 msgstr ""
 
-#: ../behavior.py:71
+#: ../behavior.py:72
 msgid "Upload to youtube"
 msgstr ""
 
-#: ../behavior.py:63
+#: ../behavior.py:64
 msgid "Video File"
 msgstr ""
 
-#: ../behavior.py:107
+#: ../behavior.py:114
 msgid "Width"
 msgstr ""
 
-#: ../behavior.py:93
+#: ../behavior.py:94
 msgid "Youtube URL"
 msgstr ""
 
@@ -114,12 +122,27 @@ msgid "convert_outfile_options_help"
 msgstr ""
 
 #. Default: "Configure the parameters for media."
-#: ../browser/views.py:57
+#: ../browser/views.py:91
 msgid "description_media_global_settings_form"
 msgstr ""
 
 #. Default: "Media View"
 #: ../tiles/mediaview.py:41
 msgid "msg_short_name_mediaview"
+msgstr ""
+
+#. Default: "Unable to download thumbnail image automatically from youtube. Try later."
+#: ../subscribers.py:73
+msgid "yt_image_download_error_label"
+msgstr ""
+
+#. Default: "Unable to download thumbnail image automatically from youtube. Probably it isn't available yet. Please retry in a few minutes."
+#: ../subscribers.py:99
+msgid "yt_image_download_notfound_error_label"
+msgstr ""
+
+#. Default: "Thumbnail image correctly saved from youtube."
+#: ../subscribers.py:116
+msgid "yt_image_download_success_label"
 msgstr ""
 
