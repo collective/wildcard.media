@@ -39,7 +39,11 @@ require([
             $video.find('[height]').attr('height', height);
           }
           $span.replaceWith($video);
-          $video.find('video').mediaelementplayer({pluginPath: '++resource++wildcard-media/components/mediaelement/build/'});
+          $video.find('video').mediaelementplayer({
+            pluginPath: '++resource++wildcard-media/components/mediaelement/build/',
+            features: ['playpause', 'current', 'progress', 'duration', 'tracks', 'volume', 'fullscreen',
+                       'googleanalytics', 'universalgoogleanalytics']
+          });
         }
       });
     });
@@ -49,7 +53,10 @@ require([
       var $audio = $('<audio controls="controls" preload="none"' +
         'src="' + $a.attr('href') + '/@@view/++widget++form.widgets.IAudio.audio_file/@@download/file.mp3' + '"></audio>');
       $span.replaceWith($audio);
-      $audio.mediaelementplayer();
+      $audio.mediaelementplayer({
+        features: ['playpause', 'current', 'progress', 'duration', 'tracks', 'volume', 'fullscreen',
+                   'googleanalytics', 'universalgoogleanalytics']
+      });
     });
 
     var selector = '.template-wildcardvideo #form-widgets-IVideo-upload_video_to_youtube-0';
