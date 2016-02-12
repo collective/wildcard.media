@@ -1,8 +1,8 @@
-from oauthlib.oauth2 import WebApplicationClient
-from plone import api
-from plone.registry.interfaces import IRegistry
-from zope.component import getUtility
 from zope.globalrequest import getRequest
+from oauthlib.oauth2 import WebApplicationClient
+from zope.component import getUtility
+from plone.registry.interfaces import IRegistry
+from plone import api
 
 import json
 import requests
@@ -192,8 +192,7 @@ def uploadToYouTube(video):
     except:
         removeFromYouTube(video)
         raise
-    video_id = video.youtube_data['id']
-    video.youtube_url = u'https://www.youtube.com/watch?v=%s' % video_id
+    video.youtube_url = u'https://www.youtube.com/watch?v=%s' % video.youtube_data['id']
     video.video_converted = True
 
 

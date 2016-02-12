@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2016-02-10 16:10+0000\n"
+"POT-Creation-Date: 2015-11-12 08:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI +ZONE\n"
 "Last-Translator: Luca Fabbri <keul@redturtle.it>\n"
 "Language-Team: RedTurtle Technology <sviluppoplone@redturtle.it>\n"
@@ -18,7 +18,7 @@ msgstr ""
 msgid "Additional Video Formats"
 msgstr "Formati Video Aggiuntivi"
 
-#: ../behavior.py:95
+#: ../behavior.py:94
 msgid "Alternatively, you can provide a youtube video url. If this is specified, video file will be ignored. If video was uploaded to youtube, this field will be filled with video url."
 msgstr "In alternativa, puoi fornire l'url di un video su YouTube. Se lo inserisci, il file video verrà ignorato. Se il file video è stato caricato su YouTube, questo campo verrà popolato con il suo url."
 
@@ -26,7 +26,7 @@ msgstr "In alternativa, puoi fornire l'url di un video su YouTube. Se lo inseris
 msgid "Async Quota Size"
 msgstr "Dimensione Quota Async"
 
-#: ../behavior.py:153
+#: ../behavior.py:146
 msgid "Audio File"
 msgstr "File Audio"
 
@@ -38,7 +38,7 @@ msgstr "Opzioni di Infile per la conversione"
 msgid "Convert Outfile Options"
 msgstr "Opzioni di Outfile per la conversione"
 
-#: ../behavior.py:55
+#: ../behavior.py:54
 msgid "Cover Image"
 msgstr "Immagine Copertina"
 
@@ -50,19 +50,11 @@ msgstr "Altezza di default del video"
 msgid "Default video width"
 msgstr "Larghezza di default del video"
 
-#: ../browser/templates/video_macro.pt:47
-msgid "Edit"
-msgstr "Modificalo"
-
-#: ../behavior.py:119
+#: ../behavior.py:112
 msgid "Height"
 msgstr "Altezza"
 
-#: ../behavior.py:103
-msgid "If checked, try to download original thumbnail from youtube into this video."
-msgstr "Se selezionato, prova a scaricare la miniatura originale da youtube e salvarla nel video."
-
-#: ../browser/views.py:90
+#: ../browser/views.py:56
 #: ../profiles/default/controlpanel.xml
 msgid "Media Settings"
 msgstr "Impostazioni Multimedia"
@@ -73,43 +65,35 @@ msgstr ""
 "Numero di conversioni da lanciare in una volta.\n"
 "Il nome della quota assegnata è  `wildcard.media`."
 
-#: ../behavior.py:125
+#: ../behavior.py:118
 msgid "Provide a file in srt format"
 msgstr "Fornisci un file in formato srt"
 
-#: ../behavior.py:73
+#: ../behavior.py:72
 msgid "Requires having youtube account connected. Videos that are private will remain unlisted on YouTube. Once published, video will be made public on YouTube. "
 msgstr "E' necessatio avere un account YouTube collegato. I video privati non saranno visibili su YouTube. Una volta pubblicati, verranno anche resi visibili su YouTube."
 
-#: ../behavior.py:102
-msgid "Retrieve original thumbnail from youtube"
-msgstr "Scarica la miniatura originale da youtube"
-
-#: ../behavior.py:124
+#: ../behavior.py:117
 msgid "Subtitle file"
 msgstr "File sottotitoli"
 
-#: ../browser/templates/video_macro.pt:46
-msgid "This video doesn't have a saved thumbnail image."
-msgstr "Questo video non ha una miniatura salvata."
-
-#: ../behavior.py:135
+#: ../behavior.py:128
 msgid "Transcript"
 msgstr "Trascrizione"
 
-#: ../behavior.py:72
+#: ../behavior.py:71
 msgid "Upload to youtube"
 msgstr "Carica su YouTube"
 
-#: ../behavior.py:64
+#: ../behavior.py:63
 msgid "Video File"
 msgstr "File Video"
 
-#: ../behavior.py:114
+#: ../behavior.py:107
 msgid "Width"
 msgstr "Larghezza"
 
-#: ../behavior.py:94
+#: ../behavior.py:93
 msgid "Youtube URL"
 msgstr "URL YouTube"
 
@@ -131,30 +115,11 @@ msgid "convert_outfile_options_help"
 msgstr "Passa un parametro opzionale per outfile ad aconv durante il processo di conversione."
 
 #. Default: "Configure the parameters for media."
-#: ../browser/views.py:91
+#: ../browser/views.py:57
 msgid "description_media_global_settings_form"
 msgstr "Configura i parametri per il multimedia."
-
-#: ../browser/templates/video_macro.pt:48
-msgid "it and enable \"Retrieve original thumbnail\" field. <br /> If you uploaded a video to YouTube, it is possible that the thumbnail wasn't available at upload time. Try to re-save the video to reload the image."
-msgstr "e abilita il campo \"Retrieve original thumbnail\". <br /> Se hai fatto un upload su YouTube, è possibile che l'immagine non sia ancora disponibile. Riprova a salvare il video più tardi."
 
 #. Default: "Media View"
 #: ../tiles/mediaview.py:41
 msgid "msg_short_name_mediaview"
 msgstr "Vista Multimedia"
-
-#. Default: "Unable to download thumbnail image automatically from youtube. Try later."
-#: ../subscribers.py:73
-msgid "yt_image_download_error_label"
-msgstr "Impossibile scaricare la miniatura in automatico da youtube. Riprova più tardi."
-
-#. Default: "Unable to download thumbnail image automatically from youtube. Probably it isn't available yet. Please retry in a few minutes."
-#: ../subscribers.py:99
-msgid "yt_image_download_notfound_error_label"
-msgstr "Impossibile scaricare la miniatura in automatico da youtube. Probabilmente non è ancora disponibile. Riprova più tardi."
-
-#. Default: "Thumbnail image correctly saved from youtube."
-#: ../subscribers.py:116
-msgid "yt_image_download_success_label"
-msgstr "Miniatura scaricata correttamente da youtube."

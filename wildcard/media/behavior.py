@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-import re
 
 from plone.app.textfield import RichText
 from plone.autoform import directives as form
@@ -10,13 +9,13 @@ from plone.namedfile import field as namedfile
 from plone.supermodel import model
 from wildcard.media import _
 from wildcard.media.browser.widget import StreamNamedFileFieldWidget
-from wildcard.media.settings import GlobalSettings
 from z3c.form.interfaces import IAddForm, IEditForm
 from zope import schema
 from zope.component import adapts
-from zope.component.hooks import getSite
-from zope.interface import alsoProvides, implements
 from zope.interface import Invalid, invariant
+from zope.interface import alsoProvides, implements
+from zope.component.hooks import getSite
+from wildcard.media.settings import GlobalSettings
 
 try:
     from wildcard.media import youtube
@@ -98,12 +97,6 @@ class IVideo(model.Schema):
                       u"with video url."),
         required=False
     )
-    retrieve_thumb = schema.Bool(
-        title=_(u'Retrieve original thumbnail from youtube'),
-        description=_(u"If checked, try to download original thumbnail from "
-                      u"youtube into this video."),
-        required=False,
-        default=False)
 
     @invariant
     def validate_videos(data):
@@ -242,21 +235,10 @@ class Video(BaseAdapter):
         elif value != getattr(self.context, 'video_file', _marker):
             self.context.video_converted = False
             self.context.video_file = value
-
-    def get_youtube_id_from_url(self):
-        if not getattr(self.context, 'youtube_url', None):
-            return ""
-        pattern = r"((?<=(v|V)/)|(?<=be/)|(?<=(\?|\&)v=)|(?<=embed/))([\w-]+)"
-        match = re.search(pattern, self.context.youtube_url)
-        if not match:
-            return ""
-        return match.group()
-
     video_file = property(_get_video_file, _set_video_file)
 
     image = BasicProperty(IVideo['image'])
     youtube_url = BasicProperty(IVideo['youtube_url'])
-    retrieve_thumb = BasicProperty(IVideo['retrieve_thumb'])
     width = BasicProperty(IVideo['width'])
     height = BasicProperty(IVideo['height'])
     transcript = BasicProperty(IVideo['transcript'])
