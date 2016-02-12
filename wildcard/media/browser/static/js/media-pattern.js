@@ -2,7 +2,9 @@
 define([
   'jquery',
   'mockup-patterns-base',
-  'mediaelement'
+  'mediaelement',
+  'mep-feature-googleanalytics',
+  'mep-feature-universalgoogleanalytics'
 ], function($, Base) {
   'use strict';
 
