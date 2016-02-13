@@ -10,6 +10,9 @@ Changelog
 - Automatically get thumbnail image for youtube videos on creation/edit
   [cekk]
 
+- add Google and universal analytics MediaElement.js plugins
+  [ivanteoh]
+
 2.0.2 (2015-11-25)
 ------------------
 

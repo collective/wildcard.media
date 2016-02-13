@@ -30,7 +30,9 @@ module.exports = function(grunt) {
             'jquery': 'empty:',
 
             'wildcard-patterns-video': 'js/media-pattern',
-            'mediaelement': 'components/mediaelement/build/mediaelement-and-player'
+            'mediaelement': 'components/mediaelement/build/mediaelement-and-player',
+            'mep-feature-googleanalytics': 'components/mediaelement/plugins/mep-feature-googleanalytics',
+            'mep-feature-universalgoogleanalytics': 'components/mediaelement/plugins/mep-feature-universalgoogleanalytics'
           }
         }
       },
@@ -69,7 +71,9 @@ module.exports = function(grunt) {
             'jquery': 'empty:',
 
             'wildcard-patterns-video': 'js/media-pattern',
-            'mediaelement': 'components/mediaelement/build/mediaelement-and-player'
+            'mediaelement': 'components/mediaelement/build/mediaelement-and-player',
+            'mep-feature-googleanalytics': 'components/mediaelement/plugins/mep-feature-googleanalytics',
+            'mep-feature-universalgoogleanalytics': 'components/mediaelement/plugins/mep-feature-universalgoogleanalytics'
           }
         }
       }

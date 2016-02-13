@@ -7945,14 +7945,157 @@ $.extend(mejs.MepDefaults,
 })(mejs.$);
 define("mediaelement", function(){});
 
+/*
+* Google Analytics Plugin
+* Requires
+*
+*/
+
+(function($) {
+
+$.extend(mejs.MepDefaults, {
+	googleAnalyticsTitle: '',
+	googleAnalyticsCategory: 'Videos',
+	googleAnalyticsEventPlay: 'Play',
+	googleAnalyticsEventPause: 'Pause',
+	googleAnalyticsEventEnded: 'Ended',
+	googleAnalyticsEventTime: 'Time'
+});
+
+
+$.extend(MediaElementPlayer.prototype, {
+	buildgoogleanalytics: function(player, controls, layers, media) {
+
+		media.addEventListener('play', function() {
+			if (typeof _gaq != 'undefined') {
+				_gaq.push(['_trackEvent',
+					player.options.googleAnalyticsCategory,
+					player.options.googleAnalyticsEventPlay,
+					(player.options.googleAnalyticsTitle === '') ? player.media.currentSrc : player.options.googleAnalyticsTitle
+				]);
+			}
+		}, false);
+
+		media.addEventListener('pause', function() {
+			if (typeof _gaq != 'undefined') {
+				_gaq.push(['_trackEvent',
+					player.options.googleAnalyticsCategory,
+					player.options.googleAnalyticsEventPause,
+					(player.options.googleAnalyticsTitle === '') ? player.media.currentSrc : player.options.googleAnalyticsTitle
+				]);
+			}
+		}, false);
+
+		media.addEventListener('ended', function() {
+			if (typeof _gaq != 'undefined') {
+				_gaq.push(['_trackEvent',
+					player.options.googleAnalyticsCategory,
+					player.options.googleAnalyticsEventEnded,
+					(player.options.googleAnalyticsTitle === '') ? player.media.currentSrc : player.options.googleAnalyticsTitle
+				]);
+			}
+		}, false);
+
+		/*
+		media.addEventListener('timeupdate', function() {
+			if (typeof _gaq != 'undefined') {
+				_gaq.push(['_trackEvent',
+					player.options.googleAnalyticsCategory,
+					player.options.googleAnalyticsEventEnded, 
+					player.options.googleAnalyticsTime,
+					(player.options.googleAnalyticsTitle === '') ? player.media.currentSrc : player.options.googleAnalyticsTitle,
+					player.currentTime
+				]);
+			}
+		}, true);
+		*/
+	}
+});
+
+})(mejs.$);
+
+define("mep-feature-googleanalytics", function(){});
+
+/*
+* analytics.js Google Analytics Plugin
+* Requires JQuery
+*/
+
+(function($) {
+
+$.extend(mejs.MepDefaults, {
+	googleAnalyticsTitle: '',
+	googleAnalyticsCategory: 'Videos',
+	googleAnalyticsEventPlay: 'Play',
+	googleAnalyticsEventPause: 'Pause',
+	googleAnalyticsEventEnded: 'Ended',
+	googleAnalyticsEventTime: 'Time'
+});
+
+
+$.extend(MediaElementPlayer.prototype, {
+	builduniversalgoogleanalytics: function(player, controls, layers, media) {
+
+		media.addEventListener('play', function() {
+			if (typeof ga != 'undefined') {
+				ga('send', 'event',
+					player.options.googleAnalyticsCategory,
+					player.options.googleAnalyticsEventPlay,
+					(player.options.googleAnalyticsTitle === '') ? player.media.currentSrc : player.options.googleAnalyticsTitle
+				);
+			}
+		}, false);
+
+		media.addEventListener('pause', function() {
+			if (typeof ga != 'undefined') {
+				ga('send', 'event',
+					player.options.googleAnalyticsCategory,
+					player.options.googleAnalyticsEventPause,
+					(player.options.googleAnalyticsTitle === '') ? player.media.currentSrc : player.options.googleAnalyticsTitle
+				);
+			}
+		}, false);
+
+		media.addEventListener('ended', function() {
+			if (typeof ga != 'undefined') {
+				ga('send', 'event',
+					player.options.googleAnalyticsCategory,
+					player.options.googleAnalyticsEventEnded,
+					(player.options.googleAnalyticsTitle === '') ? player.media.currentSrc : player.options.googleAnalyticsTitle
+				);
+			}
+		}, false);
+
+		/*
+		media.addEventListener('timeupdate', function() {
+			if (typeof ga != 'undefined') {
+				ga('send', 'event',
+					player.options.googleAnalyticsCategory,
+					player.options.googleAnalyticsEventEnded, 
+					player.options.googleAnalyticsTime,
+				  (player.options.googleAnalyticsTitle === '') ? player.media.currentSrc : player.options.googleAnalyticsTitle,
+					player.currentTime
+				);
+			}
+		}, true);
+		*/
+	}
+});
+
+})(mejs.$);
+
+define("mep-feature-universalgoogleanalytics", function(){});
+
 /* global define */
 define('wildcard-patterns-video',[
   'jquery',
   'mockup-patterns-base',
-  'mediaelement'
+  'mediaelement',
+  'mep-feature-googleanalytics',
+  'mep-feature-universalgoogleanalytics'
 ], function($, Base) {
   'use strict';
- 
+
   var Media = Base.extend({
     name: 'media',
     trigger: '.pat-media',
@@ -7960,12 +8103,16 @@ define('wildcard-patterns-video',[
     },
     init: function() {
       var self = this;
-      self.$el.mediaelementplayer({pluginPath: '++resource++wildcard-media/components/mediaelement/build/'});
+      self.$el.mediaelementplayer({
+        pluginPath: '++resource++wildcard-media/components/mediaelement/build/',
+        features: ['playpause','current','progress','duration','tracks','volume','fullscreen',
+                   'googleanalytics', 'universalgoogleanalytics']
+      });
     }
   });
- 
+
   return Media;
- 
+
 });
 
 /* global require */
@@ -8009,7 +8156,11 @@ require([
             $video.find('[height]').attr('height', height);
           }
           $span.replaceWith($video);
-          $video.find('video').mediaelementplayer({pluginPath: '++resource++wildcard-media/components/mediaelement/build/'});
+          $video.find('video').mediaelementplayer({
+            pluginPath: '++resource++wildcard-media/components/mediaelement/build/',
+            features: ['playpause', 'current', 'progress', 'duration', 'tracks', 'volume', 'fullscreen',
+                       'googleanalytics', 'universalgoogleanalytics']
+          });
         }
       });
     });
@@ -8019,7 +8170,10 @@ require([
       var $audio = $('<audio controls="controls" preload="none"' +
         'src="' + $a.attr('href') + '/@@view/++widget++form.widgets.IAudio.audio_file/@@download/file.mp3' + '"></audio>');
       $span.replaceWith($audio);
-      $audio.mediaelementplayer();
+      $audio.mediaelementplayer({
+        features: ['playpause', 'current', 'progress', 'duration', 'tracks', 'volume', 'fullscreen',
+                   'googleanalytics', 'universalgoogleanalytics']
+      });
     });
 
     var selector = '.template-wildcardvideo #form-widgets-IVideo-upload_video_to_youtube-0';
@@ -8037,6 +8191,7 @@ require([
   });
 
 });
+
 define("js/bundle.js", function(){});
 
 }());
