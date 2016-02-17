@@ -8126,15 +8126,11 @@ if(window.jQuery){
 
 require([
   'jquery',
-  'pat-registry',
   'wildcard-patterns-video'
-  ], function($, Registry){
+  ], function($){
   'use strict';
 
   $(document).ready(function(){
-    if (!Registry.initialized) {
-      Registry.init();
-    }
 
     $('span.wcvideo a').each(function(){
       var $a = $(this);

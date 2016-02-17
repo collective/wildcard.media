@@ -4,6 +4,10 @@ Changelog
 2.0.3 (Unreleased)
 ------------------
 
+- Do not call pattern registry init as that will be called for us already.
+  This fixes https://github.com/collective/wildcard.media/issues/42
+  [vangheem]
+
 - For youtube videos, use the iframe instead simple html5 video tag
   [cekk]
 
