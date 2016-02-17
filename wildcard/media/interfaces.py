@@ -49,27 +49,84 @@ class IGlobalMediaSettings(Interface):
                       "The quota name assigned is `wildcard.media`."),
         default=3)
 
-    convert_infile_options = schema.TextLine(
-        title=_("Convert Infile Options"),
+    force = schema.Bool(
+        title=_("Force video conversion"),
         description=_(
-            'convert_infile_options_help',
+            "always_convert_help",
+            default=u"Force the video through the full conversion "
+                    u"process, even if it is already in the final video format."
+                    u" This may be useful if you always want to transcode to a "
+                    u"given video size."
+        ),
+        default=False,
+    )
+
+    avconv_in_mp4 = schema.TextLine(
+        title=_("MP4: infile parameters"),
+        description=_(
+            'avconv_in_mp4_help',
             default=u"Pass optional infile parameters to aconv during the "
-                    u"conversion process.\n"
+                    u"MP4 conversion process."
         ),
         default=u'',
         required=False,
     )
 
-    convert_outfile_options = schema.TextLine(
-        title=_("Convert Outfile Options"),
+    avconv_out_mp4 = schema.TextLine(
+        title=_("MP4: outfile parameters"),
         description=_(
-            'convert_outfile_options_help',
+            'avconv_out_mp4_help',
             default=u"Pass optional outfile parameters to aconv during the "
-                    u"conversion process."
+                    u"MP4 conversion process."
         ),
         default=u'',
         required=False,
     )
+
+    avconv_in_webm = schema.TextLine(
+        title=_("WebM: infile parameters"),
+        description=_(
+            'avconv_in_webm_help',
+            default=u"Pass optional infile parameters to aconv during the "
+                    u"WebM conversion process."
+        ),
+        default=u'',
+        required=False,
+    )
+
+    avconv_out_webm = schema.TextLine(
+        title=_("WebM: outfile parameters"),
+        description=_(
+            'avconv_out_webm_help',
+            default=u"Pass optional outfile parameters to aconv during the "
+                    u"WebM conversion process."
+        ),
+        default=u'',
+        required=False,
+    )
+
+    avconv_in_ogg = schema.TextLine(
+        title=_("OGG: infile parameters"),
+        description=_(
+            'avconv_in_ogg_help',
+            default=u"Pass optional infile parameters to aconv during the "
+                    u"OGG conversion process."
+        ),
+        default=u'',
+        required=False,
+    )
+
+    avconv_out_ogg = schema.TextLine(
+        title=_("OGG: outfile parameters"),
+        description=_(
+            'avconv_out_ogg_help',
+            default=u"Pass optional outfile parameters to aconv during the "
+                    u"OGG conversion process."
+        ),
+        default=u'',
+        required=False,
+    )
+
 
     default_video_width = schema.Int(
         title=_(u'Default video width'),

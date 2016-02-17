@@ -82,13 +82,13 @@ class AVConvProcess(BaseSubProcess):
     else:
         bin_name = 'avconv'
 
-    def convert(self, filepath, outputfilepath):
+    def convert(self, filepath, outputfilepath, video_type, video):
         portal = getSite()
         settings = GlobalSettings(portal)
 
-        infile_options = shlex.split(settings.convert_infile_options or '')
-        outfile_options = shlex.split(settings.convert_outfile_options or '')
-        cmd = [self.binary] + infile_options + ['-i', filepath] + outfile_options + [outputfilepath]
+        params = self.get_avconv_params(settings, video_type, video)
+
+        cmd = [self.binary] + params['in'] + ['-i', filepath] + params['out'] + [outputfilepath]
 
         self._run_command(cmd)
 
@@ -96,6 +96,16 @@ class AVConvProcess(BaseSubProcess):
         cmd = [self.binary, '-i', filepath, '-ss', instant, '-f', 'image2',
                '-vframes', '1', outputfilepath]
         self._run_command(cmd)
+
+    def get_avconv_params(self, settings, video_type, video):
+        params = {}
+        for op in ('in', 'out'):
+            option = getattr(settings, 'avconv_%s_%s' % (op, video_type)) or ''
+            # replace width/height if set
+            option = option.replace('{width}', str(video.width))
+            option = option.replace('{height}', str(video.height))
+            params[op] = shlex.split(option)
+        return params
 
 try:
     avconv = AVConvProcess()
@@ -179,13 +189,16 @@ def _convertFormat(context):
                 format.extension
             )
 
+    # sometimes force full video conversion
+    force = settings.force
+
     for video_type, fieldname in conversion_types.items():
-        if video_type == video.contentType.split('/')[-1]:
+        if video_type == video.contentType.split('/')[-1] and not force:
             setattr(context, fieldname, video)
         else:
             output_filepath = os.path.join(tmpdir, 'output.' + video_type)
             try:
-                avconv.convert(tmpfilepath, output_filepath)
+                avconv.convert(tmpfilepath, output_filepath, video_type, context)
             except:
                 logger.warn('error converting to %s' % video_type)
                 continue

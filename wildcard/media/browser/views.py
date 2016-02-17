@@ -17,6 +17,7 @@ from wildcard.media.subscribers import video_edited
 from z3c.form import button
 from z3c.form import field
 from z3c.form import form
+from z3c.form import group
 from zope.component.hooks import getSite
 from zope.interface import alsoProvides
 
@@ -51,7 +52,6 @@ class AudioView(MediaView):
         self.ct = self.context.audio_file.contentType
         return self.index()
 
-
 class VideoView(BrowserView):
 
     def get_embed_url(self):
@@ -83,9 +83,21 @@ class VideoView(BrowserView):
         url = "%s/@@edit" % self.context.absolute_url()
         return addTokenToUrl(url)
 
+class DefaultGroup(group.Group):
+    label = u"Default"
+    fields = field.Fields(IGlobalMediaSettings).select(
+        "additional_video_formats", "async_quota_size",
+        "default_video_width", "default_video_height")
 
-class GlobalSettingsForm(form.EditForm):
-    fields = field.Fields(IGlobalMediaSettings)
+class ConversionSettingsGroup(group.Group):
+    label = u"Conversion settings"
+    fields = field.Fields(IGlobalMediaSettings).select(
+        "force", "avconv_in_mp4", "avconv_out_mp4",
+        "avconv_in_webm", "avconv_out_webm",
+        "avconv_in_ogg", "avconv_out_ogg")
+
+class GlobalSettingsForm(group.GroupForm, form.EditForm):
+    groups = (DefaultGroup, ConversionSettingsGroup)
 
     label = _(u"Media Settings")
     description = _(u'description_media_global_settings_form',
@@ -107,6 +119,8 @@ GlobalSettingsFormView = wrap_form(GlobalSettingsForm)
 
 class ConvertVideo(BrowserView):
     def __call__(self):
+        # Mark the video as not converted
+        self.context.video_converted = False
         video_edited(self.context, None)
         self.request.response.redirect(self.context.absolute_url())
 
