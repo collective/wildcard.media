@@ -16,6 +16,9 @@ Changelog
 - fix fileUpload fails when Wildcard.Video is registered as the video type
   [displacedaussie]
 
+- add support for separate avconv parameters per output format
+  [displacedaussie]
+
 2.0.2 (2015-11-25)
 ------------------
 
