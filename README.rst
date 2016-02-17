@@ -6,14 +6,14 @@ Introduction
    :width: 382
    :alt: Original work by wildcardcorp.com
    :align: right
-   
+
 This package provides Audio and Video Dexterity content types and behaviors,
 conversions and players/views.
 
 It integrates the HTML5 media player `mediaelementjs`_ and uses
 `plone.app.async`_ if installed to convert videos to common formats.
 
-.. _mediaelementjs: http://mediaelementjs.com 
+.. _mediaelementjs: http://mediaelementjs.com
 .. _plone.app.async: https://pypi.python.org/pypi/plone.app.async
 
 Features
@@ -69,7 +69,7 @@ in the control panel per video format:
 
     avconv [infile options] -i infile [outfile options] outfile.{format}
 
-The latest version of ``avconv`` on Ubuntu may require 
+The latest version of ``avconv`` on Ubuntu may require
 ``-strict experimental`` as an ``outfile`` option for the mp4 format.
 
 
@@ -84,20 +84,30 @@ Install
 
 Different install requirements::
 
-    eggs = 
+    eggs =
         ...
         wildcard.media[youtube]
         ...
 
-Then, setup a google api with oauth access and configure the 
+Then, setup a google api with oauth access and configure the
 ``google_oauth_id`` and ``google_oauth_secret`` properties in the
 Configuration Registry.
 
 Finally, go to the url: http://plonesite/authorize-google
 
 
+Development
+-----------
+
+Compiling JS
+~~~~~~~~~~~~
+
+cd wildcard/media/browser/static
+make bootstrap
+make prod
+
+
 Support
 -------
 
 Only tested on Plone 5.0 and 4.3.x
-
