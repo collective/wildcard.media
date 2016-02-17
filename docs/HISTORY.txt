@@ -16,6 +16,9 @@ Changelog
 - fix fileUpload fails when Wildcard.Video is registered as the video type
   [displacedaussie]
 
+- add support h264 for older IOS devices and OSX safari via config avconv params
+  [displacedaussie]
+
 2.0.2 (2015-11-25)
 ------------------
 
