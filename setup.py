@@ -36,7 +36,8 @@ setup(name='wildcard.media',
           'plone.rfc822',
           'plone.supermodel>=1.1',
           'five.globalrequest',
-          'plone.api'
+          'plone.api',
+          'requests'
       ],
       extras_require={
           'test': [
