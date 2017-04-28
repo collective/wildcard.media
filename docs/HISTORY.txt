@@ -1,6 +1,12 @@
 Changelog
 =========
 
+(unreleased)
+------------
+
+- make thumbnail creation work on Windows
+  [tschorr]
+
 2.0.3 (2016-03-01)
 ------------------
 

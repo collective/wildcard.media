@@ -214,8 +214,9 @@ def _convertFormat(context):
     try:
         avconv.grab_frame(tmpfilepath, output_filepath)
         if os.path.exists(output_filepath):
-            fi = open(output_filepath)
-            context.image = NamedBlobImage(fi, filename=u'screengrab.png')
+            with open(output_filepath, 'rb') as fi:
+                data = fi.read()
+            context.image = NamedBlobImage(data, filename=u'screengrab.png')
             fi.close()
     except:
         logger.warn('error getting thumbnail from video')
