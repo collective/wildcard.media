@@ -4,6 +4,9 @@ Changelog
 (unreleased)
 ------------
 
+- Fix embedding a video that uses youtube via TinyMCE.
+  [pbauer]
+
 - make thumbnail creation work on Windows
   [tschorr]
 

@@ -19,6 +19,7 @@
     name="wildcard_video_macro"
     for="..interfaces.IVideoEnabled"
     template="templates/video_macro.pt"
+    class=".views.VideoView"
     permission="zope2.View"
     layer="..interfaces.ILayer"
   />
