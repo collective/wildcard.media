@@ -108,7 +108,7 @@ class IVideo(model.Schema):
     @invariant
     def validate_videos(data):
         if not data.video_file and not data.youtube_url:
-            raise Invalid("Must specify either a video file or youtube url")
+            raise Invalid("Must specify either a video file or a video url")
 
     width = schema.Int(
         title=_(u"Width"),
