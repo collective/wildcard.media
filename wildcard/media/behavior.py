@@ -91,8 +91,8 @@ class IVideo(model.Schema):
     )
 
     youtube_url = schema.TextLine(
-        title=_(u"Youtube URL"),
-        description=_(u"Alternatively, you can provide a youtube video url. "
+        title=_(u"Video URL"),
+        description=_(u"Alternatively, you can provide a video url. "
                       u"If this is specified, video file will be ignored. "
                       u"If video was uploaded to youtube, this field will be filled "
                       u"with video url."),
