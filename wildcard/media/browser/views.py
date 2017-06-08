@@ -58,6 +58,10 @@ class AudioView(MediaView):
 
 class VideoView(BrowserView):
 
+    def get_site_ID(self):
+        video_site = urlparse(self.context.youtube_url)[1].replace('www.','')
+        return video_site
+
     def getPlayerCode(self):
         """Return code from external service player"""
         #video_site = self.context.youtube_url
