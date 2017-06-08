@@ -21,6 +21,10 @@ from z3c.form import group
 from zope.component.hooks import getSite
 from zope.interface import alsoProvides
 
+from zope.component import getMultiAdapter, ComponentLookupError
+from wildcard.media.adapter import IVideoEmbedCode
+from urlparse import urlparse
+
 try:
     from wildcard.media import youtube
 except ImportError:
@@ -54,6 +58,20 @@ class AudioView(MediaView):
 
 class VideoView(BrowserView):
 
+    def getPlayerCode(self):
+        """Return code from external service player"""
+        #video_site = self.context.youtube_url
+        # video_site = urlparse(self.context.youtube_url)[1].replace('www.','')
+        # print "DEBUG - video_site: %s" % video_site
+        # try:
+        #     adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode, name = video_site)
+        # except ComponentLookupError:
+        #     adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode)
+        # print "DEBUG - Adapter scelto!"
+        # return adapter()
+        return "codice embed"
+
+
     def get_embed_url(self):
         """
         Try to guess video id from a various case of possible youtube urls and
@@ -70,6 +88,7 @@ class VideoView(BrowserView):
         if not video_id:
             return ""
         return "https://www.youtube.com/embed/" + video_id
+
 
     def get_edit_url(self):
         """

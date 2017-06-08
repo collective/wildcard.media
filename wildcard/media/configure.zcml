@@ -68,4 +68,12 @@
   <include file="profiles.zcml" />
   <include package=".tiles" file="configure.zcml" zcml:condition="installed collective.cover"/>
 
+<!-- Default adapter -->
+  <adapter
+      for = "wildcard.media.interfaces.IVideoEnabled
+             zope.publisher.interfaces.browser.IHTTPRequest"
+      provides = "wildcard.media.adapter.IVideoEmbedCode"
+      factory = "wildcard.media.browser.videoembedcode.VideoEmbedCode"
+  />
+
 </configure>
