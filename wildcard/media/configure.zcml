@@ -68,13 +68,31 @@
   <include file="profiles.zcml" />
   <include package=".tiles" file="configure.zcml" zcml:condition="installed collective.cover"/>
 
-<!-- Default adapter -->
+<!-- Internal video adapter -->
   <adapter
       for = "wildcard.media.interfaces.IVideoEnabled
              zope.publisher.interfaces.browser.IHTTPRequest"
       provides = "wildcard.media.adapter.IVideoEmbedCode"
-      factory = "wildcard.media.browser.videoembedcode.VideoEmbedCode"
+      factory = ".browser.videoembedcode.VideoEmbedCode"
       name = "internal"
   />
+
+<!-- Youtube video adapter -->
+  <adapter
+      for = "wildcard.media.interfaces.IVideoEnabled
+             zope.publisher.interfaces.browser.IHTTPRequest"
+      provides = "wildcard.media.adapter.IVideoEmbedCode"
+      factory = ".browser.videoembedcode.ClassicYoutubeEmbedCode"
+      name = "youtube.com"
+  />
+
+  <adapter
+      for = "wildcard.media.interfaces.IVideoEnabled
+             zope.publisher.interfaces.browser.IHTTPRequest"
+      provides = "wildcard.media.adapter.IVideoEmbedCode"
+      factory = ".browser.videoembedcode.ShortYoutubeEmbedCode"
+      name = "youtu.be"
+  />
+
 
 </configure>
