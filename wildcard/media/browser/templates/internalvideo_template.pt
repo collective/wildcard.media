@@ -1,0 +1,42 @@
+<div class="wcvideo-container"
+     tal:define="util context/@@wcmedia-utils;
+                 settings util/settings;
+                 video nocall: video|context;
+                 height height|video/height|settings/default_video_height|string:720;
+                 width width|video/width|settings/default_video_width|string:400;
+                 upload_to_youtube video/upload_video_to_youtube|nothing;
+                 youtube_url view/get_embed_url|nothing">
+
+
+    <video width="320" height="240" poster="poster.jpg" controls="controls" preload="none" class="active pat-media"
+          tal:attributes="poster util/image_url;
+                          width width;
+                          height height;">
+        <tal:videos tal:repeat="video python:util.videos()">
+            <source src="/media/echo-hereweare.mp4" type="video/mp4"
+                    tal:attributes="src video/url;
+                                    type string:video/${video/type}" />
+        </tal:videos>
+        <track kind="subtitles" src="subtitles.srt" srclang="en"
+               tal:condition="util/subtitles_url"
+               tal:attributes="src util/subtitles_url" />
+        <object width="320" height="240" type="application/x-shockwave-flash" data="flashmediaelement.swf"
+                tal:attributes="data string:${util/mstatic}/flashmediaelement.swf;
+                                width width;
+                                height height;">
+            <param name="movie" value="flashmediaelement.swf"
+                  tal:attributes="value string:${util/mstatic}/flashmediaelement.swf"/>
+            <param name="flashvars" value="controls=true&file=myvideo.mp4"
+                  tal:attributes="value string:controls=true&file=${util/mp4_url_quoted}&poster=${util/image_url_quoted};" />
+            <param name="allowFullScreen" value="true" />
+            <img src="myvideo.jpg" width="320" height="240" title="No video playback capabilities"
+                 tal:condition="util/image_url"
+                 tal:attributes="src util/image_url;
+                                 title video/Title;
+                                 width width;
+                                 height height;"/>
+        </object>
+    </video>
+
+    
+</div>
