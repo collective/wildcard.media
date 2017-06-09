@@ -74,6 +74,7 @@
              zope.publisher.interfaces.browser.IHTTPRequest"
       provides = "wildcard.media.adapter.IVideoEmbedCode"
       factory = "wildcard.media.browser.videoembedcode.VideoEmbedCode"
+      name = "internal"
   />
 
 </configure>
