@@ -65,15 +65,18 @@ class VideoView(BrowserView):
     def getPlayerCode(self):
         """Return code from external service player"""
         #video_site = self.context.youtube_url
-        # video_site = urlparse(self.context.youtube_url)[1].replace('www.','')
-        # print "DEBUG - video_site: %s" % video_site
-        # try:
-        #     adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode, name = video_site)
-        # except ComponentLookupError:
-        #     adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode)
-        # print "DEBUG - Adapter scelto!"
-        # return adapter()
-        return "codice embed"
+        util=getMultiAdapter((self.context, self.request), name = "wcmedia-utils")
+        if util.mp4_url():
+            name="internal"
+
+        else:
+            name = urlparse(self.context.youtube_url)[1].replace('www.','')
+
+        try:
+            adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode, name = name)
+        except ComponentLookupError:
+            adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode)
+        return adapter()
 
 
     def get_embed_url(self):
