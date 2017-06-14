@@ -108,7 +108,7 @@ class GoogleAPI(object):
         fi = named_file.open()
         headers = self._headers
         headers.update({
-            'x-upload-content-length': named_file.size,
+            'x-upload-content-length': str(named_file.size),
             'x-upload-content-type': named_file.contentType
         })
         initial_resp = requests.post(
