@@ -39,9 +39,6 @@ class ClassicYoutubeEmbedCode(object):
     def __call__(self):
         return self.template()
 
-    def get_embed_code(self):
-        return "classic youtube embed code - DEBUG"
-
     def getVideoLink(self):
         qs = urlparse(self.context.getRemoteUrl())[4]
         params = qs.split('&')
@@ -90,9 +87,6 @@ class ShortYoutubeEmbedCode(object):
 
     def __call__(self):
         return self.template()
-
-    def get_embed_code(self):
-        return "classic youtube embed code - DEBUG"
 
     def getVideoLink(self):
         qs = urlparse(self.context.getRemoteUrl())[4]

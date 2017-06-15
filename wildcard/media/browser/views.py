@@ -63,12 +63,18 @@ class VideoView(BrowserView):
         return video_site
 
     def getPlayerCode(self):
-        """Return code from external service player"""
-        #video_site = self.context.youtube_url
+        """ Fetch the correct adapter for the Video.
+        The video can be internal (inside the Plone site) or from an
+        external service."""
+
+        # Retrieve 'wcmedia-utils' view for the context then we check if
+        # the video is internal
         util=getMultiAdapter((self.context, self.request), name = "wcmedia-utils")
         if util.mp4_url():
             name="internal"
 
+        # Extract the domain from the URL of the video. We use it as the
+        # name for the different adapters that handle different external services.
         else:
             name = urlparse(self.context.youtube_url)[1].replace('www.','')
 
