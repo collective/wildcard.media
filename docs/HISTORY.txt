@@ -10,6 +10,10 @@ Changelog
 - make thumbnail creation work on Windows
   [tschorr]
 
+- now it's possible to use external services other than YouTube with the help of
+  adapter views for video contents
+  [arsenico13]
+
 2.0.3 (2016-03-01)
 ------------------
 
