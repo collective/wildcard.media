@@ -5,7 +5,7 @@
                  height height|video/height|settings/default_video_height|string:720;
                  width width|video/width|settings/default_video_width|string:400;
                  upload_to_youtube video/upload_video_to_youtube|nothing;
-                 youtube_url view/get_embed_url|nothing">
+                 video_url view/get_embed_url|nothing">
 
 
     <video width="320" height="240" poster="poster.jpg" controls="controls" preload="none" class="active pat-media"

@@ -193,7 +193,7 @@ def uploadToYouTube(video):
         removeFromYouTube(video)
         raise
     video_id = video.youtube_data['id']
-    video.youtube_url = u'https://www.youtube.com/watch?v=%s' % video_id
+    video.video_url = u'https://www.youtube.com/watch?v=%s' % video_id
     video.video_converted = True
 
 
@@ -206,7 +206,7 @@ def removeFromYouTube(video):
     api.delete_video(video.youtube_data)
     video.youtube_data = None
     video.video_converted = False
-    video.youtube_url = u''
+    video.video_url = u''
 
 
 def updateYouTubePermissions(video):

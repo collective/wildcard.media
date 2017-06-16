@@ -1,7 +1,7 @@
 Changelog
 =========
 
-(unreleased)
+3.0.0 (unreleased)
 ------------
 
 - Fix embedding a video that uses youtube via TinyMCE.
@@ -12,6 +12,10 @@ Changelog
 
 - now it's possible to use external services other than YouTube with the help of
   adapter views for video contents
+  [arsenico13]
+
+- [BREAKING] change attribute name for WildcardVideo contentype: youtube_url has
+  been changed in video_url (upgrade step available)
   [arsenico13]
 
 2.0.3 (2016-03-01)

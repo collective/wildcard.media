@@ -59,7 +59,7 @@ class AudioView(MediaView):
 class VideoView(BrowserView):
 
     def get_site_ID(self):
-        video_site = urlparse(self.context.youtube_url)[1].replace('www.','')
+        video_site = urlparse(self.context.video_url)[1].replace('www.','')
         return video_site
 
     def getPlayerCode(self):
@@ -76,7 +76,7 @@ class VideoView(BrowserView):
         # Extract the domain from the URL of the video. We use it as the
         # name for the different adapters that handle different external services.
         else:
-            name = urlparse(self.context.youtube_url)[1].replace('www.','')
+            name = urlparse(self.context.video_url)[1].replace('www.','')
 
         try:
             adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode, name = name)

@@ -5,9 +5,9 @@
                      height height|video/height|settings/default_video_height|string:720;
                      width width|video/width|settings/default_video_width|string:400;
                      upload_to_youtube video/upload_video_to_youtube|nothing;
-                     youtube_url view/get_embed_url|nothing">
+                     video_url view/get_embed_url|nothing">
 
-        <tal:yt tal:condition="youtube_url">
+        <tal:yt tal:condition="video_url">
           <tal:no_image condition="not:util/image_url">
             <p class="discreet" tal:define="edit_url view/get_edit_url|nothing"
                tal:condition="edit_url">
@@ -23,7 +23,7 @@
           <iframe
             tal:attributes="width width;
                             height height;
-                            src youtube_url"
+                            src video_url"
             frameborder="0"
             allowfullscreen>
           </iframe>
