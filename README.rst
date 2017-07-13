@@ -96,13 +96,14 @@ Configuration Registry.
 Finally, go to the url: http://plonesite/authorize-google
 
 
-Video Adapter - Various external services support
--------------------------------------------------
+Video Adapter - Support for various external services
+-----------------------------------------------------
 
-With the help of adapters it's now possible to embed videos from different
-sources other than YouTube.
-Just add the correct product/plug-in that provides the support for the external
-service of your own choice to your buildout and you are good to go.
+From version 3.0, with the help of adapters it's now possible to embed videos
+from different sources other than YouTube.
+Just add to your buildout the correct product/plug-in that provides the support
+for the external service of your own choice to your buildout and you are good
+to go.
 
 
 Development
