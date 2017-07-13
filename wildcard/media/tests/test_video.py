@@ -202,7 +202,7 @@ class YoutubeVideoIntegrationTest(unittest.TestCase):
 
     def create(self, id, video_test_url, retrieve_thumb=False):
         self.portal.invokeFactory('WildcardVideo', id,
-                                  youtube_url=video_test_url,
+                                  video_url=video_test_url,
                                   retrieve_thumb=retrieve_thumb)
         return self.portal[id]
 
