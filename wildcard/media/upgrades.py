@@ -65,7 +65,7 @@ def upgrade_to_3000(context, logger=None):
     for brain in brains:
         video_obj = brain.getObject()
         video_obj.video_url = video_obj.youtube_url
-        video_obj.reindexObject() # reindicizziamo
+        video_obj.reindexObject() # reindexing
         count += 1
 
 
