@@ -70,4 +70,4 @@ class ClassicYoutubeEmbedCode(object):
         video_id = video_behavior.get_youtube_id_from_url()
         if not video_id:
             return ""
-        return "https://www.youtube.com/embed/" + video_id
+        return "https://www.youtube.com/embed/" + video_id + "?rel=0"
