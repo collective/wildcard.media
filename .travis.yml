@@ -1,0 +1,23 @@
+language: python
+python: 2.7.13
+sudo: false
+cache:
+  pip: true
+  directories:
+    - $HOME/buildout-cache
+env:
+  - PLONE_VERSION=4.3.x
+  - PLONE_VERSION=5.0.x
+  - PLONE_VERSION=5.1.x
+before_install:
+  - mkdir -p $HOME/buildout-cache/{eggs,downloads}
+  - pip install -r https://raw.githubusercontent.com/plone/buildout.coredev/5.1/requirements.txt
+install:
+  - sed -ie "s#plone-x.x.x.cfg#plone-$PLONE_VERSION.cfg#" travis.cfg
+  - buildout -N -t 3 -c travis.cfg
+script:
+  - bin/code-analysis
+  - bin/test
+after_success:
+  - test-coverage
+  - travis_wait createcoverage
