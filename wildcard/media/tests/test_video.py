@@ -168,7 +168,7 @@ class VideoFunctionalTest(unittest.TestCase):
         self.assertTrue('My video' in self.browser.contents)
         self.assertTrue('This is my video' in self.browser.contents)
         self.assertTrue('<video' in self.browser.contents)
-        self.assertEqual(self.browser.contents.count('<source'), 3)
+        self.assertEqual(self.browser.contents.count('<source'), 1)
         self.assertIn(
             '++widget++form.widgets.IVideo.video_file/@@stream',
             self.browser.contents)
