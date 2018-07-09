@@ -15,16 +15,16 @@ from zope.globalrequest import getRequest
 
 
 def _run(obj, func):
-    # return func(obj)
-    if tasks:
-        # collective.celery is installed
-        tfunc = getattr(tasks, func.__name__)
-        tfunc.delay(obj)
-    elif pasync.asyncInstalled():
-        # plone.app.async installed
-        pasync.queueJob(obj, func)
-    else:
-        func(obj)
+    return func(obj)
+    # if tasks:
+    #     # collective.celery is installed
+    #     tfunc = getattr(tasks, func.__name__)
+    #     tfunc.delay(obj)
+    # elif pasync.asyncInstalled():
+    #     # plone.app.async installed
+    #     pasync.queueJob(obj, func)
+    # else:
+    #     func(obj)
 
 
 def convertVideoFormats(video):
