@@ -56,6 +56,6 @@ setup(name='wildcard.media',
       target = plone
 
       [celery_tasks]
-      meida = wildcard.media.tasks
+      media = wildcard.media.tasks
       """,
       )
