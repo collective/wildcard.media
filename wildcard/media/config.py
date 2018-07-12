@@ -1,4 +1,4 @@
-
+ASYNC_DELAY = 30
 
 class Format(object):
 
