@@ -67,6 +67,13 @@ class IVideo(model.Schema):
         constraint=valid_video
     )
 
+    form.omitted(IAddForm, 'video_file_original')
+    form.omitted(IEditForm, 'video_file_original')
+    form.widget(video_file_original=StreamNamedFileFieldWidget)
+    video_file_original = namedfile.NamedBlobFile(
+        required=False,
+    )
+
     if youtube:
         upload_video_to_youtube = schema.Bool(
             title=_(u'Upload to youtube'),

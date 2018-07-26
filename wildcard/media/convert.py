@@ -164,6 +164,16 @@ def _convertFormat(context):
 
     video = context.video_file
     context.video_converted = True
+
+    # keep original file, but not if convert action is used
+    action_called = getattr(context, 'convert_action_called', False)
+    if action_called:
+        logger.warn('Convert action called for {}'.format(context.absolute_url_path()))
+        context.convert_action_called = False
+    else:
+        logger.warn('Saving original video for {}'.format(context.absolute_url_path()))
+        context.video_file_original = video
+
     try:
         opened = openBlob(video._blob)
         bfilepath = opened.name
