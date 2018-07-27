@@ -4,7 +4,7 @@
   "private": true,
   "description": "",
   "dependencies": {
-    "mediaelement": "2.18.2",
+    "mediaelement": "4.2.9",
     "mockup": "2.1.0",
     "patternslib": "2.0.11",
     "select2": "3.5.1"
