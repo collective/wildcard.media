@@ -26,6 +26,7 @@ Features
 - Be able to add video from TinyMCE by adding a link to the audio or video
   objects and then adding one of the available Audio and Video TinyMCE styles.
 - Integration with `plone.app.async`_ for conversions if installed
+- Integration wtih `collective.celery`_ for conversion if installed
 - Plone 4.3 syndication support
 - Transcript data
 - Youtube URL  (in case you want the video streamed from Youtube)
