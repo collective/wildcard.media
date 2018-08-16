@@ -175,6 +175,14 @@ class Utils(MediaView):
             return None
 
     @memoize
+    def original_video_url(self):
+        url = None
+        video_file_original = getattr(self.context, 'video_file_original', None)
+        if video_file_original is not None:
+            url = self.base_furl + 'video_file_original' + '/download'
+        return url
+
+    @memoize
     def subtitles_url(self):
         subtitles = getattr(self.context, 'subtitle_file', None)
         if subtitles:

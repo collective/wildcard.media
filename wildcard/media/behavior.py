@@ -254,6 +254,7 @@ class Video(BaseAdapter):
             self.context.video_file = None
             self.context.video_file_ogv = None
             self.context.video_file_webm = None
+            self.context.video_file_original = None
         elif value != getattr(self.context, 'video_file', _marker):
             self.context.video_converted = False
             self.context.video_file = value
@@ -279,6 +280,7 @@ class Video(BaseAdapter):
 
     video_file_ogv = UnsettableProperty(IVideo['video_file_ogv'])
     video_file_webm = UnsettableProperty(IVideo['video_file_webm'])
+    video_file_original = UnsettableProperty(IVideo['video_file_original'])
     image = UnsettableProperty(IVideo['image'])
 
     if youtube:
