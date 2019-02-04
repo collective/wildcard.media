@@ -8,14 +8,15 @@ from plone.autoform.interfaces import IFormFieldProvider
 from plone.dexterity.interfaces import IDexterityContent
 from plone.namedfile import field as namedfile
 from plone.supermodel import model
+from Products.CMFPlone.utils import safe_unicode
 from wildcard.media import _
 from wildcard.media.browser.widget import StreamNamedFileFieldWidget
 from wildcard.media.settings import GlobalSettings
 from z3c.form.interfaces import IAddForm, IEditForm
 from zope import schema
-from zope.component import adapts
+from zope.component import adapter
 from zope.component.hooks import getSite
-from zope.interface import alsoProvides, implements
+from zope.interface import alsoProvides, implementer
 from zope.interface import Invalid, invariant
 
 try:
@@ -213,7 +214,7 @@ class BasicProperty(object):
 class BaseAdapter(object):
 
     def _get_metadata(self):
-        return unicode(json.dumps(getattr(self.context, 'metadata', {})))
+        return safe_unicode(json.dumps(getattr(self.context, 'metadata', {})))
 
     def _set_metadata(self, value):
         pass
@@ -224,9 +225,9 @@ class BaseAdapter(object):
 _marker = object()
 
 
+@implementer(IVideo)
+@adapter(IDexterityContent)
 class Video(BaseAdapter):
-    implements(IVideo)
-    adapts(IDexterityContent)
 
     def __init__(self, context):
         self.context = context
@@ -278,9 +279,9 @@ class Video(BaseAdapter):
         upload_video_to_youtube = BasicProperty(IVideo['upload_video_to_youtube'])
 
 
+@implementer(IAudio)
+@adapter(IDexterityContent)
 class Audio(BaseAdapter):
-    implements(IAudio)
-    adapts(IDexterityContent)
 
     def __init__(self, context):
         self.context = context

@@ -1,15 +1,15 @@
 from plone.rfc822.interfaces import IPrimaryFieldInfo
-from zope.component import adapts
-from zope.interface import implements
+from zope.component import adapter
+from zope.interface import implementer
 from wildcard.media.interfaces import (
     IMediaEnabled, IVideoEnabled
 )
 from wildcard.media.behavior import IVideo, IAudio
 
 
+@implementer(IPrimaryFieldInfo)
+@adapter(IMediaEnabled)
 class PrimaryFieldInfo(object):
-    implements(IPrimaryFieldInfo)
-    adapts(IMediaEnabled)
 
     def __init__(self, context):
         self.context = context

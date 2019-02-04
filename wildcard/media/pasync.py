@@ -3,19 +3,19 @@ from zope.component import getUtility
 from Products.CMFCore.utils import getToolByName
 from wildcard.media.settings import GlobalSettings
 
-try:
-    from zc.async.interfaces import COMPLETED
-except:
-    COMPLETED = None
+# try:
+#     from zc.async.interfaces import COMPLETED
+# except:
+COMPLETED = None
 
 logger = getLogger('wildcard.video')
 
 QUOTA_NAME = 'wildcard.video'
 
-try:
-    from plone.app.async.interfaces import IAsyncService
-except ImportError:
-    pass
+# try:
+#     from plone.app.async.interfaces import IAsyncService
+# except ImportError:
+#     pass
 
 
 def getPortal(obj):
@@ -23,12 +23,12 @@ def getPortal(obj):
 
 
 def asyncInstalled():
-    try:
-        import plone.app.async
-        plone.app.async  # pyflakes
-        return True
-    except:
-        return False
+    # try:
+    #     import plone.app.async
+    #     plone.app.async  # pyflakes
+    #     return True
+    # except:
+    return False
 
 
 def isConversion(job, sitepath, func):
@@ -49,8 +49,8 @@ class JobRunner(object):
         self.objectpath = self.object.getPhysicalPath()
         self.portal = getPortal(obj)
         self.portalpath = self.portal.getPhysicalPath()
-        self.async = getUtility(IAsyncService)
-        self.queue = self.async.getQueues()['']
+        self.async_support = getUtility(IAsyncService)
+        self.queue = self.async_support.getQueues()['']
         self.func = func
 
     def is_current_active(self, job):
@@ -103,7 +103,7 @@ class JobRunner(object):
                         self.queue.name)
 
     def queue_it(self):
-        self.async.queueJobInQueue(self.queue, (QUOTA_NAME,), self.func,
+        self.async_support.queueJobInQueue(self.queue, (QUOTA_NAME,), self.func,
                                    self.object)
 
 

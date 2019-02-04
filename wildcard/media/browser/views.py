@@ -1,4 +1,4 @@
-import urllib
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 import re
 
 from Products.CMFCore.utils import getToolByName
@@ -198,7 +198,7 @@ class Utils(MediaView):
     def mp4_url_quoted(self):
         url = self.mp4_url()
         if url:
-            return urllib.quote_plus(url)
+            return six.moves.urllib.parse.quote_plus(url)
         else:
             return url
 
@@ -206,7 +206,7 @@ class Utils(MediaView):
     def image_url_quoted(self):
         url = self.image_url()
         if url:
-            return urllib.quote_plus(url)
+            return six.moves.urllib.parse.quote_plus(url)
         else:
             return url
 

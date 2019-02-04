@@ -1,11 +1,13 @@
 from wildcard.media.interfaces import IAudioEnabled, IVideoEnabled
 from plone.dexterity.content import Item
-from zope.interface import implements
+from zope.interface import implementer
 
 
+@implementer(IAudioEnabled)
 class Audio(Item):
-    implements(IAudioEnabled)
+    pass
 
 
+@implementer(IVideoEnabled)
 class Video(Item):
-    implements(IVideoEnabled)
+    pass

@@ -5,7 +5,7 @@ except ImportError:
 import subprocess
 import os
 from logging import getLogger
-from plone.app.blob.utils import openBlob
+# from plone.app.blob.utils import openBlob
 from tempfile import mkdtemp
 from shutil import copyfile, rmtree
 import shlex
@@ -13,6 +13,7 @@ from wildcard.media.config import getFormat
 from plone.namedfile import NamedBlobFile, NamedBlobImage
 from wildcard.media.settings import GlobalSettings
 from Products.CMFCore.utils import getToolByName
+import six
 
 logger = getLogger('wildcard.media')
 
@@ -47,7 +48,7 @@ class BaseSubProcess(object):
         return None
 
     def _run_command(self, cmd, or_error=False):
-        if isinstance(cmd, basestring):
+        if isinstance(cmd, six.string_types):
             cmd = cmd.split()
         cmdformatted = ' '.join(cmd)
         logger.info("Running command %s" % cmdformatted)
@@ -158,7 +159,8 @@ def _convertFormat(context):
     video = context.video_file
     context.video_converted = True
     try:
-        opened = openBlob(video._blob)
+        opened = video._blob.open('r')
+        # opened = openBlob(video._blob)
         bfilepath = opened.name
         opened.close()
     except IOError:

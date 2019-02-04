@@ -1,7 +1,7 @@
 from logging import getLogger
 from zope.i18nmessageid import MessageFactory
-import permissions  # noqa
-permissions  # pyflakes
+from wildcard.media import permissions  # noqa
+# permissions  # pyflakes
 
 _ = MessageFactory('wildcard.media')
 

@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 from plone import api
 from plone.namedfile.file import NamedBlobImage
-from wildcard.media.async import (
-    convertVideoFormats,
-    uploadToYouTube,
-    removeFromYouTube,
-    updateYouTubePermissions,
-    editYouTubeVideo)
+from wildcard.media.async_support import uploadToYouTube
+from wildcard.media.async_support import removeFromYouTube
+from wildcard.media.async_support import updateYouTubePermissions
+from wildcard.media.async_support import editYouTubeVideo
+from wildcard.media.async_support import convertVideoFormats
 from wildcard.media import _
 from wildcard.media.behavior import IVideo
 from requests.exceptions import Timeout
 from wildcard.media import logger
+
 import requests
 
 

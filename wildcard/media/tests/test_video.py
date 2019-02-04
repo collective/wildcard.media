@@ -163,7 +163,7 @@ class VideoFunctionalTest(unittest.TestCase):
         file_path = os.path.join(test_file_dir, "test.mp4")
         file_ctl = self.browser.getControl(
             name='form.widgets.IVideo.video_file')
-        file_ctl.add_file(open(file_path), 'video/mp4', 'test.mp4')
+        file_ctl.add_file(open(file_path, 'rb'), 'video/mp4', 'test.mp4')
         self.browser.getControl('Save').click()
         self.assertTrue('My video' in self.browser.contents)
         self.assertTrue('This is my video' in self.browser.contents)

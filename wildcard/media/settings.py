@@ -1,5 +1,5 @@
 from persistent.dict import PersistentDict
-from zope.interface import implements
+from zope.interface import implementer
 from zope.annotation.interfaces import IAnnotations
 from wildcard.media.interfaces import IGlobalMediaSettings
 
@@ -33,6 +33,6 @@ class Base(object):
         return self._metadata.get(name, default)
 
 
+@implementer(IGlobalMediaSettings)
 class GlobalSettings(Base):
     use_interface = IGlobalMediaSettings
-    implements(IGlobalMediaSettings)

@@ -16,7 +16,7 @@ def _getBlob(_type='audio', _format='mp3'):
     newpath = mktemp()
     origpath = os.path.join(test_file_dir, filename)
     copyfile(origpath, newpath)
-    fi = open(newpath)
+    fi = open(newpath, 'rb')
     blob = NamedBlobFile(fi, filename=filename)
     fi.close()
     return blob
