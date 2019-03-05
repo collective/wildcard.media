@@ -9,12 +9,8 @@ except ImportError:
 import time
 
 
-# XXX go back to using autoretry when retry is fixed in collective.celery
-# @task.as_admin(autoretry_for=(POSKeyError,), retry_backoff=5)
-@task.as_admin()
+@task.as_admin(autoretry_for=(POSKeyError,), retry_backoff=5)
 def convertVideoFormats(context):
-    # XXX remove sleep when retry is fixed in collective.celery
-    time.sleep(10)
     convert.convertVideoFormats(context)
 
 
