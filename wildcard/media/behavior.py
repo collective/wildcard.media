@@ -105,10 +105,10 @@ class IVideo(model.Schema):
         required=False,
         default=False)
 
-    @invariant
-    def validate_videos(data):
-        if not data.video_file and not data.youtube_url:
-            raise Invalid("Must specify either a video file or youtube url")
+    #@invariant
+    #def validate_videos(data):
+    #    if not data.video_file and not data.youtube_url:
+    #        raise Invalid("Must specify either a video file or youtube url")
 
     width = schema.Int(
         title=_(u"Width"),
@@ -152,7 +152,7 @@ class IAudio(model.Schema):
     audio_file = namedfile.NamedBlobFile(
         title=_(u"Audio File"),
         description=u"",
-        required=True,
+        required=False,
         constraint=valid_audio
     )
 
