@@ -47,8 +47,7 @@ def getDefaultHeight():
     settings = GlobalSettings(portal)
     return settings.default_video_height
 
-
-class IVideo(model.Schema):
+class IVideoBase(model.Schema):
 
     form.omitted('image')
     image = namedfile.NamedBlobImage(
@@ -66,16 +65,6 @@ class IVideo(model.Schema):
         required=False,
         constraint=valid_video
     )
-
-    if youtube:
-        upload_video_to_youtube = schema.Bool(
-            title=_(u'Upload to youtube'),
-            description=_(u'Requires having youtube account connected. '
-                          u'Videos that are private will remain unlisted on YouTube. '
-                          u'Once published, video will be made public on YouTube. '),
-            required=False,
-            default=False)
-
     form.omitted(IAddForm, 'video_file_ogv')
     form.omitted(IEditForm, 'video_file_ogv')
     form.widget(video_file_ogv=StreamNamedFileFieldWidget)
@@ -89,6 +78,20 @@ class IVideo(model.Schema):
     video_file_webm = namedfile.NamedBlobFile(
         required=False,
     )
+
+alsoProvides(IVideoBase, IFormFieldProvider)
+
+class IVideo(IVideoBase):
+
+    if youtube:
+        upload_video_to_youtube = schema.Bool(
+            title=_(u'Upload to youtube'),
+            description=_(u'Requires having youtube account connected. '
+                          u'Videos that are private will remain unlisted on YouTube. '
+                          u'Once published, video will be made public on YouTube. '),
+            required=False,
+            default=False)
+
 
     youtube_url = schema.TextLine(
         title=_(u"Youtube URL"),
@@ -144,7 +147,7 @@ class IVideo(model.Schema):
 alsoProvides(IVideo, IFormFieldProvider)
 
 
-class IAudio(model.Schema):
+class IAudioBase(model.Schema):
 
     # main file will always be converted to mp4
     form.widget(audio_file=StreamNamedFileFieldWidget)
@@ -152,7 +155,7 @@ class IAudio(model.Schema):
     audio_file = namedfile.NamedBlobFile(
         title=_(u"Audio File"),
         description=u"",
-        required=True,
+        required=False,
         constraint=valid_audio
     )
 
@@ -160,6 +163,10 @@ class IAudio(model.Schema):
     metadata = schema.Text(
         required=False
     )
+
+alsoProvides(IAudioBase, IFormFieldProvider)
+
+class IAudio(IAudioBase):
 
     transcript = RichText(
         title=_(u"Transcript"),
@@ -224,8 +231,8 @@ class BaseAdapter(object):
 _marker = object()
 
 
-class Video(BaseAdapter):
-    implements(IVideo)
+class VideoBase(BaseAdapter):
+    implements(IVideoBase)
     adapts(IDexterityContent)
 
     def __init__(self, context):
@@ -250,6 +257,19 @@ class Video(BaseAdapter):
         elif value != getattr(self.context, 'video_file', _marker):
             self.context.video_converted = False
             self.context.video_file = value
+
+class Video(VideoBase):
+    implements(IVideo)
+    adapts(IDexterityContent)
+    def __init__(self,context):
+        super(Video,self,context).__init__()
+        self._get_video_file = super(Video,self,context)._get_video_file
+
+    def _get_video_file(self):
+        return super(Video,self,context)._get_video_file()
+
+    def _set_video_file(self):
+        return super(Video,self,context)._set_video_file()
 
     def get_youtube_id_from_url(self):
         if not getattr(self.context, 'youtube_url', None):
@@ -277,13 +297,19 @@ class Video(BaseAdapter):
     if youtube:
         upload_video_to_youtube = BasicProperty(IVideo['upload_video_to_youtube'])
 
-
-class Audio(BaseAdapter):
-    implements(IAudio)
+class AudioBase(BaseAdapter):
+    implements(IAudioBase)
     adapts(IDexterityContent)
 
     def __init__(self, context):
         self.context = context
 
     audio_file = BasicProperty(IAudio['audio_file'])
+
+class Audio(AudioBase):
+    implements(IAudio)
+    adapts(IDexterityContent)
+    def __init__(self,context):
+        super(Audio,self,context).__init__()
+
     transcript = BasicProperty(IAudio['transcript'])

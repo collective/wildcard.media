@@ -25,6 +25,15 @@
       />
 
   <plone:behavior
+      title="Video Basic"
+      description="Add a barebones basic video field that is optional, no external video link"
+      provides=".behavior.IVideoBase"
+      factory=".behavior.VideoBase"
+      for="plone.dexterity.interfaces.IDexterityContent"
+      marker=".interfaces.IVideoEnabled"
+      />
+
+  <plone:behavior
       title="Video"
       description="Add support for video fields"
       provides=".behavior.IVideo"
@@ -32,6 +41,16 @@
       for="plone.dexterity.interfaces.IDexterityContent"
       marker=".interfaces.IVideoEnabled"
       />
+
+  <plone:behavior
+      title="Audio Basic"
+      description="Add support for basic audio fields"
+      provides=".behavior.IAudioBase"
+      factory=".behavior.AudioBase"
+      for="plone.dexterity.interfaces.IDexterityContent"
+      marker=".interfaces.IAudioEnabled"
+      />
+
   <plone:behavior
       title="Audio"
       description="Add support for audio fields"
