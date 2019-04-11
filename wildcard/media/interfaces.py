@@ -14,6 +14,9 @@ class IAudioEnabled(IMediaEnabled):
     pass
 
 
+class IVideoBaseEnabled(IMediaEnabled):
+    pass
+
 class IVideoEnabled(IMediaEnabled):
     pass
 

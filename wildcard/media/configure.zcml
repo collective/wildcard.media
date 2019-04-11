@@ -30,7 +30,7 @@
       provides=".behavior.IVideoBase"
       factory=".behavior.VideoBase"
       for="plone.dexterity.interfaces.IDexterityContent"
-      marker=".interfaces.IVideoEnabled"
+      marker=".interfaces.IVideoBaseEnabled"
       />
 
   <plone:behavior

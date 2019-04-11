@@ -2,9 +2,9 @@ from plone.rfc822.interfaces import IPrimaryFieldInfo
 from zope.component import adapts
 from zope.interface import implements
 from wildcard.media.interfaces import (
-    IMediaEnabled, IVideoEnabled
+    IMediaEnabled, IVideoBaseEnabled, IVideoEnabled
 )
-from wildcard.media.behavior import IVideo, IAudio
+from wildcard.media.behavior import IVideoBase, IVideo, IAudio
 
 
 class PrimaryFieldInfo(object):
@@ -16,6 +16,9 @@ class PrimaryFieldInfo(object):
         if IVideoEnabled.providedBy(self.context):
             self.fieldname = 'video_file'
             self.field = IVideo[self.fieldname]
+        if IVideoBaseEnabled.providedBy(self.context):
+            self.fieldname = 'video_file'
+            self.field = IVideoBase[self.fieldname]
         else:
             self.fieldname = 'audio_file'
             self.field = IAudio[self.fieldname]

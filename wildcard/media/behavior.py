@@ -63,7 +63,6 @@ class IVideoBase(model.Schema):
         title=_(u"Video File"),
         description=u"",
         required=False,
-        constraint=valid_video
     )
     form.omitted(IAddForm, 'video_file_ogv')
     form.omitted(IEditForm, 'video_file_ogv')
@@ -77,6 +76,15 @@ class IVideoBase(model.Schema):
     form.widget(video_file_webm=StreamNamedFileFieldWidget)
     video_file_webm = namedfile.NamedBlobFile(
         required=False,
+    )
+    width = schema.Int(
+        title=_(u"Width"),
+        defaultFactory=getDefaultWidth
+    )
+
+    height = schema.Int(
+        title=_(u"Height"),
+        defaultFactory=getDefaultHeight
     )
 
 alsoProvides(IVideoBase, IFormFieldProvider)
@@ -113,15 +121,6 @@ class IVideo(IVideoBase):
         if not data.video_file and not data.youtube_url:
             raise Invalid("Must specify either a video file or youtube url")
 
-    width = schema.Int(
-        title=_(u"Width"),
-        defaultFactory=getDefaultWidth
-    )
-
-    height = schema.Int(
-        title=_(u"Height"),
-        defaultFactory=getDefaultHeight
-    )
 
     subtitle_file = namedfile.NamedBlobFile(
         title=_(u"Subtitle file"),
@@ -129,6 +128,9 @@ class IVideo(IVideoBase):
         required=False
     )
 
+    form.omitted('video_file')
+    form.omitted('width')
+    form.omitted('height')
     form.omitted('metadata')
     metadata = schema.Text(
         required=False
@@ -258,18 +260,15 @@ class VideoBase(BaseAdapter):
             self.context.video_converted = False
             self.context.video_file = value
 
+    video_file = property(_get_video_file, _set_video_file)
+
+    video_file_ogv = UnsettableProperty(IVideo['video_file_ogv'])
+    video_file_webm = UnsettableProperty(IVideo['video_file_webm'])
+    image = UnsettableProperty(IVideo['image'])
+
 class Video(VideoBase):
     implements(IVideo)
     adapts(IDexterityContent)
-    def __init__(self,context):
-        super(Video,self,context).__init__()
-        self._get_video_file = super(Video,self,context)._get_video_file
-
-    def _get_video_file(self):
-        return super(Video,self,context)._get_video_file()
-
-    def _set_video_file(self):
-        return super(Video,self,context)._set_video_file()
 
     def get_youtube_id_from_url(self):
         if not getattr(self.context, 'youtube_url', None):
@@ -280,7 +279,6 @@ class Video(VideoBase):
             return ""
         return match.group()
 
-    video_file = property(_get_video_file, _set_video_file)
 
     image = BasicProperty(IVideo['image'])
     youtube_url = BasicProperty(IVideo['youtube_url'])
@@ -290,9 +288,6 @@ class Video(VideoBase):
     transcript = BasicProperty(IVideo['transcript'])
     subtitle_file = BasicProperty(IVideo['subtitle_file'])
 
-    video_file_ogv = UnsettableProperty(IVideo['video_file_ogv'])
-    video_file_webm = UnsettableProperty(IVideo['video_file_webm'])
-    image = UnsettableProperty(IVideo['image'])
 
     if youtube:
         upload_video_to_youtube = BasicProperty(IVideo['upload_video_to_youtube'])
@@ -307,9 +302,7 @@ class AudioBase(BaseAdapter):
     audio_file = BasicProperty(IAudio['audio_file'])
 
 class Audio(AudioBase):
-    implements(IAudio)
+    implementsOnly(IAudio)
     adapts(IDexterityContent)
-    def __init__(self,context):
-        super(Audio,self,context).__init__()
 
     transcript = BasicProperty(IAudio['transcript'])
