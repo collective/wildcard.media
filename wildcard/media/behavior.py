@@ -302,7 +302,7 @@ class AudioBase(BaseAdapter):
     audio_file = BasicProperty(IAudio['audio_file'])
 
 class Audio(AudioBase):
-    implementsOnly(IAudio)
+    implements(IAudio)
     adapts(IDexterityContent)
 
     transcript = BasicProperty(IAudio['transcript'])
