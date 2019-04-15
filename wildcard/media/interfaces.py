@@ -13,6 +13,8 @@ class IMediaEnabled(Interface):
 class IAudioEnabled(IMediaEnabled):
     pass
 
+class IAudioOptionalEnabled(IAudioEnabled):
+    pass
 
 class IVideoEnabled(IMediaEnabled):
     pass
