@@ -173,7 +173,7 @@ class IAudio(model.Schema):
 
 alsoProvides(IAudio, IFormFieldProvider)
 
-class IVideoOptional(IVideo):
+class IVideoOptional(model.Schema):
 
     form.omitted('image')
     image = namedfile.NamedBlobImage(
@@ -229,13 +229,6 @@ class IVideoOptional(IVideo):
                       u"youtube into this video."),
         required=False,
         default=False)
-
-    @invariant
-    def validate_videos(data):
-        pass
-        #if not data.video_file and not data.youtube_url and not data.audio_file:
-        #    raise Invalid("Must specify either a video file or youtube url")
-
 
     width = schema.Int(
         title=_(u"Width"),
