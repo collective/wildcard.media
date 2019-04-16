@@ -33,7 +33,7 @@
       marker=".interfaces.IVideoEnabled"
       />
   <plone:behavior
-      title="Video Optional"
+      title="Video (Optional)"
       description="Add support for video fields"
       provides=".behavior.IVideoOptional"
       factory=".behavior.VideoOptional"
