@@ -110,4 +110,4 @@ make prod
 Support
 -------
 
-Only tested on Plone 5.0 and 4.3.x
+Tested on Plone 4.3.x, 5.0, 5.1 and 5.2
