@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
-import unittest2 as unittest
-import os
-
 from plone.app.testing import SITE_OWNER_NAME
 from plone.app.testing import SITE_OWNER_PASSWORD
 from plone.testing.z2 import Browser
-
-from wildcard.media.testing import (
-    MEDIA_FUNCTIONAL_TESTING
-)
-
 from wildcard.media.settings import GlobalSettings
+from wildcard.media.testing import MEDIA_FUNCTIONAL_TESTING
+
+import unittest
 
 
 class TestVarious(unittest.TestCase):

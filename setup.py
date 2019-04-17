@@ -18,6 +18,7 @@ setup(name='wildcard.media',
           "Programming Language :: Python :: 3.7",
           "Framework :: Plone :: 4.3",
           "Framework :: Plone :: 5.0",
+          "Framework :: Plone :: 5.1",
           "Framework :: Plone :: 5.2",
       ],
       keywords='video audio media plone tiny html5 mediaelement',
@@ -36,8 +37,6 @@ setup(name='wildcard.media',
           'plone.app.dexterity',
           'plone.autoform',
           'plone.app.textfield',
-          # FIXME: fix blob dependencies...
-          # 'plone.app.blob',
           'plone.rfc822',
           'plone.supermodel>=1.1',
           'five.globalrequest',
@@ -48,7 +47,6 @@ setup(name='wildcard.media',
       extras_require={
           'test': [
               'plone.app.testing',
-              'unittest2'
           ],
           'youtube': [
               'requests',
