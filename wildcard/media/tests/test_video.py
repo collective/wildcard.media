@@ -93,6 +93,7 @@ class VideoIntegrationTest(unittest.TestCase):
             '++widget++form.widgets.IVideo.video_file_webm/@@download/test.webm',
             result)
 
+    @unittest.skip('Partial downloads are not supported by plone.namedfile')
     def test_media_range_request(self):
         self.create('video3')
         video = self.portal['video3']

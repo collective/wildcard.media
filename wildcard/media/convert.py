@@ -5,7 +5,6 @@ except ImportError:
 import subprocess
 import os
 from logging import getLogger
-# from plone.app.blob.utils import openBlob
 from tempfile import mkdtemp
 from shutil import copyfile, rmtree
 import shlex
@@ -160,7 +159,6 @@ def _convertFormat(context):
     context.video_converted = True
     try:
         opened = video._blob.open('r')
-        # opened = openBlob(video._blob)
         bfilepath = opened.name
         opened.close()
     except IOError:

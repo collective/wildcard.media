@@ -1,14 +1,12 @@
-from zope.interface import implementer, implementer_only
-from zope.component import adapter, getMultiAdapter
-from z3c.form.interfaces import IFieldWidget, IFormLayer, IDataManager
-from z3c.form.widget import FieldWidget
+from Acquisition import aq_inner
 from plone.formwidget.namedfile.interfaces import INamedFileWidget
 from plone.formwidget.namedfile.widget import NamedFileWidget, Download
 from plone.namedfile.interfaces import INamedFileField
-from plone.namedfile.utils import get_contenttype
-# from plone.app.blob.field import BlobWrapper
-
-from Acquisition import aq_inner
+from plone.namedfile.utils import stream_data
+from z3c.form.interfaces import IFieldWidget, IFormLayer, IDataManager
+from z3c.form.widget import FieldWidget
+from zope.component import adapter, getMultiAdapter
+from zope.interface import implementer, implementer_only
 from zope.publisher.interfaces import NotFound
 
 
@@ -44,8 +42,6 @@ class MediaStream(Download):
             content = aq_inner(self.context.form.getContent())
         else:
             content = aq_inner(self.context.context)
-        # from plone.dexterity.filerepresentation import DefaultReadFile
-        # return DefaultReadFile(content)._getStream()
 
         field = aq_inner(self.context.field)
 
@@ -53,12 +49,5 @@ class MediaStream(Download):
         file_ = dm.get()
         if file_ is None:
             raise NotFound(self, self.request)
-        # FIXME: BlobWrapper does not exists for py3
-        # Find suitable replacement that works with dexterity.
-        # sorry...
-        return
-        content_type = get_contenttype(file_)
-        blob_wrapper = BlobWrapper(content_type)
-        blob_wrapper.setBlob(file_)
 
-        return blob_wrapper.index_html(self.request)
+        return stream_data(file_)
