@@ -33,12 +33,28 @@
       marker=".interfaces.IVideoEnabled"
       />
   <plone:behavior
+      title="Video (Optional)"
+      description="Add support for video fields"
+      provides=".behavior.IVideoOptional"
+      factory=".behavior.VideoOptional"
+      for="plone.dexterity.interfaces.IDexterityContent"
+      marker=".interfaces.IVideoEnabled"
+      />
+  <plone:behavior
       title="Audio"
       description="Add support for audio fields"
       provides=".behavior.IAudio"
       factory=".behavior.Audio"
       for="plone.dexterity.interfaces.IDexterityContent"
       marker=".interfaces.IAudioEnabled"
+      />
+  <plone:behavior
+      title="Audio (Optional)"
+      description="Add support for audio fields, make them optional"
+      provides=".behavior.IAudioOptional"
+      factory=".behavior.AudioOptional"
+      for="plone.dexterity.interfaces.IDexterityContent"
+      marker=".interfaces.IAudioOptionalEnabled"
       />
 
   <adapter name="SearchableText" factory=".indexers.MediaSearchableText" />
