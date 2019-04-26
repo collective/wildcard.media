@@ -12,8 +12,7 @@
     name="stream"
     for=".widget.IStreamNamedFileWidget"
     class=".widget.MediaStream"
-    permission="zope2.View"
-    />
+    permission="zope2.View" />
 
   <browser:page
     name="wildcard_video_macro"
@@ -21,31 +20,31 @@
     template="templates/video_macro.pt"
     class=".views.VideoView"
     permission="zope2.View"
-    layer="..interfaces.ILayer"
-  />
+    layer="..interfaces.ILayer" />
+
   <browser:page
     name="wildcard_video_view"
     for="..interfaces.IVideoEnabled"
     template="templates/video_view.pt"
     permission="zope2.View"
     class=".views.VideoView"
-    layer="..interfaces.ILayer"
-  />
+    layer="..interfaces.ILayer" />
+
   <browser:page
     name="wildcard_audio_view"
     for="..interfaces.IAudioEnabled"
     class=".views.AudioView"
     template="templates/audio_view.pt"
     permission="zope2.View"
-    layer="..interfaces.ILayer"
-  />
+    layer="..interfaces.ILayer" />
+
   <browser:page
     name="convert-video"
     for="..interfaces.IMediaEnabled"
     class=".views.ConvertVideo"
     permission="cmf.ModifyPortalContent"
-    layer="..interfaces.ILayer"
-  />
+    layer="..interfaces.ILayer" />
+
   <browser:page
     name="wcmedia-utils"
     for="*"
@@ -53,6 +52,7 @@
     class=".views.Utils"
     allowed_interface="..interfaces.IUtils"
     layer="..interfaces.ILayer" />
+
   <browser:page
     name="authorize-google"
     for="Products.CMFCore.interfaces._content.ISiteRoot"
@@ -80,6 +80,7 @@
     class=".views.GlobalSettingsFormView"
     layer="..interfaces.ILayer"
     permission="cmf.ManagePortal" />
+
   <adapter
     for="Products.CMFPlone.interfaces.IPloneSiteRoot"
     provides="..interfaces.IGlobalMediaSettings"

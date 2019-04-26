@@ -88,5 +88,13 @@
       sortkey="1"
       profile="wildcard.media:default"
       />
+   <genericsetup:upgradeStep
+      title="Upgrade to version 3.0.0"
+      source="2003"
+      destination="3000"
+      handler="wildcard.media.upgrades.upgrade_to_3000"
+      sortkey="1"
+      profile="wildcard.media:default"
+      />
 
 </configure>

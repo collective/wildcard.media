@@ -168,7 +168,7 @@ class VideoFunctionalTest(unittest.TestCase):
         self.assertTrue('My video' in self.browser.contents)
         self.assertTrue('This is my video' in self.browser.contents)
         self.assertTrue('<video' in self.browser.contents)
-        self.assertEqual(self.browser.contents.count('<source'), 3)
+        self.assertEqual(self.browser.contents.count('<source'), 1)
         self.assertIn(
             '++widget++form.widgets.IVideo.video_file/@@stream',
             self.browser.contents)
@@ -200,9 +200,9 @@ class YoutubeVideoIntegrationTest(unittest.TestCase):
     def getFti(self):
         return queryUtility(IDexterityFTI, name='WildcardVideo')
 
-    def create(self, id, video_url, retrieve_thumb=False):
+    def create(self, id, video_test_url, retrieve_thumb=False):
         self.portal.invokeFactory('WildcardVideo', id,
-                                  youtube_url=video_url,
+                                  video_url=video_test_url,
                                   retrieve_thumb=retrieve_thumb)
         return self.portal[id]
 
@@ -235,7 +235,7 @@ class YoutubeVideoIntegrationTest(unittest.TestCase):
 
         self.create(
             id='video4',
-            video_url='https://www.youtube.com/embed/' + self.video_id,
+            video_test_url='https://www.youtube.com/embed/' + self.video_id,
             retrieve_thumb=True)
         video4 = self.portal['video4']
         image4 = getattr(video4, 'image', None)

@@ -20,13 +20,13 @@ def video_added(video, event):
             uploadToYouTube(video)
         else:
             convertVideoFormats(video)
-    if getattr(video, 'youtube_url', None) and getattr(video, 'retrieve_thumb', False):
-        # it has youtube_url set if is a remote video or is uploaded to youtube
+    if getattr(video, 'video_url', None) and getattr(video, 'retrieve_thumb', False):
+        # it has video_url set if is a remote video or is uploaded to youtube
         retrieveThumbImage(video)
 
 
 def video_edited(video, event):
-    if getattr(video, 'youtube_url', None) and getattr(video, 'retrieve_thumb', False):
+    if getattr(video, 'video_url', None) and getattr(video, 'retrieve_thumb', False):
         retrieveThumbImage(video)
     elif getattr(video, 'youtube_data', False):
         if not getattr(video, 'upload_video_to_youtube', False):

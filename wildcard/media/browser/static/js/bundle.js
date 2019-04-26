@@ -58,9 +58,9 @@ require([
     var selector = '.template-wildcardvideo #form-widgets-IVideo-upload_video_to_youtube-0';
     var checkFields = function(){
       if($(selector)[0].checked){
-        $('#formfield-form-widgets-IVideo-youtube_url').hide();
+        $('#formfield-form-widgets-IVideo-video_url').hide();
       }else{
-        $('#formfield-form-widgets-IVideo-youtube_url').show();
+        $('#formfield-form-widgets-IVideo-video_url').show();
       }
     };
     if($(selector).change(checkFields).size() > 0){

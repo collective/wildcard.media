@@ -90,9 +90,9 @@ class IVideo(model.Schema):
         required=False,
     )
 
-    youtube_url = schema.TextLine(
-        title=_(u"Youtube URL"),
-        description=_(u"Alternatively, you can provide a youtube video url. "
+    video_url = schema.TextLine(
+        title=_(u"Video URL"),
+        description=_(u"Alternatively, you can provide a video url. "
                       u"If this is specified, video file will be ignored. "
                       u"If video was uploaded to youtube, this field will be filled "
                       u"with video url."),
@@ -107,8 +107,8 @@ class IVideo(model.Schema):
 
     @invariant
     def validate_videos(data):
-        if not data.video_file and not data.youtube_url:
-            raise Invalid("Must specify either a video file or youtube url")
+        if not data.video_file and not data.video_url:
+            raise Invalid("Must specify either a video file or a video url")
 
     width = schema.Int(
         title=_(u"Width"),
@@ -252,10 +252,10 @@ class Video(BaseAdapter):
             self.context.video_file = value
 
     def get_youtube_id_from_url(self):
-        if not getattr(self.context, 'youtube_url', None):
+        if not getattr(self.context, 'video_url', None):
             return ""
         pattern = r"((?<=(v|V)/)|(?<=be/)|(?<=(\?|\&)v=)|(?<=embed/))([\w-]+)"
-        match = re.search(pattern, self.context.youtube_url)
+        match = re.search(pattern, self.context.video_url)
         if not match:
             return ""
         return match.group()
@@ -263,7 +263,7 @@ class Video(BaseAdapter):
     video_file = property(_get_video_file, _set_video_file)
 
     image = BasicProperty(IVideo['image'])
-    youtube_url = BasicProperty(IVideo['youtube_url'])
+    video_url = BasicProperty(IVideo['video_url'])
     retrieve_thumb = BasicProperty(IVideo['retrieve_thumb'])
     width = BasicProperty(IVideo['width'])
     height = BasicProperty(IVideo['height'])

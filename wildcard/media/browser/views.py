@@ -21,6 +21,10 @@ from z3c.form import group
 from zope.component.hooks import getSite
 from zope.interface import alsoProvides
 
+from zope.component import getMultiAdapter, ComponentLookupError
+from wildcard.media.adapter import IVideoEmbedCode
+from urlparse import urlparse
+
 try:
     from wildcard.media import youtube
 except ImportError:
@@ -54,6 +58,33 @@ class AudioView(MediaView):
 
 class VideoView(BrowserView):
 
+    def get_site_ID(self):
+        video_site = urlparse(self.context.video_url)[1].replace('www.','')
+        return video_site
+
+    def getPlayerCode(self):
+        """ Fetch the correct adapter for the Video.
+        The video can be internal (inside the Plone site) or from an
+        external service."""
+
+        # Retrieve 'wcmedia-utils' view for the context then we check if
+        # the video is internal
+        util=getMultiAdapter((self.context, self.request), name = "wcmedia-utils")
+        if util.mp4_url():
+            name="internal"
+
+        # Extract the domain from the URL of the video. We use it as the
+        # name for the different adapters that handle different external services.
+        else:
+            name = urlparse(self.context.video_url)[1].replace('www.','')
+
+        try:
+            adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode, name = name)
+        except ComponentLookupError:
+            adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode)
+        return adapter()
+
+
     def get_embed_url(self):
         """
         Try to guess video id from a various case of possible youtube urls and
@@ -70,6 +101,7 @@ class VideoView(BrowserView):
         if not video_id:
             return ""
         return "https://www.youtube.com/embed/" + video_id
+
 
     def get_edit_url(self):
         """

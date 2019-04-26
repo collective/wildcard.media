@@ -1,7 +1,7 @@
 from Products.CMFPlone.utils import getToolByName
 from Products.CMFPlone.utils import getFSVersionTuple
 from wildcard.media.settings import GlobalSettings
-
+import logging
 
 PROFILE_ID = 'profile-wildcard.media:default'
 PROFILE_ID_PLONE4 = 'profile-wildcard.media:plone4'
@@ -47,3 +47,27 @@ def upgrade_to_2003(context):
         settings.avconv_in_mp4 = old_infileopt
         settings.avconv_in_ogg = old_infileopt
         settings.avconv_in_webm = old_infileopt
+
+def upgrade_to_3000(context, logger=None):
+    """We need to change the name for an attribute for video objects.
+    youtube_url now is video_url"""
+
+    if logger is None:
+        # Called as upgrade step: define our own logger.
+        logger = logging.getLogger('wildcard.media')
+
+    logger.info('Upgrading wildcard.media to version 3000')
+
+    catalog = getToolByName(context, 'portal_catalog')
+    brains = catalog(portal_type='WildcardVideo')
+    count = 0
+
+    for brain in brains:
+        video_obj = brain.getObject()
+        video_obj.video_url = video_obj.youtube_url
+        video_obj.reindexObject() # reindexing
+        count += 1
+
+
+    logger.info('%s fields for WildcardVideo objects converted.' % count)
+    logger.info('wildcard.media v.3000: upgrade done')
