@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import unittest2 as unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 import os
 from zope.interface import alsoProvides
 from zope.component import createObject
@@ -118,7 +121,3 @@ class AudioFunctionalTest(unittest.TestCase):
         self.assertIn(
             '++widget++form.widgets.IAudio.audio_file/@@stream',
             self.browser.contents)
-
-
-def test_suite():
-    return unittest.defaultTestLoader.loadTestsFromName(__name__)

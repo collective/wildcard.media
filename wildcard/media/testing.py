@@ -17,6 +17,7 @@ class MediaLayer(PloneSandboxLayer):
 
     def setUpZope(self, app, configurationContext):
         import wildcard.media
+        wildcard.media.config.USE_ASYNC = False
         xmlconfig.file(
             'configure.zcml',
             wildcard.media,

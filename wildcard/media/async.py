@@ -6,21 +6,23 @@ except ImportError:
 
 from wildcard.media import pasync
 from wildcard.media import convert
+from wildcard.media import config as media_config
 try:
     from wildcard.media import youtube
 except ImportError:
     youtube = None
+from wildcard.media.config import ASYNC_DELAY
+
 from plone import api
 from zope.globalrequest import getRequest
 
 
 def _run(obj, func):
-    # return func(obj)
-    if tasks:
+    if media_config.USE_ASYNC and tasks:
         # collective.celery is installed
         tfunc = getattr(tasks, func.__name__)
-        tfunc.delay(obj)
-    elif pasync.asyncInstalled():
+        tfunc.apply_async(args=[obj], kwargs={}, countdown=ASYNC_DELAY)
+    elif media_config.USE_ASYNC and pasync.asyncInstalled():
         # plone.app.async installed
         pasync.queueJob(obj, func)
     else:

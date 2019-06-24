@@ -11,6 +11,11 @@ from plone.app.blob.field import BlobWrapper
 from Acquisition import aq_inner
 from zope.publisher.interfaces import NotFound
 
+try:
+    from collective.xsendfile.utils import disable_xsendfile
+except ImportError:
+    def disable_xsendfile(request):
+        pass
 
 class IStreamNamedFileWidget(INamedFileWidget):
     pass
@@ -51,6 +56,7 @@ class MediaStream(Download):
         if file_ is None:
             raise NotFound(self, self.request)
 
+        disable_xsendfile(self.request)
         content_type = get_contenttype(file_)
         blob_wrapper = BlobWrapper(content_type)
         blob_wrapper.setBlob(file_)

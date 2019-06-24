@@ -4,7 +4,22 @@ Changelog
 unreleased
 ----------
 
-- nothing yet
+- collective.celery integration
+
+- upgrade mediaelementsjs
+
+- Retry on POSKeyError when using celery
+
+- #2610885: Sleep for a few seconds in convert task because retry isn't working
+  with collective.celery tasks.
+  [JL 2019-02-28]
+
+- #2610885: Remove sleep and restore retry on POSKeyError
+  [JL 2019-03-05]
+
+- Fix tests.
+  [JL 2019-06-24]
+
 
 2.0.4 (2017-12-18)
 ------------------

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import unittest2 as unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 import os
 
 from plone.app.testing import SITE_OWNER_NAME
@@ -36,7 +39,3 @@ class TestVarious(unittest.TestCase):
         self.browser.getLink('Site Setup').click()
         self.browser.getLink('Media Settings').click()
         self.assertTrue('ogg' in self.browser.contents)
-
-
-def test_suite():
-    return unittest.defaultTestLoader.loadTestsFromName(__name__)

@@ -1,4 +1,4 @@
-
+ASYNC_DELAY = 30
 
 class Format(object):
 
@@ -18,3 +18,6 @@ def getFormat(type_):
     for tt in CONVERTABLE_FORMATS:
         if tt.type_ == type_:
             return tt
+
+
+USE_ASYNC = True

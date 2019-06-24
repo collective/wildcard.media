@@ -38,6 +38,10 @@
                                  height height;"/>
         </object>
     </video>
+    <br/>
+    <p tal:condition="util/original_video_url">
+      <a tal:attributes="href util/original_video_url" href="">Original video file</a>
+    </p>
 </tal:has_video>
 <tal:yt tal:condition="youtube_url">
   <tal:no_image condition="not:util/image_url">

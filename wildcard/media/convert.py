@@ -13,6 +13,7 @@ from wildcard.media.config import getFormat
 from plone.namedfile import NamedBlobFile, NamedBlobImage
 from wildcard.media.settings import GlobalSettings
 from Products.CMFCore.utils import getToolByName
+from Acquisition import aq_base
 
 logger = getLogger('wildcard.media')
 
@@ -98,12 +99,18 @@ class AVConvProcess(BaseSubProcess):
         self._run_command(cmd)
 
     def get_avconv_params(self, settings, video_type, video):
+        portal = getSite()
+        settings = GlobalSettings(portal)
         params = {}
         for op in ('in', 'out'):
             option = getattr(settings, 'avconv_%s_%s' % (op, video_type)) or ''
             # replace width/height if set
-            option = option.replace('{width}', str(video.width))
-            option = option.replace('{height}', str(video.height))
+            width = getattr(aq_base(video), 'width',
+                            settings.default_video_width)
+            height = getattr(aq_base(video), 'height',
+                             settings.default_video_height)
+            option = option.replace('{width}', str(width))
+            option = option.replace('{height}', str(height))
             params[op] = shlex.split(option)
         return params
 
@@ -157,6 +164,16 @@ def _convertFormat(context):
 
     video = context.video_file
     context.video_converted = True
+
+    # keep original file, but not if convert action is used
+    action_called = getattr(context, 'convert_action_called', False)
+    if action_called:
+        logger.warn('Convert action called for {}'.format(context.absolute_url_path()))
+        context.convert_action_called = False
+    else:
+        logger.warn('Saving original video for {}'.format(context.absolute_url_path()))
+        context.video_file_original = video
+
     try:
         opened = openBlob(video._blob)
         bfilepath = opened.name
@@ -200,7 +217,7 @@ def _convertFormat(context):
             try:
                 avconv.convert(tmpfilepath, output_filepath, video_type, context)
             except:
-                logger.warn('error converting to %s' % video_type)
+                logger.exception('error converting to %s' % video_type)
                 continue
             if os.path.exists(output_filepath):
                 fi = open(output_filepath)

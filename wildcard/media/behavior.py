@@ -67,6 +67,13 @@ class IVideo(model.Schema):
         constraint=valid_video
     )
 
+    form.omitted(IAddForm, 'video_file_original')
+    form.omitted(IEditForm, 'video_file_original')
+    form.widget(video_file_original=StreamNamedFileFieldWidget)
+    video_file_original = namedfile.NamedBlobFile(
+        required=False,
+    )
+
     if youtube:
         upload_video_to_youtube = schema.Bool(
             title=_(u'Upload to youtube'),
@@ -247,6 +254,7 @@ class Video(BaseAdapter):
             self.context.video_file = None
             self.context.video_file_ogv = None
             self.context.video_file_webm = None
+            self.context.video_file_original = None
         elif value != getattr(self.context, 'video_file', _marker):
             self.context.video_converted = False
             self.context.video_file = value
@@ -272,6 +280,7 @@ class Video(BaseAdapter):
 
     video_file_ogv = UnsettableProperty(IVideo['video_file_ogv'])
     video_file_webm = UnsettableProperty(IVideo['video_file_webm'])
+    video_file_original = UnsettableProperty(IVideo['video_file_original'])
     image = UnsettableProperty(IVideo['image'])
 
     if youtube:

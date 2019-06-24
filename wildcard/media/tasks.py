@@ -1,3 +1,4 @@
+from ZODB.POSException import POSKeyError
 from collective.celery import task
 from wildcard.media import convert
 try:
@@ -5,8 +6,10 @@ try:
 except ImportError:
     youtube = None
 
+import time
 
-@task.as_admin()
+
+@task.as_admin(autoretry_for=(POSKeyError,), retry_backoff=5)
 def convertVideoFormats(context):
     convert.convertVideoFormats(context)
 
