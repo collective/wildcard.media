@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import unittest2 as unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 import os
 from zope.interface import alsoProvides
 from zope.component import createObject
@@ -36,17 +39,15 @@ class VideoIntegrationTest(unittest.TestCase):
         self.request = self.layer['request']
         self.request['ACTUAL_URL'] = self.portal.absolute_url()
         setRoles(self.portal, TEST_USER_ID, ['Manager'])
-        settings = GlobalSettings(self.portal)
-        settings.additional_video_formats = []
+        # settings = GlobalSettings(self.portal)
+        # settings.additional_video_formats = []
 
     def getFti(self):
         return queryUtility(IDexterityFTI, name='WildcardVideo')
 
     def create(self, id):
         self.portal.invokeFactory('WildcardVideo', id,
-                                  video_file=getVideoBlob('mp4'),
-                                  video_file_ogv=getVideoBlob('ogv'),
-                                  video_file_webm=getVideoBlob('webm'))
+                                  video_file=getVideoBlob('mp4'))
         return self.portal[id]
 
     def test_schema(self):
@@ -247,6 +248,3 @@ class YoutubeVideoIntegrationTest(unittest.TestCase):
         image5 = getattr(self.portal['video5'], 'image', None)
         self.assertEqual(image5, None)
 
-
-def test_suite():
-    return unittest.defaultTestLoader.loadTestsFromName(__name__)

@@ -101,7 +101,7 @@ class IGlobalMediaSettings(Interface):
             default=u"Pass optional outfile parameters to aconv during the "
                     u"WebM conversion process."
         ),
-        default=u'',
+        default=u'-strict experimental',
         required=False,
     )
 

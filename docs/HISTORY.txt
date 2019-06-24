@@ -17,6 +17,9 @@ unreleased
 - #2610885: Remove sleep and restore retry on POSKeyError
   [JL 2019-03-05]
 
+- Fix tests.
+  [JL 2019-06-24]
+
 
 2.0.4 (2017-12-18)
 ------------------
