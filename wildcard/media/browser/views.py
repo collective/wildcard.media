@@ -1,11 +1,10 @@
 import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
-import re
 
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone import PloneMessageFactory as pmf
 from Products.Five import BrowserView
 from plone import api
-from plone.app.z3cform.layout import wrap_form
+from plone.z3cform.layout import wrap_form
 from plone.memoize.instance import memoize
 from wildcard.media import _
 from wildcard.media.behavior import IVideo
