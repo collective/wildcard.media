@@ -5,13 +5,25 @@ cache:
   pip: true
   directories:
     - $HOME/buildout-cache
-env:
-  - PLONE_VERSION=4.3.x
-  - PLONE_VERSION=5.0.x
-  - PLONE_VERSION=5.1.x
+matrix:
+  include:
+    - python: "2.7"
+      env: PLONE_VERSION=4.3.x
+    - python: "2.7"
+      env: PLONE_VERSION=5.0.x
+    - python: "2.7"
+      env: PLONE_VERSION=5.1.x
+    - python: "2.7"
+      env: PLONE_VERSION=5.2.x
+    - python: "3.7"
+      env: PLONE_VERSION=5.2.x
+    - python: "3.8"
+      env: PLONE_VERSION=5.2.x
+      dist: xenial
+      sudo: true  
 before_install:
   - mkdir -p $HOME/buildout-cache/{eggs,downloads}
-  - pip install -r https://raw.githubusercontent.com/plone/buildout.coredev/5.1/requirements.txt
+  - ./bootstrap.sh plone-$PLONE_VERSION.cfg
 install:
   - sed -ie "s#plone-x.x.x.cfg#plone-$PLONE_VERSION.cfg#" travis.cfg
   - buildout -N -t 3 -c travis.cfg
