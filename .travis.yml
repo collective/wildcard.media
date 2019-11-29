@@ -26,7 +26,7 @@ before_install:
   - ./bootstrap.sh plone-$PLONE_VERSION.cfg
 install:
   - sed -ie "s#plone-x.x.x.cfg#plone-$PLONE_VERSION.cfg#" travis.cfg
-  - buildout -N -t 3 -c travis.cfg
+  - bin/buildout -N -t 3 -c travis.cfg
 script:
 #  - bin/code-analysis
   - bin/test
