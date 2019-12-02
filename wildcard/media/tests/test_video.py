@@ -86,12 +86,12 @@ class VideoIntegrationTest(unittest.TestCase):
         self.assertIn(
             '++widget++form.widgets.IVideo.video_file/@@download/test.mp4',
             result)
-        # self.assertIn(
-        #     '++widget++form.widgets.IVideo.video_file_ogv/@@download/test.ogv',
-        #     result)
-        #self.assertIn(
-        #    '++widget++form.widgets.IVideo.video_file_webm/@@download/test.webm',
-        #    result)
+        self.assertIn(
+            '++widget++form.widgets.IVideo.video_file_ogv/@@download/test.ogv',
+            result)
+        self.assertIn(
+           '++widget++form.widgets.IVideo.video_file_webm/@@download/test.webm',
+           result)
 
     def test_media_range_request(self):
         self.create('video3')
@@ -172,12 +172,12 @@ class VideoFunctionalTest(unittest.TestCase):
         self.assertIn(
             '++widget++form.widgets.IVideo.video_file/@@stream',
             self.browser.contents)
-        #self.assertIn(
-        #    '++widget++form.widgets.IVideo.video_file_ogv/@@stream',
-        #    self.browser.contents)
-        #self.assertIn(
-        #    '++widget++form.widgets.IVideo.video_file_webm/@@stream',
-        #    self.browser.contents)
+        self.assertIn(
+           '++widget++form.widgets.IVideo.video_file_ogv/@@stream',
+           self.browser.contents)
+        self.assertIn(
+           '++widget++form.widgets.IVideo.video_file_webm/@@stream',
+           self.browser.contents)
 
 
 class YoutubeVideoIntegrationTest(unittest.TestCase):
