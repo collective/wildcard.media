@@ -1,0 +1,35 @@
+language: python
+python: 2.7.13
+sudo: false
+cache:
+  pip: true
+  directories:
+    - $HOME/buildout-cache
+matrix:
+  include:
+    - python: "2.7"
+      env: PLONE_VERSION=4.3.x
+    - python: "2.7"
+      env: PLONE_VERSION=5.0.x
+    - python: "2.7"
+      env: PLONE_VERSION=5.1.x
+    # - python: "2.7"
+    #   env: PLONE_VERSION=5.2.x
+    # - python: "3.7"
+    #   env: PLONE_VERSION=5.2.x
+    # - python: "3.8"
+    #   env: PLONE_VERSION=5.2.x
+    #   dist: xenial
+    #   sudo: true  
+before_install:
+  - mkdir -p $HOME/buildout-cache/{eggs,downloads}
+  - ./bootstrap.sh plone-$PLONE_VERSION.cfg
+install:
+  - sed -ie "s#plone-x.x.x.cfg#plone-$PLONE_VERSION.cfg#" travis.cfg
+  - bin/buildout -N -t 3 -c travis.cfg
+script:
+#  - bin/code-analysis
+  - bin/test
+after_success:
+  - test-coverage
+  - travis_wait createcoverage
