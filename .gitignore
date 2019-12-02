@@ -7,6 +7,8 @@
 *.egg-info
 *.EGG-INFO
 .*.cfg
+.Python
+pip-selfcheck.json
 bin/
 develop-eggs/
 downloads/
