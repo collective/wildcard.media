@@ -17,10 +17,10 @@ matrix:
       env: PLONE_VERSION=5.2.x
     - python: "3.7"
       env: PLONE_VERSION=5.2.x
-    - python: "3.8"
-      env: PLONE_VERSION=5.2.x
-      dist: xenial
-      sudo: true  
+    # - python: "3.8"
+    #   env: PLONE_VERSION=5.2.x
+    #   dist: xenial
+    #   sudo: true  
 before_install:
   - mkdir -p $HOME/buildout-cache/{eggs,downloads}
   - ./bootstrap.sh plone-$PLONE_VERSION.cfg
