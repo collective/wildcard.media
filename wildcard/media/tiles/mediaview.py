@@ -7,7 +7,7 @@ from Products.CMFPlone.utils import safe_unicode
 from Products.CMFPlone import PloneMessageFactory as pmf
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from zope import schema
-from zope.interface import implements
+from zope.interface import implementer
 
 from wildcard.media import _
 
@@ -30,8 +30,8 @@ class IMediaViewTile(IPersistentCoverTile):
     )
 
 
+@implementer(IMediaViewTile)
 class MediaViewTile(PersistentCoverTile):
-    implements(IMediaViewTile)
 
     index = ViewPageTemplateFile('templates/mediaview.pt')
 

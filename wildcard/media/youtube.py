@@ -3,9 +3,11 @@ from plone import api
 from plone.registry.interfaces import IRegistry
 from zope.component import getUtility
 from zope.globalrequest import getRequest
+from Products.CMFPlone.utils import safe_text
 
 import json
 import requests
+import six
 
 
 class GoogleAPIException(Exception):
@@ -161,7 +163,8 @@ class GoogleAPI(object):
             'grant_type': 'authorization_code'
         }
         resp = requests.post(url, data=data)
-        self.registry['google_auth_data'] = unicode(resp.content)
+        # TODO: Check if resp.content is text or bytes in py3
+        self.registry['google_auth_data'] = safe_text(resp.content)
         self.req.response.redirect(self.site.absolute_url())
 
     def refresh_access_token(self):
@@ -174,7 +177,7 @@ class GoogleAPI(object):
         resp = requests.post('https://accounts.google.com/o/oauth2/token',
                              data=params)
         self.auth_data.update(resp.json())
-        self.registry['google_auth_data'] = unicode(json.dumps(self.auth_data))
+        self.registry['google_auth_data'] = safe_text(json.dumps(self.auth_data))
 
     @property
     def authorized(self):

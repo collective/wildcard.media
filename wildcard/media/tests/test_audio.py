@@ -1,27 +1,21 @@
 # -*- coding: utf-8 -*-
-import unittest2 as unittest
-import os
-from zope.interface import alsoProvides
-from zope.component import createObject
-from zope.component import queryUtility
-
-from plone.dexterity.interfaces import IDexterityFTI
-
 from plone.app.testing import SITE_OWNER_NAME
 from plone.app.testing import SITE_OWNER_PASSWORD
-from plone.testing.z2 import Browser
-
-from wildcard.media.interfaces import IAudioEnabled
-
-from wildcard.media.testing import (
-    MEDIA_INTEGRATION_TESTING,
-    MEDIA_FUNCTIONAL_TESTING
-)
-
 from plone.app.testing import TEST_USER_ID, setRoles
 from plone.app.z3cform.interfaces import IPloneFormLayer
-from wildcard.media.tests import getAudioBlob, test_file_dir
+from plone.dexterity.interfaces import IDexterityFTI
 from plone.rfc822.interfaces import IPrimaryFieldInfo, IPrimaryField
+from plone.testing.z2 import Browser
+from wildcard.media.interfaces import IAudioEnabled
+from wildcard.media.testing import MEDIA_FUNCTIONAL_TESTING
+from wildcard.media.testing import MEDIA_INTEGRATION_TESTING
+from wildcard.media.tests import getAudioBlob, test_file_dir
+from zope.component import createObject
+from zope.component import queryUtility
+from zope.interface import alsoProvides
+
+import os
+import unittest
 
 
 class AudioIntegrationTest(unittest.TestCase):
@@ -110,7 +104,7 @@ class AudioFunctionalTest(unittest.TestCase):
         file_path = os.path.join(test_file_dir, "test.mp3")
         file_ctl = self.browser.getControl(
             name='form.widgets.IAudio.audio_file')
-        file_ctl.add_file(open(file_path), 'audio/mp3', 'test.mp3')
+        file_ctl.add_file(open(file_path, 'rb'), 'audio/mp3', 'test.mp3')
         self.browser.getControl('Save').click()
         self.assertTrue('My audio' in self.browser.contents)
         self.assertTrue('This is my audio' in self.browser.contents)

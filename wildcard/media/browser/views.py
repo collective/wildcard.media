@@ -1,11 +1,10 @@
-import urllib
-import re
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone import PloneMessageFactory as pmf
 from Products.Five import BrowserView
 from plone import api
-from plone.app.z3cform.layout import wrap_form
+from plone.z3cform.layout import wrap_form
 from plone.memoize.instance import memoize
 from wildcard.media import _
 from wildcard.media.behavior import IVideo
@@ -198,7 +197,7 @@ class Utils(MediaView):
     def mp4_url_quoted(self):
         url = self.mp4_url()
         if url:
-            return urllib.quote_plus(url)
+            return six.moves.urllib.parse.quote_plus(url)
         else:
             return url
 
@@ -206,7 +205,7 @@ class Utils(MediaView):
     def image_url_quoted(self):
         url = self.image_url()
         if url:
-            return urllib.quote_plus(url)
+            return six.moves.urllib.parse.quote_plus(url)
         else:
             return url
 

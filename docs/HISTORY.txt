@@ -4,9 +4,11 @@ Changelog
 2.1.0 (unreleased)
 ------------------
 
+- Add support for Python 3 and Plone 5.2.
+  [pbauer]
 - Add travis config for ci
   [cekk]
-
+\
 2.0.4 (2017-12-18)
 ------------------
 

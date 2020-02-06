@@ -5,7 +5,6 @@ except ImportError:
 import subprocess
 import os
 from logging import getLogger
-from plone.app.blob.utils import openBlob
 from tempfile import mkdtemp
 from shutil import copyfile, rmtree
 import shlex
@@ -13,6 +12,7 @@ from wildcard.media.config import getFormat
 from plone.namedfile import NamedBlobFile, NamedBlobImage
 from wildcard.media.settings import GlobalSettings
 from Products.CMFCore.utils import getToolByName
+import six
 
 logger = getLogger('wildcard.media')
 
@@ -47,7 +47,7 @@ class BaseSubProcess(object):
         return None
 
     def _run_command(self, cmd, or_error=False):
-        if isinstance(cmd, basestring):
+        if isinstance(cmd, six.string_types):
             cmd = cmd.split()
         cmdformatted = ' '.join(cmd)
         logger.info("Running command %s" % cmdformatted)
@@ -111,7 +111,7 @@ try:
     avconv = AVConvProcess()
 except IOError:
     avconv = None
-    logger.warn('ffmpeg not installed. wildcard.video will not function')
+    logger.warning('ffmpeg not installed. wildcard.video will not function')
 
 
 class AVProbeProcess(BaseSubProcess):
@@ -142,7 +142,7 @@ try:
     avprobe = AVProbeProcess()
 except IOError:
     avprobe = None
-    logger.warn('avprobe not installed. wildcard.video will not function')
+    logger.warning('avprobe not installed. wildcard.video will not function')
 
 
 def switchFileExt(filename, ext):
@@ -158,11 +158,11 @@ def _convertFormat(context):
     video = context.video_file
     context.video_converted = True
     try:
-        opened = openBlob(video._blob)
+        opened = video._blob.open('r')
         bfilepath = opened.name
         opened.close()
     except IOError:
-        logger.warn('error opening blob file')
+        logger.warning('error opening blob file')
         return
 
     tmpdir = mkdtemp()
@@ -172,7 +172,7 @@ def _convertFormat(context):
     try:
         metadata = avprobe.info(tmpfilepath)
     except:
-        logger.warn('not a valid video format')
+        logger.warning('not a valid video format')
         return
     context.metadata = metadata
 
@@ -200,7 +200,7 @@ def _convertFormat(context):
             try:
                 avconv.convert(tmpfilepath, output_filepath, video_type, context)
             except:
-                logger.warn('error converting to %s' % video_type)
+                logger.warning('error converting to %s' % video_type)
                 continue
             if os.path.exists(output_filepath):
                 fi = open(output_filepath)
@@ -219,12 +219,12 @@ def _convertFormat(context):
             context.image = NamedBlobImage(data, filename=u'screengrab.png')
             fi.close()
     except:
-        logger.warn('error getting thumbnail from video')
+        logger.warning('error getting thumbnail from video')
     rmtree(tmpdir)
 
 
 def convertVideoFormats(context):
     if not avprobe or not avconv:
-        logger.warn('can not run wildcard.media conversion. No avconv')
+        logger.warning('can not run wildcard.media conversion. No avconv')
         return
     _convertFormat(context)
