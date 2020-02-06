@@ -1,0 +1,34 @@
+include *.sh
+include base.cfg
+include buildout.cfg
+include plone-4.3.x.cfg
+include plone-5.0.x.cfg
+include plone-5.1.x.cfg
+include plone-5.2.x.cfg
+include travis.cfg
+include versions.cfg
+recursive-include docs *.GPL
+recursive-include docs *.txt
+recursive-include wildcard *.bowerrc
+recursive-include wildcard *.css
+recursive-include wildcard *.gif
+recursive-include wildcard *.js
+recursive-include wildcard *.json
+recursive-include wildcard *.md
+recursive-include wildcard *.mp3
+recursive-include wildcard *.mp4
+recursive-include wildcard *.ogv
+recursive-include wildcard *.png
+recursive-include wildcard *.po
+recursive-include wildcard *.pot
+recursive-include wildcard *.pt
+recursive-include wildcard *.py
+recursive-include wildcard *.sh
+recursive-include wildcard *.svg
+recursive-include wildcard *.swf
+recursive-include wildcard *.txt
+recursive-include wildcard *.webm
+recursive-include wildcard *.xap
+recursive-include wildcard *.xml
+recursive-include wildcard *.zcml
+recursive-include wildcard Makefile
