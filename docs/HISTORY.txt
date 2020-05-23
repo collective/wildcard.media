@@ -4,7 +4,7 @@ Changelog
 2.1.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Reintroduce support for partial streaming based on https://github.com/plone/plone.namedfile/pull/86 [pbauer]
 
 
 2.1.0 (2020-02-06)

@@ -1,6 +1,7 @@
 from Acquisition import aq_inner
 from plone.formwidget.namedfile.interfaces import INamedFileWidget
-from plone.formwidget.namedfile.widget import NamedFileWidget, Download
+from plone.formwidget.namedfile.widget import NamedFileWidget
+from plone.namedfile.browser import Download
 from plone.namedfile.interfaces import INamedFileField
 from plone.namedfile.utils import stream_data
 from z3c.form.interfaces import IFieldWidget, IFormLayer, IDataManager
@@ -31,9 +32,6 @@ class MediaStream(Download):
 
     def __call__(self):
         """ Partially reproduced from plone.formwidget.namedfile.widget.Download.
-
-        Leverages the existing BlobWrapper functionality to stream the media blobs
-        to the client, allowing ranges and partial content.
         """
         if self.context.ignoreContext:
             raise NotFound("Cannot get the data file from a widget with no context")
@@ -50,4 +48,5 @@ class MediaStream(Download):
         if file_ is None:
             raise NotFound(self, self.request)
 
-        return stream_data(file_)
+        request_range = self.handle_request_range(file_)
+        return stream_data(file_, **request_range)
