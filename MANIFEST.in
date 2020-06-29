@@ -1,9 +1,6 @@
 include *.sh
 include base.cfg
 include buildout.cfg
-include plone-4.3.x.cfg
-include plone-5.0.x.cfg
-include plone-5.1.x.cfg
 include plone-5.2.x.cfg
 include travis.cfg
 include versions.cfg
