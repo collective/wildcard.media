@@ -203,9 +203,9 @@ def _convertFormat(context):
                 logger.warning('error converting to %s' % video_type)
                 continue
             if os.path.exists(output_filepath):
-                fi = open(output_filepath)
-                namedblob = NamedBlobFile(
-                    fi, filename=switchFileExt(video.filename,  video_type))
+                with open(output_filepath, 'rb') as fi:
+                    namedblob = NamedBlobFile(
+                        fi, filename=switchFileExt(video.filename,  video_type))
                 setattr(context, fieldname, namedblob)
                 fi.close()
 
