@@ -127,7 +127,7 @@ class AVProbeProcess(BaseSubProcess):
         result = {}
         for line in self._run_command(cmd, or_error=True).splitlines():
             if six.PY3:
-                line = line.decode
+                line = line.decode()
             if ':' not in line:
                 continue
             name, data = line.split(':', 1)
