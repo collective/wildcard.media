@@ -126,6 +126,7 @@ class AVProbeProcess(BaseSubProcess):
         cmd = [self.binary, filepath]
         result = {}
         for line in self._run_command(cmd, or_error=True).splitlines():
+            line = line.decode()
             if ':' not in line:
                 continue
             name, data = line.split(':', 1)
