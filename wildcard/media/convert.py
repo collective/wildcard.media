@@ -126,6 +126,8 @@ class AVProbeProcess(BaseSubProcess):
         cmd = [self.binary, filepath]
         result = {}
         for line in self._run_command(cmd, or_error=True).splitlines():
+            if six.PY3:
+                line = line.decode()
             if ':' not in line:
                 continue
             name, data = line.split(':', 1)
@@ -203,11 +205,10 @@ def _convertFormat(context):
                 logger.warning('error converting to %s' % video_type)
                 continue
             if os.path.exists(output_filepath):
-                fi = open(output_filepath)
-                namedblob = NamedBlobFile(
-                    fi, filename=switchFileExt(video.filename,  video_type))
+                with open(output_filepath, 'rb') as fi:
+                    namedblob = NamedBlobFile(
+                        fi, filename=switchFileExt(video.filename,  video_type))
                 setattr(context, fieldname, namedblob)
-                fi.close()
 
     # try and grab one from video
     output_filepath = os.path.join(tmpdir, u'screengrab.png')
@@ -216,8 +217,7 @@ def _convertFormat(context):
         if os.path.exists(output_filepath):
             with open(output_filepath, 'rb') as fi:
                 data = fi.read()
-            context.image = NamedBlobImage(data, filename=u'screengrab.png')
-            fi.close()
+            context.image = NamedBlobImage(data, filename=u'screengrab.png')            
     except:
         logger.warning('error getting thumbnail from video')
     rmtree(tmpdir)
