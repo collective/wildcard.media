@@ -20,6 +20,8 @@ unreleased
 - Fix tests.
   [JL 2019-06-24]
 
+- Add names to async tasks.
+
 
 2.0.4 (2017-12-18)
 ------------------
