@@ -47,6 +47,6 @@ class MediaStream(Download):
         file_ = dm.get()
         if file_ is None:
             raise NotFound(self, self.request)
-
+        self.set_headers(file_)
         request_range = self.handle_request_range(file_)
         return stream_data(file_, **request_range)
