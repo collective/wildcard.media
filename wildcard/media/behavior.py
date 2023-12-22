@@ -26,13 +26,13 @@ except ImportError:
 
 
 def valid_video(namedblob):
-    if namedblob.contentType.split('/')[0] != 'video':
+    if namedblob.contentType.split("/")[0] != "video":
         raise Invalid("must be a video file")
     return True
 
 
 def valid_audio(namedblob):
-    if namedblob.contentType.split('/')[0] != 'audio':
+    if namedblob.contentType.split("/")[0] != "audio":
         raise Invalid("must be a audio file")
     return True
 
@@ -50,95 +50,91 @@ def getDefaultHeight():
 
 
 class IVideo(model.Schema):
-
-    form.omitted('image')
+    form.omitted("image")
     image = namedfile.NamedBlobImage(
-        title=_(u"Cover Image"),
-        description=u"",
+        title=_("Cover Image"),
+        description="",
         required=False,
     )
 
     # main file will always be converted to mp4
     form.widget(video_file=StreamNamedFileFieldWidget)
-    model.primary('video_file')
+    model.primary("video_file")
     video_file = namedfile.NamedBlobFile(
-        title=_(u"Video File"),
-        description=u"",
-        required=False,
-        constraint=valid_video
+        title=_("Video File"), description="", required=False, constraint=valid_video
     )
 
     if youtube:
         upload_video_to_youtube = schema.Bool(
-            title=_(u'Upload to youtube'),
-            description=_(u'Requires having youtube account connected. '
-                          u'Videos that are private will remain unlisted on YouTube. '
-                          u'Once published, video will be made public on YouTube. '),
+            title=_("Upload to youtube"),
+            description=_(
+                "Requires having youtube account connected. "
+                "Videos that are private will remain unlisted on YouTube. "
+                "Once published, video will be made public on YouTube. "
+            ),
             required=False,
-            default=False)
+            default=False,
+        )
 
-    form.omitted(IAddForm, 'video_file_ogv')
-    form.omitted(IEditForm, 'video_file_ogv')
+    form.omitted(IAddForm, "video_file_ogv")
+    form.omitted(IEditForm, "video_file_ogv")
     form.widget(video_file_ogv=StreamNamedFileFieldWidget)
     video_file_ogv = namedfile.NamedBlobFile(
         required=False,
     )
 
-    form.omitted(IAddForm, 'video_file_webm')
-    form.omitted(IEditForm, 'video_file_webm')
+    form.omitted(IAddForm, "video_file_webm")
+    form.omitted(IEditForm, "video_file_webm")
     form.widget(video_file_webm=StreamNamedFileFieldWidget)
     video_file_webm = namedfile.NamedBlobFile(
         required=False,
     )
 
-    youtube_url = schema.TextLine(
-        title=_(u"Youtube URL"),
-        description=_(u"Alternatively, you can provide a youtube video url. "
-                      u"If this is specified, video file will be ignored. "
-                      u"If video was uploaded to youtube, this field will be filled "
-                      u"with video url."),
-        required=False
+    video_url = schema.TextLine(
+        title=_("Video URL"),
+        description=_(
+            "Alternatively, you can provide a video url. "
+            "If this is specified, video file will be ignored. "
+            "If video was uploaded to youtube, this field will be filled "
+            "with video url."
+        ),
+        required=False,
     )
     retrieve_thumb = schema.Bool(
-        title=_(u'Retrieve original thumbnail from youtube'),
-        description=_(u"If checked, try to download original thumbnail from "
-                      u"youtube into this video."),
+        title=_("Retrieve original thumbnail from youtube"),
+        description=_(
+            "If checked, try to download original thumbnail from "
+            "youtube into this video."
+        ),
         required=False,
-        default=False)
+        default=False,
+    )
 
     @invariant
     def validate_videos(data):
-        if not data.video_file and not data.youtube_url:
+        if not data.video_file and not data.video_url:
             raise Invalid("Must specify either a video file or youtube url")
 
-    width = schema.Int(
-        title=_(u"Width"),
-        defaultFactory=getDefaultWidth
-    )
+    width = schema.Int(title=_("Width"), defaultFactory=getDefaultWidth)
 
-    height = schema.Int(
-        title=_(u"Height"),
-        defaultFactory=getDefaultHeight
-    )
+    height = schema.Int(title=_("Height"), defaultFactory=getDefaultHeight)
 
     subtitle_file = namedfile.NamedBlobFile(
-        title=_(u"Subtitle file"),
-        description=_(u"Provide a file in srt format"),
-        required=False
+        title=_("Subtitle file"),
+        description=_("Provide a file in srt format"),
+        required=False,
     )
 
-    form.omitted('metadata')
-    metadata = schema.Text(
-        required=False
-    )
+    form.omitted("metadata")
+    metadata = schema.Text(required=False)
 
     transcript = RichText(
-        title=_(u"Transcript"),
-        default_mime_type='text/html',
-        output_mime_type='text/html',
-        allowed_mime_types=('text/html', 'text/plain'),
-        default=u"",
-        required=False
+        title=_("Transcript"),
+        default_mime_type="text/html",
+        output_mime_type="text/html",
+        allowed_mime_types=("text/html", "text/plain"),
+        default="",
+        required=False,
     )
 
 
@@ -146,30 +142,25 @@ alsoProvides(IVideo, IFormFieldProvider)
 
 
 class IAudio(model.Schema):
-
     # main file will always be converted to mp4
     form.widget(audio_file=StreamNamedFileFieldWidget)
-    model.primary('audio_file')
+    model.primary("audio_file")
     audio_file = namedfile.NamedBlobFile(
-        title=_(u"Audio File"),
-        description=u"",
-        required=True,
-        constraint=valid_audio
+        title=_("Audio File"), description="", required=True, constraint=valid_audio
     )
 
-    form.omitted('metadata')
-    metadata = schema.Text(
-        required=False
-    )
+    form.omitted("metadata")
+    metadata = schema.Text(required=False)
 
     transcript = RichText(
-        title=_(u"Transcript"),
-        default_mime_type='text/html',
-        output_mime_type='text/html',
-        allowed_mime_types=('text/html', 'text/plain'),
-        default=u"",
-        required=False
+        title=_("Transcript"),
+        default_mime_type="text/html",
+        output_mime_type="text/html",
+        allowed_mime_types=("text/html", "text/plain"),
+        default="",
+        required=False,
     )
+
 
 alsoProvides(IAudio, IFormFieldProvider)
 
@@ -195,7 +186,6 @@ class UnsettableProperty(object):
 
 
 class BasicProperty(object):
-
     def __init__(self, field):
         self._field = field
 
@@ -212,9 +202,8 @@ class BasicProperty(object):
 
 
 class BaseAdapter(object):
-
     def _get_metadata(self):
-        return safe_unicode(json.dumps(getattr(self.context, 'metadata', {})))
+        return safe_unicode(json.dumps(getattr(self.context, "metadata", {})))
 
     def _set_metadata(self, value):
         pass
@@ -228,7 +217,6 @@ _marker = object()
 @implementer(IVideo)
 @adapter(IDexterityContent)
 class Video(BaseAdapter):
-
     def __init__(self, context):
         self.context = context
 
@@ -238,6 +226,7 @@ class Video(BaseAdapter):
 
     def _set_file(self, value):
         self.video_file = value
+
     file = property(_get_file, _set_file)
 
     def _get_video_file(self):
@@ -248,43 +237,42 @@ class Video(BaseAdapter):
             self.context.video_file = None
             self.context.video_file_ogv = None
             self.context.video_file_webm = None
-        elif value != getattr(self.context, 'video_file', _marker):
+        elif value != getattr(self.context, "video_file", _marker):
             self.context.video_converted = False
             self.context.video_file = value
 
     def get_youtube_id_from_url(self):
-        if not getattr(self.context, 'youtube_url', None):
+        if not getattr(self.context, "video_url", None):
             return ""
         pattern = r"((?<=(v|V)/)|(?<=be/)|(?<=(\?|\&)v=)|(?<=embed/))([\w-]+)"
-        match = re.search(pattern, self.context.youtube_url)
+        match = re.search(pattern, self.context.video_url)
         if not match:
             return ""
         return match.group()
 
     video_file = property(_get_video_file, _set_video_file)
 
-    image = BasicProperty(IVideo['image'])
-    youtube_url = BasicProperty(IVideo['youtube_url'])
-    retrieve_thumb = BasicProperty(IVideo['retrieve_thumb'])
-    width = BasicProperty(IVideo['width'])
-    height = BasicProperty(IVideo['height'])
-    transcript = BasicProperty(IVideo['transcript'])
-    subtitle_file = BasicProperty(IVideo['subtitle_file'])
+    image = BasicProperty(IVideo["image"])
+    video_url = BasicProperty(IVideo["video_url"])
+    retrieve_thumb = BasicProperty(IVideo["retrieve_thumb"])
+    width = BasicProperty(IVideo["width"])
+    height = BasicProperty(IVideo["height"])
+    transcript = BasicProperty(IVideo["transcript"])
+    subtitle_file = BasicProperty(IVideo["subtitle_file"])
 
-    video_file_ogv = UnsettableProperty(IVideo['video_file_ogv'])
-    video_file_webm = UnsettableProperty(IVideo['video_file_webm'])
-    image = UnsettableProperty(IVideo['image'])
+    video_file_ogv = UnsettableProperty(IVideo["video_file_ogv"])
+    video_file_webm = UnsettableProperty(IVideo["video_file_webm"])
+    image = UnsettableProperty(IVideo["image"])
 
     if youtube:
-        upload_video_to_youtube = BasicProperty(IVideo['upload_video_to_youtube'])
+        upload_video_to_youtube = BasicProperty(IVideo["upload_video_to_youtube"])
 
 
 @implementer(IAudio)
 @adapter(IDexterityContent)
 class Audio(BaseAdapter):
-
     def __init__(self, context):
         self.context = context
 
-    audio_file = BasicProperty(IAudio['audio_file'])
-    transcript = BasicProperty(IAudio['transcript'])
+    audio_file = BasicProperty(IAudio["audio_file"])
+    transcript = BasicProperty(IAudio["transcript"])
