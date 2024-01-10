@@ -30,8 +30,8 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          cp test_plone${{ matrix.plone }}.cfg buildout.cfg
+          pip install -r requirements_plone_${{ matrix.plone }}.txt
+          cp plone-${{ matrix.plone }}.cfg buildout.cfg
       - name: Install buildout
         run: |
           buildout -N -t 3 code-analysis:return-status-codes=True
