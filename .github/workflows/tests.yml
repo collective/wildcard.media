@@ -1,0 +1,54 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.11"]
+        plone: ["52", "60"]
+        exclude:
+          - python: "3.9"
+            plone: "52"
+          - python: "3.10"
+            plone: "52"
+          - python: "3.11"
+            plone: "52"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache eggs
+        uses: actions/cache@v3
+        with:
+          path: eggs
+          key: ${{ runner.OS }}-build-python${{ matrix.python }}-${{ matrix.plone }}
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          cp test_plone${{ matrix.plone }}.cfg buildout.cfg
+      - name: Install buildout
+        run: |
+          buildout -N -t 3 code-analysis:return-status-codes=True
+      - name: Run tests
+        run: |
+          bin/test-coverage
+      - name: Coveralls
+        uses: AndreMiras/coveralls-python-action@develop
+        with:
+          parallel: true
+          flag-name: ${{ matrix.plone }}-${{ matrix.python }}
+
+  coveralls_finish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        uses: AndreMiras/coveralls-python-action@develop
+        with:
+          parallel-finished: true
