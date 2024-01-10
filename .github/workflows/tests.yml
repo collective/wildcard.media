@@ -37,12 +37,7 @@ jobs:
           buildout -N -t 3 code-analysis:return-status-codes=True
       - name: Run tests
         run: |
-          bin/test-coverage
-      - name: Coveralls
-        uses: AndreMiras/coveralls-python-action@develop
-        with:
-          parallel: true
-          flag-name: ${{ matrix.plone }}-${{ matrix.python }}
+          bin/test
 
   coveralls_finish:
     needs: build
