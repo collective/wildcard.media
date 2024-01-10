@@ -6,6 +6,13 @@ Changelog
 
 - Reintroduce support for partial streaming based on https://github.com/plone/plone.namedfile/pull/86 [pbauer]
 
+- Now it's possible to use external services other than YouTube with the help of
+  adapter views for video contents.
+  [arsenico13, cekk]
+
+- [BREAKING] Change attribute name for WildcardVideo contentype: youtube_url has
+  been changed in video_url (upgrade step available).
+  [arsenico13, cekk]
 
 2.1.0 (2020-02-06)
 ------------------

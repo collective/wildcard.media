@@ -7,19 +7,23 @@
     xmlns:five="http://namespaces.zope.org/five"
     xmlns:zcml="http://namespaces.zope.org/zcml"
     i18n_domain="wildcard.media">
-
+  
+  <!-- Default video adapter -->
+  <adapter
+      factory = ".video_embed_code.DefaultVideoEmbedCode"/>
+  
   <!-- Internal video adapter -->
   <adapter
-      factory = ".videoembedcode.VideoEmbedCode"
+      factory = ".video_embed_code.InternalVideoEmbedCode"
       name = "internal" />
 
   <!-- Youtube video adapter -->
   <adapter
-      factory = ".videoembedcode.ClassicYoutubeEmbedCode"
+      factory = ".video_embed_code.YoutubeVideoEmbedCode"
       name = "youtube.com" />
 
   <adapter
-      factory = ".videoembedcode.ClassicYoutubeEmbedCode"
+      factory = ".video_embed_code.YoutubeVideoEmbedCode"
       name = "youtu.be" />
 
 

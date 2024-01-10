@@ -1,27 +1,33 @@
-import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
-
+from plone import api
+from plone.memoize.instance import memoize
+from plone.z3cform.layout import wrap_form
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone import PloneMessageFactory as pmf
 from Products.Five import BrowserView
-from plone import api
-from plone.z3cform.layout import wrap_form
-from plone.memoize.instance import memoize
 from wildcard.media import _
 from wildcard.media.behavior import IVideo
 from wildcard.media.config import getFormat
 from wildcard.media.interfaces import IGlobalMediaSettings
 from wildcard.media.interfaces import IMediaEnabled
+from wildcard.media.interfaces import IVideoEmbedCode
 from wildcard.media.settings import GlobalSettings
 from wildcard.media.subscribers import video_edited
 from z3c.form import button
 from z3c.form import field
 from z3c.form import form
 from z3c.form import group
+from zope.component import getMultiAdapter, ComponentLookupError
 from zope.component.hooks import getSite
 from zope.interface import alsoProvides
-from zope.component import getMultiAdapter, ComponentLookupError
-from wildcard.media.adapter import IVideoEmbedCode
-from urlparse import urlparse
+
+
+import logging
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 try:
     from wildcard.media import youtube
@@ -31,6 +37,9 @@ try:
     from plone.protect.interfaces import IDisableCSRFProtection
 except ImportError:
     from zope.interface import Interface as IDisableCSRFProtection  # noqa
+
+
+logger = logging.getLogger(__name__)
 
 
 class MediaView(BrowserView):
@@ -81,10 +90,6 @@ class VideoView(BrowserView):
         url = "%s/@@edit" % self.context.absolute_url()
         return addTokenToUrl(url)
 
-    def get_site_id(self):
-        video_site = urlparse(self.context.video_url)[1].replace("www.", "")
-        return video_site
-
     def get_player_code(self):
         """Fetch the correct adapter for the Video.
         The video can be internal (inside the Plone site) or from an
@@ -95,18 +100,24 @@ class VideoView(BrowserView):
         util = getMultiAdapter((self.context, self.request), name="wcmedia-utils")
         if util.mp4_url():
             name = "internal"
-
-        # Extract the domain from the URL of the video. We use it as the
-        # name for the different adapters that handle different external services.
         else:
+            # Extract the domain from the URL of the video. We use it as the
+            # name for the different adapters that handle different external services.
             name = urlparse(self.context.video_url)[1].replace("www.", "")
-
         try:
             adapter = getMultiAdapter(
                 (self.context, self.request), IVideoEmbedCode, name=name
             )
         except ComponentLookupError:
+            # use default one
             adapter = getMultiAdapter((self.context, self.request), IVideoEmbedCode)
+        if not adapter:
+            logger.warning(
+                'No adapter with name "{}" for {}.'.format(
+                    name, self.context.absolute_url()
+                )
+            )
+            return ""
         return adapter()
 
 

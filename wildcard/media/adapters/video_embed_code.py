@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from urlparse import urlparse
 from wildcard.media.behavior import IVideo
 from wildcard.media.interfaces import IVideoEmbedCode
 from wildcard.media.interfaces import IVideoEnabled
@@ -8,6 +7,12 @@ from zope.interface import implementer
 from wildcard.media.interfaces import IVideoEnabled
 from zope.interface import Interface
 from zope.component import adapter
+
+try:
+    # Python 3
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 @implementer(IVideoEmbedCode)
@@ -23,14 +28,20 @@ class BaseEmbedCode:
         return self.template()
 
 
-class VideoEmbedCode(BaseEmbedCode):
+class DefaultVideoEmbedCode(BaseEmbedCode):
+    """"""
+
+    template = ViewPageTemplateFile("templates/default_template.pt")
+
+
+class InternalVideoEmbedCode(BaseEmbedCode):
     """Internal video adapter"""
 
-    template = ViewPageTemplateFile("templates/internalvideo_template.pt")
+    template = ViewPageTemplateFile("templates/internal_video_template.pt")
 
 
-class ClassicYoutubeEmbedCode(BaseEmbedCode):
-    """ClassicYoutubeEmbedCode
+class YoutubeVideoEmbedCode(BaseEmbedCode):
+    """
     Provides a way to have the html code to embed Youtube video in a web page
     """
 

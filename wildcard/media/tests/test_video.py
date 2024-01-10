@@ -45,11 +45,6 @@ class VideoIntegrationTest(unittest.TestCase):
         )
         return self.portal[id]
 
-    def test_schema(self):
-        fti = self.getFti()
-        schema = fti.lookupSchema()
-        self.assertEqual(schema.getName(), "plone_0_WildcardVideo")
-
     def test_fti(self):
         fti = self.getFti()
         self.assertNotEquals(None, fti)
@@ -200,7 +195,7 @@ class VideoFunctionalTest(unittest.TestCase):
         #    self.browser.contents)
 
 
-class YoutubeVideoIntegrationTest(unittest.TestCase):
+class VideoUrlIntegrationTest(unittest.TestCase):
     layer = MEDIA_INTEGRATION_TESTING
 
     def setUp(self):
@@ -266,6 +261,116 @@ class YoutubeVideoIntegrationTest(unittest.TestCase):
         self.create("video5", "https://youtu.be/foo")
         image5 = getattr(self.portal["video5"], "image", None)
         self.assertEqual(image5, None)
+
+
+class VideoUrlPlayerIntegrationTest(unittest.TestCase):
+    layer = MEDIA_INTEGRATION_TESTING
+
+    def setUp(self):
+        self.portal = self.layer["portal"]
+        self.request = self.layer["request"]
+        self.request["ACTUAL_URL"] = self.portal.absolute_url()
+        self.video_id = "2Lb2BiUC898"
+        self.portal.invokeFactory(
+            "WildcardVideo",
+            "video1",
+            video_url="https://youtu.be/" + self.video_id,
+        )
+        self.portal.invokeFactory(
+            "WildcardVideo",
+            "video2",
+            video_url="https://www.youtube.com/watch?v=2Lb2BiUC898",
+        )
+        self.portal.invokeFactory(
+            "WildcardVideo",
+            "video3",
+            video_url="https://www.youtube.com/embed/" + self.video_id,
+        )
+        self.portal.invokeFactory(
+            "WildcardVideo",
+            "video4",
+            video_url="https://foo.com/video4",
+        )
+        self.portal.invokeFactory(
+            "WildcardVideo",
+            "video5",
+            video_file=getVideoBlob("mp4"),
+        )
+        self.video1 = self.portal["video1"]
+        self.video2 = self.portal["video2"]
+        self.video3 = self.portal["video3"]
+        self.video4 = self.portal["video4"]
+        self.video5 = self.portal["video5"]
+        setRoles(self.portal, TEST_USER_ID, ["Manager"])
+
+    def test_youtube_video_has_youtube_player(self):
+        self.assertIn(
+            'class="wcvideo-container youtube-player"',
+            self.video1.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+
+        self.assertIn(
+            'class="wcvideo-container youtube-player"',
+            self.video2.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+        self.assertIn(
+            'class="wcvideo-container youtube-player"',
+            self.video3.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+        self.assertNotIn(
+            'class="wcvideo-container youtube-player"',
+            self.video4.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+        self.assertNotIn(
+            'class="wcvideo-container youtube-player"',
+            self.video5.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+
+    def test_internal_video_has_internal_player(self):
+        self.assertNotIn(
+            'class="wcvideo-container internal-video-player"',
+            self.video1.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+
+        self.assertNotIn(
+            'class="wcvideo-container internal-video-player"',
+            self.video2.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+        self.assertNotIn(
+            'class="wcvideo-container internal-video-player"',
+            self.video3.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+        self.assertNotIn(
+            'class="wcvideo-container internal-video-player"',
+            self.video4.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+        self.assertIn(
+            'class="wcvideo-container internal-video-player"',
+            self.video5.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+
+    def test_unknown_video_url_has_default_player(self):
+        self.assertNotIn(
+            'class="wcvideo-container default-player"',
+            self.video1.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+
+        self.assertNotIn(
+            'class="wcvideo-container default-player"',
+            self.video2.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+        self.assertNotIn(
+            'class="wcvideo-container default-player"',
+            self.video3.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+        self.assertIn(
+            'class="wcvideo-container default-player"',
+            self.video4.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
+        self.assertNotIn(
+            'class="wcvideo-container default-player"',
+            self.video5.restrictedTraverse("@@wildcard_video_view").get_player_code(),
+        )
 
 
 def test_suite():

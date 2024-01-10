@@ -1,4 +1,4 @@
-<div class="wcvideo-container" tal:define="util context/@@wcmedia-utils;
+<div class="wcvideo-container youtube-player" tal:define="util context/@@wcmedia-utils;
                      settings util/settings;
                      video nocall: video|context;
                      height height|video/height|settings/default_video_height|string:720;

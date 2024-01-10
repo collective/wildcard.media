@@ -37,13 +37,13 @@ def valid_audio(namedblob):
     return True
 
 
-def getDefaultWidth():
+def getDefaultWidth(context=None):
     portal = getSite()
     settings = GlobalSettings(portal)
     return settings.default_video_width
 
 
-def getDefaultHeight():
+def getDefaultHeight(context=None):
     portal = getSite()
     settings = GlobalSettings(portal)
     return settings.default_video_height
@@ -133,7 +133,6 @@ class IVideo(model.Schema):
         default_mime_type="text/html",
         output_mime_type="text/html",
         allowed_mime_types=("text/html", "text/plain"),
-        default="",
         required=False,
     )
 
@@ -157,7 +156,6 @@ class IAudio(model.Schema):
         default_mime_type="text/html",
         output_mime_type="text/html",
         allowed_mime_types=("text/html", "text/plain"),
-        default="",
         required=False,
     )
 
@@ -244,11 +242,11 @@ class Video(BaseAdapter):
     def get_youtube_id_from_url(self):
         if not getattr(self.context, "video_url", None):
             return ""
-        pattern = r"((?<=(v|V)/)|(?<=be/)|(?<=(\?|\&)v=)|(?<=embed/))([\w-]+)"
+        pattern = r"(youtu.*be.*)\/(watch\?v=|embed\/|v|shorts|)(.*?((?=[&#?])|$))"
         match = re.search(pattern, self.context.video_url)
         if not match:
             return ""
-        return match.group()
+        return match.groups()[2]
 
     video_file = property(_get_video_file, _set_video_file)
 
