@@ -260,7 +260,6 @@ class Video(BaseAdapter):
 
     video_file_ogv = UnsettableProperty(IVideo["video_file_ogv"])
     video_file_webm = UnsettableProperty(IVideo["video_file_webm"])
-    image = UnsettableProperty(IVideo["image"])
 
     if youtube:
         upload_video_to_youtube = BasicProperty(IVideo["upload_video_to_youtube"])
