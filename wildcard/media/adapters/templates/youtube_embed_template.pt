@@ -1,0 +1,29 @@
+<div class="wcvideo-container youtube-player" tal:define="util context/@@wcmedia-utils;
+                     settings util/settings;
+                     video nocall: video|context;
+                     height height|video/height|settings/default_video_height|string:720;
+                     width width|video/width|settings/default_video_width|string:400;
+                     upload_to_youtube video/upload_video_to_youtube|nothing;
+                     video_url view/get_embed_url|nothing">
+
+    <tal:yt tal:condition="video_url">
+        <tal:no_image condition="not:util/image_url">
+            <p class="discreet" tal:define="edit_url view/get_edit_url|nothing" tal:condition="edit_url">
+                <tal:no_image i18n:translate="">This video doesn't have a saved thumbnail image. </tal:no_image>
+                <br />
+                <a tal:attributes="href edit_url" title="edit video" i18n:translate="">Edit </a>
+                <tal:no_image i18n:translate="">
+                it and enable "Retrieve original thumbnail" field.
+                    <br />
+ If you uploaded a video to YouTube, it is possible that the thumbnail wasn't available
+                at upload time. Try to re-save the video to reload the image.
+                </tal:no_image>
+            </p>
+        </tal:no_image>
+        <iframe tal:attributes="width width;
+                            height height;
+                            src video_url" frameborder="0"
+            allowfullscreen>
+</iframe>
+</tal:yt>
+</div>

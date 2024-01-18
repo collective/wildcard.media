@@ -21,7 +21,7 @@
 
 <metal:content-core fill-slot="content-core">
     <metal:content-core define-macro="content-core" tal:define="video nocall: context">
-        <div metal:use-macro="context/wildcard_video_macro/macros/video" />
+        <div tal:replace="structure view/get_player_code" />
         <div class="transcript-text" tal:content="structure context/transcript/output|nothing" />
     </metal:content-core>
 </metal:content-core>
