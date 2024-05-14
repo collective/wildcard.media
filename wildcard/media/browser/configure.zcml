@@ -60,7 +60,8 @@
     layer="..interfaces.ILayer"
     permission="cmf.ManagePortal" />
 
-
+  <!-- broken.  Seems to put url into og:image and twitter:image tags in socialtags viewlet -->
+  <!-- 
   <configure zcml:condition="installed Products.CMFPlone.interfaces.syndication">
     <adapter
       factory=".syndication.AudioFeedItem"
@@ -73,7 +74,8 @@
            Products.CMFPlone.interfaces.syndication.IFeed"
       provides="Products.CMFPlone.interfaces.syndication.IFeedItem" />
   </configure>
-
+  -->
+  
   <browser:page
     name="global-media-settings"
     for="Products.CMFPlone.interfaces.IPloneSiteRoot"
