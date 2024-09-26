@@ -10,7 +10,9 @@ class AudioFeedItem(DexterityItem):
 
     @property
     def has_enclosure(self):
-        return True
+        if self.context.audio_file:
+            return True
+        return False
 
     @property
     def file_url(self):
