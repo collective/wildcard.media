@@ -11,4 +11,21 @@
     <value key="depends">plone</value>
   </records>
 
+   <records interface="Products.CMFPlone.interfaces.ITinyMCESchema" prefix="plone">
+        <value key="other_settings">
+            {
+            "style_formats": [
+            {
+            "title": "Embedded video",
+            "inline": "span",
+            "attributes": {
+            "class": "wcvideo"
+            }
+            }
+            ],
+            "style_formats_merge": "True"
+            }
+        </value>
+    </records>
+
 </registry>
