@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2016-02-10 16:10+0000\n"
+"POT-Creation-Date: 2024-01-12 14:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI +ZONE\n"
 "Last-Translator: Luca Fabbri <keul@redturtle.it>\n"
 "Language-Team: RedTurtle Technology <sviluppoplone@redturtle.it>\n"
@@ -14,39 +14,43 @@ msgstr ""
 "Preferred-Encodings: utf-8 latin1\n"
 "Domain: DOMAIN\n"
 
-#: ../interfaces.py:34
+#: ../configure.zcml:42
+msgid "Add support for audio fields"
+msgstr "Aggiunge il supporto per i campi audio"
+
+#: ../configure.zcml:34
+msgid "Add support for video fields"
+msgstr "Aggiunge il supporto per i campi video"
+
+#: ../interfaces.py:33
 msgid "Additional Video Formats"
 msgstr "Formati Video Aggiuntivi"
 
 #: ../behavior.py:95
-msgid "Alternatively, you can provide a youtube video url. If this is specified, video file will be ignored. If video was uploaded to youtube, this field will be filled with video url."
-msgstr "In alternativa, puoi fornire l'url di un video su YouTube. Se lo inserisci, il file video verrà ignorato. Se il file video è stato caricato su YouTube, questo campo verrà popolato con il suo url."
+msgid "Alternatively, you can provide a video url. If this is specified, video file will be ignored. If video was uploaded to youtube, this field will be filled with video url."
+msgstr "In alternativa, puoi fornire l'url di un video. Se specificato, il file video verrà ignorato."
 
-#: ../interfaces.py:47
+#: ../interfaces.py:46
 msgid "Async Quota Size"
 msgstr "Dimensione Quota Async"
 
-#: ../behavior.py:153
+#: ../configure.zcml:42
+msgid "Audio"
+msgstr "Audio"
+
+#: ../behavior.py:148
 msgid "Audio File"
 msgstr "File Audio"
-
-#: ../interfaces.py:53
-msgid "Convert Infile Options"
-msgstr "Opzioni di Infile per la conversione"
-
-#: ../interfaces.py:64
-msgid "Convert Outfile Options"
-msgstr "Opzioni di Outfile per la conversione"
 
 #: ../behavior.py:55
 msgid "Cover Image"
 msgstr "Immagine Copertina"
 
-#: ../interfaces.py:79
+#: ../interfaces.py:134
 msgid "Default video height"
 msgstr "Altezza di default del video"
 
-#: ../interfaces.py:75
+#: ../interfaces.py:132
 msgid "Default video width"
 msgstr "Larghezza di default del video"
 
@@ -54,38 +58,70 @@ msgstr "Larghezza di default del video"
 msgid "Edit"
 msgstr "Modificalo"
 
-#: ../behavior.py:119
+#: ../interfaces.py:55
+msgid "Force video conversion"
+msgstr "Forza la conversione del video"
+
+#: ../behavior.py:120
 msgid "Height"
 msgstr "Altezza"
 
-#: ../behavior.py:103
+#: ../behavior.py:105
 msgid "If checked, try to download original thumbnail from youtube into this video."
 msgstr "Se selezionato, prova a scaricare la miniatura originale da youtube e salvarla nel video."
 
-#: ../browser/views.py:90
+#: ../profiles.zcml:24
+msgid "Installs plone4 specific wildcard.media steps"
+msgstr "Installa i profili per Plone4 di wildcard.media"
+
+#: ../profiles.zcml:31
+msgid "Installs plone5 specific wildcard.media steps"
+msgstr "Installa i profili per Plone5 di wildcard.media"
+
+#: ../profiles.zcml:17
+msgid "Installs the wildcard.media package"
+msgstr "Installa wildcard.media"
+
+#: ../interfaces.py:67
+msgid "MP4: infile parameters"
+msgstr "MP$: parametri infile"
+
+#: ../interfaces.py:78
+msgid "MP4: outfile parameters"
+msgstr "MP4: parametri outfile"
+
+#: ../browser/views.py:150
 #: ../profiles/default/controlpanel.xml
 msgid "Media Settings"
 msgstr "Impostazioni Multimedia"
 
-#: ../interfaces.py:48
+#: ../interfaces.py:47
 msgid "Number of conversions to run at a time. The quota name assigned is `wildcard.media`."
 msgstr ""
 "Numero di conversioni da lanciare in una volta.\n"
 "Il nome della quota assegnata è  `wildcard.media`."
 
-#: ../behavior.py:125
+#: ../interfaces.py:111
+msgid "OGG: infile parameters"
+msgstr "OGG: parametri infile"
+
+#: ../interfaces.py:122
+msgid "OGG: outfile parameters"
+msgstr "OGG: parametri outfile"
+
+#: ../behavior.py:124
 msgid "Provide a file in srt format"
 msgstr "Fornisci un file in formato srt"
 
-#: ../behavior.py:73
+#: ../behavior.py:70
 msgid "Requires having youtube account connected. Videos that are private will remain unlisted on YouTube. Once published, video will be made public on YouTube. "
 msgstr "E' necessatio avere un account YouTube collegato. I video privati non saranno visibili su YouTube. Una volta pubblicati, verranno anche resi visibili su YouTube."
 
-#: ../behavior.py:102
+#: ../behavior.py:104
 msgid "Retrieve original thumbnail from youtube"
 msgstr "Scarica la miniatura originale da youtube"
 
-#: ../behavior.py:124
+#: ../behavior.py:123
 msgid "Subtitle file"
 msgstr "File sottotitoli"
 
@@ -93,45 +129,82 @@ msgstr "File sottotitoli"
 msgid "This video doesn't have a saved thumbnail image."
 msgstr "Questo video non ha una miniatura salvata."
 
-#: ../behavior.py:135
+#: ../behavior.py:132
 msgid "Transcript"
 msgstr "Trascrizione"
 
-#: ../behavior.py:72
+#: ../behavior.py:69
 msgid "Upload to youtube"
 msgstr "Carica su YouTube"
+
+#: ../configure.zcml:34
+msgid "Video"
+msgstr "Video"
 
 #: ../behavior.py:64
 msgid "Video File"
 msgstr "File Video"
 
-#: ../behavior.py:114
+#: ../behavior.py:94
+msgid "Video URL"
+msgstr "Url video"
+
+#: ../interfaces.py:89
+msgid "WebM: infile parameters"
+msgstr "WebM: parametri infile"
+
+#: ../interfaces.py:100
+msgid "WebM: outfile parameters"
+msgstr "WebM: parametri outfile"
+
+#: ../behavior.py:118
 msgid "Width"
 msgstr "Larghezza"
 
-#: ../behavior.py:94
-msgid "Youtube URL"
-msgstr "URL YouTube"
-
 #. Default: "To provide better HTML5 support, different video formats are generated via avconv (formerly ffmpeg). If you'd prefer to save on disc space, but provide less HTML5 support, change the additional video formats that are generated here"
-#: ../interfaces.py:35
+#: ../interfaces.py:34
 msgid "additional_video_formats_help"
 msgstr ""
 "Per fornire una migliore supporto HTML 5, vengono generati formati video differenti usando avconv (anche noto come ffmpeg).\n"
 "Se si preferisce salvare spazio disco, ma fornendo un supporto HTML 5 più limitato, modifica i formati video addizionali qui generati."
 
-#. Default: "Pass optional infile parameters to aconv during the conversion process.\n"
-#: ../interfaces.py:54
-msgid "convert_infile_options_help"
-msgstr "Passa un parametro opzionale per infile ad aconv durante il processo di conversione."
+#. Default: "Force the video through the full conversion process, even if it is already in the final video format. This may be useful if you always want to transcode to a given video size."
+#: ../interfaces.py:56
+msgid "always_convert_help"
+msgstr ""
 
-#. Default: "Pass optional outfile parameters to aconv during the conversion process."
-#: ../interfaces.py:65
-msgid "convert_outfile_options_help"
-msgstr "Passa un parametro opzionale per outfile ad aconv durante il processo di conversione."
+#. Default: "Pass optional infile parameters to aconv during the MP4 conversion process."
+#: ../interfaces.py:68
+msgid "avconv_in_mp4_help"
+msgstr ""
+
+#. Default: "Pass optional infile parameters to aconv during the OGG conversion process."
+#: ../interfaces.py:112
+msgid "avconv_in_ogg_help"
+msgstr ""
+
+#. Default: "Pass optional infile parameters to aconv during the WebM conversion process."
+#: ../interfaces.py:90
+msgid "avconv_in_webm_help"
+msgstr ""
+
+#. Default: "Pass optional outfile parameters to aconv during the MP4 conversion process."
+#: ../interfaces.py:79
+msgid "avconv_out_mp4_help"
+msgstr ""
+
+#. Default: "Pass optional outfile parameters to aconv during the OGG conversion process."
+#: ../interfaces.py:123
+msgid "avconv_out_ogg_help"
+msgstr ""
+
+#. Default: "Pass optional outfile parameters to aconv during the WebM conversion process."
+#: ../interfaces.py:101
+msgid "avconv_out_webm_help"
+msgstr ""
 
 #. Default: "Configure the parameters for media."
-#: ../browser/views.py:91
+#: ../browser/views.py:151
 msgid "description_media_global_settings_form"
 msgstr "Configura i parametri per il multimedia."
 
@@ -144,17 +217,37 @@ msgstr "e abilita il campo \"Retrieve original thumbnail\". <br /> Se hai fatto 
 msgid "msg_short_name_mediaview"
 msgstr "Vista Multimedia"
 
+#: ../profiles.zcml:38
+msgid "uninstalls the wildcard.media package"
+msgstr ""
+
+#: ../profiles.zcml:17
+msgid "wildcard.media"
+msgstr ""
+
+#: ../profiles.zcml:24
+msgid "wildcard.media plone4"
+msgstr ""
+
+#: ../profiles.zcml:31
+msgid "wildcard.media plone5"
+msgstr ""
+
+#: ../profiles.zcml:38
+msgid "wildcard.media uninstall"
+msgstr ""
+
 #. Default: "Unable to download thumbnail image automatically from youtube. Try later."
-#: ../subscribers.py:73
+#: ../subscribers.py:74
 msgid "yt_image_download_error_label"
 msgstr "Impossibile scaricare la miniatura in automatico da youtube. Riprova più tardi."
 
 #. Default: "Unable to download thumbnail image automatically from youtube. Probably it isn't available yet. Please retry in a few minutes."
-#: ../subscribers.py:99
+#: ../subscribers.py:96
 msgid "yt_image_download_notfound_error_label"
 msgstr "Impossibile scaricare la miniatura in automatico da youtube. Probabilmente non è ancora disponibile. Riprova più tardi."
 
 #. Default: "Thumbnail image correctly saved from youtube."
-#: ../subscribers.py:116
+#: ../subscribers.py:114
 msgid "yt_image_download_success_label"
 msgstr "Miniatura scaricata correttamente da youtube."

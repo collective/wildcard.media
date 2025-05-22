@@ -1,0 +1,19 @@
+<div class="wcvideo-container default-player" tal:define="util context/@@wcmedia-utils;
+    settings util/settings;
+    video nocall: video|context;
+    height height|video/height|settings/default_video_height|string:720;
+    width width|video/width|settings/default_video_width|string:400;
+    video_url video/video_url">
+
+    <video width="320"
+           height="240"
+           controls="controls"
+           preload="none"
+           class="active pat-media"
+           tal:attributes="width width;
+                           height height;">
+        <source src="${video_url}" />
+    </video>
+
+
+</div>

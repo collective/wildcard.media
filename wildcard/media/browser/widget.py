@@ -47,6 +47,9 @@ class MediaStream(Download):
         file_ = dm.get()
         if file_ is None:
             raise NotFound(self, self.request)
+        # fieldname and context required for get_canonical (plone.namedfile 6.4.0)
+        self.fieldname = field.getName()
+        self.context = self.context.context
         self.set_headers(file_)
         request_range = self.handle_request_range(file_)
         return stream_data(file_, **request_range)

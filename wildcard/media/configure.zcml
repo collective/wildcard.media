@@ -64,6 +64,7 @@
          Products.DCWorkflow.interfaces.IAfterTransitionEvent"
     handler=".subscribers.video_state_changed" />
 
+  <include package=".adapters" />
   <include package=".browser" />
   <include file="profiles.zcml" />
   <include package=".tiles" file="configure.zcml" zcml:condition="installed collective.cover"/>

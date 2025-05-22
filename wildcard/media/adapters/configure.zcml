@@ -1,0 +1,30 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="wildcard.media">
+  
+  <!-- Default video adapter -->
+  <adapter
+      factory = ".video_embed_code.DefaultVideoEmbedCode"/>
+  
+  <!-- Internal video adapter -->
+  <adapter
+      factory = ".video_embed_code.InternalVideoEmbedCode"
+      name = "internal" />
+
+  <!-- Youtube video adapter -->
+  <adapter
+      factory = ".video_embed_code.YoutubeVideoEmbedCode"
+      name = "youtube.com" />
+
+  <adapter
+      factory = ".video_embed_code.YoutubeVideoEmbedCode"
+      name = "youtu.be" />
+
+
+</configure>

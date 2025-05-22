@@ -79,6 +79,42 @@ YouTube API Support
 Since version 2.0, YouTube integration is supported.
 Videos can automatically be uploaded to a configured YouTube account.
 
+Video Adapter - Support for various external services
+-----------------------------------------------------
+
+With the help of adapters it's now possible to embed videos
+from different sources other than YouTube.
+
+By default only YouTube adapter is registered. If you need to provide a new provider, just register an adapter like this::
+
+  <adapter
+      factory = ".foo_adapter.FooVideoEmbedCode"
+      name = "foo.com" />
+
+And the code should be something like this::
+  from wildcard.video.adapters.video_embed_code import BaseEmbedCode
+  from wildcard.media.interfaces import IVideoEmbedCode
+  from wildcard.media.interfaces import IVideoEnabled
+  from zope.browserpage.viewpagetemplatefile import ViewPageTemplateFile
+  from zope.interface import implementer
+  from zope.interface import Interface
+  from zope.component import adapter
+
+
+  @implementer(IVideoEmbedCode)
+  @adapter(IVideoEnabled, Interface)
+  class FooVideoEmbedCode(BaseEmbedCode):
+      template = ViewPageTemplateFile("foo_template.pt")
+
+The template file is the html snippet used for embedding the video.
+The name of the adapter is the domain name of the streaming service.
+
+If you set a video_url like "https://foo.com/videos/123456", the adapter with name "foo.com" will be used.
+If the service uses more domains (for example youtube.com or youtu.be), you need to register several adapters for each domain.
+
+If you link a direct link to an mp4 file, a default adapter will be used.
+
+
 Install
 ~~~~~~~
 
