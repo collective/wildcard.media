@@ -14,6 +14,9 @@ Changelog
   been changed in video_url (upgrade step available).
   [arsenico13, cekk]
 
+- Add support for Plone 6.1
+  [pbauer]
+
 2.1.0 (2020-02-06)
 ------------------
 
